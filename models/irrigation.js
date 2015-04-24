@@ -5,7 +5,8 @@ var mongoose = require('mongoose');
 var irrigationSchema = new mongoose.Schema({
   irrigationDate: {type: Date, default: new Date()},
   quantity: Number,
-  garden_id: Schema.Types.ObjectId
+  garden_id: Schema.Types.ObjectId,
+  dosis_id: Schema.Types.ObjectId
 });
 
 // Export the Mongoose model

@@ -3,9 +3,17 @@ var mongoose = require('mongoose');
 
 // Define our dosis schema
 var dosisSchema = new mongoose.Schema({
-  ph: Number,
-  ec: Number,
-  irrigation_id: Schema.Types.ObjectId
+	created: { type: Date, default: new Date() },
+	water: Number,
+	ph_dosis: Number,
+	ph: Number,
+	ec: Number,
+	nutrients: [
+		{
+			name: String,
+			quantity: Number
+		}
+	]
 });
 
 // Export the Mongoose model
