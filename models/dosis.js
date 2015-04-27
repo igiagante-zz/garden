@@ -5,7 +5,7 @@ var mongoose = require('mongoose');
 var dosisSchema = new mongoose.Schema({
 	created: { type: Date, default: new Date() },
 	water: Number,
-	ph_dosis: Number,
+	phDosis: Number,
 	ph: Number,
 	ec: Number,
 	nutrients: [

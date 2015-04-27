@@ -1,12 +1,14 @@
 var Dosis = require('../models/dosis')
 
-var dosis_sevice = function() {
+var dosisSevice = {};
 
-	getDosis: function(dosis_id){
-		Dosis.findById({dosis_id}, function(err, dosis){
+dosisSevice.getDosis = function(dosis_id){
+
+		Dosis.findById({ "_id " : dosis_id}, function(err, dosis){
 			if(err)
 				console.log(err);
 			return dosis;
 		});
 	}; 
-};
+
+module.exports = dosisSevice;

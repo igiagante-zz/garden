@@ -24,8 +24,12 @@ var port = process.env.PORT || 8080;        // set our port
 // =============================================================================
 var router = express.Router();              // get an instance of the express Router
 var dosis_router = require('./routers/dosis_router.js')
+var garden_router = require('./routers/garden_router.js')
+var irrigation_router = require('./routers/irrigation_router.js')
 
 router.use('/dosis', dosis_router);
+router.use('/garden', garden_router);
+router.use('/irrigation', irrigation_router);
 
 // middleware to use for all requests
 router.use(function(req, res, next) {

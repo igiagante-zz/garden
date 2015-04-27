@@ -5,7 +5,7 @@ var mongoose = require('mongoose');
 var gardenSchema = new mongoose.Schema({
   name: String,
   startDate: {type: Date, default: new Date()},
-  endDate: {type: Date, default: new Date()}
+  endDate: {type: Date}
 });
 
 // Export the Mongoose model
