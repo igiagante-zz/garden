@@ -4,7 +4,13 @@ var Irrigation = require('../models/irrigation')
 var irrigationService = require('../services/irrigation_service')
 
 router.get('/garden/:garden_id', function(req, res) {
-    irrigationService.calculateUseOfNutrient(req.params.garden_id);
+    
+    var callback = function(error, nutrients) {
+        //req, res
+        res.json(nutrients);
+    }
+    
+    irrigationService.calculateUseOfNutrient(req.params.garden_id, callback);
 });
 
 //create a irrigation
