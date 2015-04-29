@@ -1,5 +1,6 @@
 // Load required packages
 var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
 
 // Define our plant schema
 var plantSchema = new mongoose.Schema({
@@ -7,7 +8,9 @@ var plantSchema = new mongoose.Schema({
   size: Number,
   phSoil: Number,
   ecSoil: Number,
-  irrigation_id: Schema.Types.ObjectId
+  harvest: Number,
+  irrigations: [ Schema.Types.ObjectId ],
+  gardenId: Schema.Types.ObjectId
 });
 
 // Export the Mongoose model

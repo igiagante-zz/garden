@@ -3,57 +3,59 @@ var Garden = require('../models/garden')
 var Irrigation = require('../models/irrigation')
 var Dosis = require('../models/dosis')
 var async = require('async')
+var logger = require('../utils/logger')
 
 var irrigationSevice = {};
 var irrigationsOut = [];
 
 var ObjectId = require('mongoose').Types.ObjectId
 
-var calculateUseOfNutrient = function(garden_id){
+var calculateUseOfNutrient = function(garden_id, populateCallback){
 
 		async.series([
 			//Load irrigations
 				function(callback) {
-				Irrigation.find({ "gardenId" : garden_id}, function(err, irrigations){ 
-			   		if(err) console.log(err); 
+					Irrigation.find({ "gardenId" : garden_id}, function(err, irrigations){ 
+				   		if(err) logger.log(err); 
 
-			   		for (var i = 0; i < irrigations.length; i++) {
-			   			irrigationsOut.push({
-			   				_id: irrigations[i]._id,
-			   				irrigationDate: irrigations[i].irrigationDate,
-			   				quantity: irrigations[i].quantity,
-			   				gardenId: irrigations[i].gardenId,
-			   				dosisId: irrigations[i].dosisId
-			   			}
-			   			);
-			   		};
-			   		callback();
-			  	}); 	
-			},
-			//Init Nutrients
-			function(callback) {
-				console.log(' Start calculationg use of nutrients ');
-				if(irrigationsOut === undefined || irrigationsOut.length == 0) {
-					callback(console.log('No irrigations were found'));	
-				}else {
-					initnutrients(irrigationsOut);
-				}	
-			}
+				   		for (var i = 0; i < irrigations.length; i++) {
+					   			irrigationsOut.push({
+					   				_id: irrigations[i]._id,
+					   				irrigationDate: irrigations[i].irrigationDate,
+					   				quantity: irrigations[i].quantity,
+					   				gardenId: irrigations[i].gardenId,
+					   				dosisId: irrigations[i].dosisId
+					   			}
+				   			);
+				   		};
+				   		callback();
+				  	}); 	
+				},
+				//Init Nutrients
+				function(callback) {
+					
+				logger.log(' ------------------------------------------------------------------------------ ');
+				logger.log(' -----------------------  Start proccessing  Nutrients ------------------------ ' );
+				logger.log(' ------------------------------------------------------------------------------ ');
+				logger.log(' ');
+
+					if(irrigationsOut === undefined || irrigationsOut.length == 0) {
+						callback(logger.log('No irrigations were found'));	
+					}else {
+						initnutrients(irrigationsOut, callback, populateCallback);
+					}	
+				}
 		], function(err) { //This function gets called after the two tasks have called their "task callbacks"
-	        if (err) console.log(err);
+	        if (err) logger.log(err);
 		});
 	};
 
-var initnutrients = function(irrigations){
+var initnutrients = function(irrigations, callbackOut, populateCallback){
 
 	var nutrientsTemp = [];
 	var nutrients = [];
 
 	var doses = [];
-
-	console.log('------------------------------------------------------------------------------  ');
-	console.log('----------------  irrigations insise of initnutrients method ----------------- ' );
-	console.log('------------------------------------------------------------------------------  ');
 
 	var readIrrigations = function(irrigations, callback) {
     
@@ -77,7 +79,7 @@ var initnutrients = function(irrigations){
 
 		Dosis.findById(irrigation.dosisId, function(err, dosis){
 			if (err){
-                console.log(err);
+                logger.log(err);
             } else {
                 callback(undefined, dosis);
             }	
@@ -129,15 +131,16 @@ var initnutrients = function(irrigations){
 			};
 		}
 		for (var i = 0; i < nutrients.length; i++) {
-			console.log("nutrients: " + i + " " + nutrients[i].name + " = " + nutrients[i].quantity);
+			logger.log("nutrients: " + i + " " + nutrients[i].name + " = " + nutrients[i].quantity);
 		};
+		populateCallback(undefined, nutrients);	
 		callback();	
 	};
 
 	async.series([ 
 		
-		function(callback){
-			readIrrigations(irrigations, callback);
+		function(callbackOut){
+			readIrrigations(irrigations, callbackOut);
 		},
 
 		function(callback){
@@ -149,7 +152,7 @@ var initnutrients = function(irrigations){
 		},
 
 		function(callback){
-			sumQuantityOfNutrientsUsed(callback);			
+			sumQuantityOfNutrientsUsed(callback);		
 		}
 
 	]);
