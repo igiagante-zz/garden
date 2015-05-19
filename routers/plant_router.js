@@ -5,6 +5,9 @@ var plantController = require('../controllers/plant_controller')
 //create a plant
 router.post('/', plantController.createPlant);
 
+//add image to plant
+router.put('/image/:plant_id', plantController.addImage);
+
 //update a plant
 router.put('/:plant_id', plantController.updatePlant);
     
@@ -16,5 +19,7 @@ router.delete('/:plant_id', plantController.deletePlant);
 
 //get all plants
 router.get('/', plantController.getAll);
+
+
 
 module.exports = router;

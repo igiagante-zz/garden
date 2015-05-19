@@ -1,4 +1,5 @@
 // Load required packages
+var Images = require('./image.js');
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
@@ -9,8 +10,9 @@ var plantSchema = new mongoose.Schema({
   phSoil: Number,
   ecSoil: Number,
   harvest: Number,
+  images: [ Images ],
   irrigations: [ Schema.Types.ObjectId ],
-  gardenId: Schema.Types.ObjectId
+  gardenId: { type: Schema.Types.ObjectId, required: true }
 });
 
 // Export the Mongoose model

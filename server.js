@@ -8,6 +8,7 @@ var express    = require('express'),        // call express
 	bodyParser = require('body-parser'),
 	morgan = require('morgan'),            // log requests to the console (express4)
 	expressValidator = require('express-validator'),
+	multer = require('multer'),
 	logger = require('./utils/logger');
 
 // connect to the database
@@ -17,9 +18,10 @@ mongoose.connect('mongodb://localhost:27017/garden'); // connect to our database
 var app = express();                 // define our app using express
 // configure app to use bodyParser()
 // this will let us get the data from a POST
-logger.debug("Setting parse urlencoded request bodies into req.body.");
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+logger.debug("Setting parse urlencoded request bodies into req.body");
+app.use(bodyParser.json()); // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+app.use(multer()); // for parsing multipart/form-data
 app.use(expressValidator());
 
 var port = process.env.PORT || 8080;        // set our port

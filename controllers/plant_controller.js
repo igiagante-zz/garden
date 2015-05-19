@@ -2,6 +2,7 @@ var express = require('express'),
     router = express.Router(),
     Plant = require('../models/plant'),
     Garden = require('../models/garden'),
+    imageService = require('../services/image_service.js'),
     logger = require('../utils/logger'),
     util = require('util');
 
@@ -56,7 +57,7 @@ var updatePlant = function(req, res) {
         if (err)
             res.send(err);
 
-        console.log(plant);
+        logger.info(plant);
 
         plant.name = req.body.name; 
         plant.size = req.body.size;
@@ -103,11 +104,44 @@ var getPlant = function(req, res) {
     };
 
 var getAll = function(req, res) {       
-            Plant.find(function(err, plants) {
-                if (err)
-                    res.send(err)
-                res.json(plants);
+    Plant.find(function(err, plants) {
+        if (err)
+            res.send(err)
+        res.json(plants);
+    });
+};
+
+var addImage = function(req, res) {
+
+    logger.info(' text ' + req.body);
+
+    //res.send(req.files.image);
+
+    logger.debug(' Image ' + req.files.image);
+
+    imageService.upload(req.files.image, function callback(error, images) {
+        if(error) {
+            return res.send(error).status(500);
+        }
+        Plant.findById(req.params.plant_id, function(err, plant) {
+
+            if (err) {                
+                return res.send(err).status(500);
+            }
+
+            logger.info('adding images to ' + plant);
+
+            plant.images = images;
+
+            // save the plant
+            plant.save(function(err) {
+                if (err) {                
+                    return res.send(err).status(500);
+                }
+                res.json(plant);
             });
+        });
+    });
 };
 
 module.exports = {
@@ -115,7 +149,8 @@ module.exports = {
     updatePlant: updatePlant,
     deletePlant: deletePlant,
     getPlant: getPlant,
-    getAll: getAll
+    getAll: getAll,
+    addImage: addImage
 };
 
 

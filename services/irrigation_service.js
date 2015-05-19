@@ -1,4 +1,3 @@
-var dosesevice = require('./dosis_service')
 var Garden = require('../models/garden')
 var Irrigation = require('../models/irrigation')
 var Dosis = require('../models/dosis')
