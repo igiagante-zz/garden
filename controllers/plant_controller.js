@@ -113,23 +113,21 @@ var getAll = function(req, res) {
 
 var addImage = function(req, res) {
 
-    logger.info(' text ' + req.body);
+    logger.info(' mainImage ' + req.params.mainImage);
 
-    //res.send(req.files.image);
-
-    logger.debug(' Image ' + req.files.image);
-
-    imageService.upload(req.files.image, function callback(error, images) {
+    imageService.upload(req.files.image, req.params.mainImage, function callback(error, images) {
+        
         if(error) {
             return res.send(error).status(500);
         }
+        
         Plant.findById(req.params.plant_id, function(err, plant) {
 
             if (err) {                
                 return res.send(err).status(500);
             }
 
-            logger.info('adding images to ' + plant);
+            console.info('adding images to array : ' + images)
 
             plant.images = images;
 

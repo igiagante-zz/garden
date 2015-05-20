@@ -10,7 +10,7 @@ var plantSchema = new mongoose.Schema({
   phSoil: Number,
   ecSoil: Number,
   harvest: Number,
-  images: [ Images ],
+  images: [ Schema.Types.ObjectId ],
   irrigations: [ Schema.Types.ObjectId ],
   gardenId: { type: Schema.Types.ObjectId, required: true }
 });

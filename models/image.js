@@ -7,7 +7,8 @@ var Images = new Schema({
         enum: ['thumbnail', 'detail'],
         required: true
     },
-    url: { type: String, required: true }
+    url: { type: String, required: true },
+    main: Boolean
 });
 
 module.exports = mongoose.model('Images', Images);
