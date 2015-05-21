@@ -64,7 +64,7 @@ var upload = function(image, mainImage, callback){
 					//adding imageThumb.id to images array
 					images.push(imageThumb.id);		
 
-					console.log('imageThumb.id : ' + imageThumb.id)	;		
+					console.log('images : ' + images)	;		
 				});
 
 				return callback(undefined, images);				

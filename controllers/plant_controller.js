@@ -129,7 +129,7 @@ var addImage = function(req, res) {
 
             console.info('adding images to array : ' + images)
 
-            plant.images = images;
+            plant.images = plant.images.concat(images);
 
             // save the plant
             plant.save(function(err) {
