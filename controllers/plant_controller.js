@@ -10,16 +10,14 @@ var createPlant = function(req, res) {
 
     logger.debug(' -------------------- Creating a new plant  -------------------- ');
 
-    req.assert('gardenId', 'Invalid gardenId').notEmpty();
+    //req.assert('gardenId', 'Invalid gardenId').notEmpty();
+    req.assert('gardenId', 'gardenId should not be empty', req.body.gardenId).notEmpty();
 
     var errors = req.validationErrors();
       if (errors) {
         res.status(400).send('There have been validation errors: ' + util.inspect(errors));
         return;
       }
-      res.json({
-        gardenId: req.param('gardenId')
-    });
 
     Garden.findById(req.body.gardenId, function(err, garden){
 
@@ -32,7 +30,7 @@ var createPlant = function(req, res) {
             phSoil: req.body.phSoil,
             ecSoil: req.body.ecSoil,
             harvest: req.body.harvest,
-            gardenId: garden.gardenId
+            gardenId: req.body.gardenId
         }, function(err, plant) {
             if (err)
                 res.send(err);
