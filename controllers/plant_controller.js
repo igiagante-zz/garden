@@ -109,44 +109,12 @@ var getAll = function(req, res) {
     });
 };
 
-var addImage = function(req, res) {
-
-    logger.info(' mainImage ' + req.params.mainImage);
-
-    imageService.upload(req.files.image, req.params.mainImage, function callback(error, images) {
-        
-        if(error) {
-            return res.send(error).status(500);
-        }
-        
-        Plant.findById(req.params.plant_id, function(err, plant) {
-
-            if (err) {                
-                return res.send(err).status(500);
-            }
-
-            console.info('adding images to array : ' + images)
-
-            plant.images = plant.images.concat(images);
-
-            // save the plant
-            plant.save(function(err) {
-                if (err) {                
-                    return res.send(err).status(500);
-                }
-                res.json(plant);
-            });
-        });
-    });
-};
-
 module.exports = {
     createPlant: createPlant,
     updatePlant: updatePlant,
     deletePlant: deletePlant,
     getPlant: getPlant,
-    getAll: getAll,
-    addImage: addImage
+    getAll: getAll
 };
 
 

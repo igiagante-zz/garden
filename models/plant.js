@@ -5,7 +5,7 @@ var Schema = mongoose.Schema;
 
 // Define our plant schema
 var plantSchema = new mongoose.Schema({
-  name: String,
+  name: { type: String, required: true },
   size: Number,
   phSoil: Number,
   ecSoil: Number,

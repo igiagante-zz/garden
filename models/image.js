@@ -8,7 +8,7 @@ var Images = new Schema({
         required: true
     },
     url: { type: String, required: true },
-    main: Boolean
+    main: { type: Number, default: 0}
 });
 
 module.exports = mongoose.model('Images', Images);
