@@ -93,21 +93,21 @@ var imageFiles = function(plant_id, callback){
         }
         
         imagesData = imagesData.concat(images);
+
+		var files = [];
+
+		for (var i = 0; i < imagesData.length; i++) {
+			fs.readFile(imagesData[i].url, function (err, data) {
+				if(err) {
+					console.log('The file wasn\'t found ' + imagesData[i].url);
+					throw err;
+				}
+			  	files.push(data);
+			});
+		};
+
+		return callback(undefined, files);
     });
-
-	var files = [];
-
-	for (var i = 0; i < imagesData.length; i++) {
-		fs.readFile(imagesData[i].url, function (err, data) {
-			if(err) {
-				console.log('The file wasn\'t found ' + imagesData[i].url);
-				throw err;
-			}
-		  	files.push(data);
-		});
-	};
-
-	return callback(undefined, files);
 };
 
 var getImagesData = function(plant_id, callback){

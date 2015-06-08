@@ -35,7 +35,8 @@ var getImages = function(req, res) {
         if(error) {
             return res.send(error).status(500);
         }
-        res.json(images);
+
+        res.json({"files" : images});
     });
 };
 
@@ -67,7 +68,7 @@ var addImage = function(req, res) {
 
     var dirImageName = req.files.image.originalname.split('.')[0];
 
-    var dirPath = '/Users/igiagante/projects/garden/images/uploads/' + dirImageName;
+    var dirPath = '/images/uploads/' + dirImageName;
 
     imageService.upload(req.files.image, req.params.mainImage, dirPath, function callback(error, images) {
         

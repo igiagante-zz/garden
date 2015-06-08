@@ -9,7 +9,9 @@ var express    = require('express'),        // call express
 	morgan = require('morgan'),            // log requests to the console (express4)
 	expressValidator = require('express-validator'),
 	multer = require('multer'),
-	logger = require('./utils/logger');
+	path = require('path');
+	logger = require('./utils/logger'),
+	cors = require('cors');
 
 // connect to the database
 var mongoose = require('mongoose');
@@ -24,7 +26,10 @@ app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x
 app.use(multer()); // for parsing multipart/form-data
 app.use(expressValidator());
 
-var port = process.env.PORT || 8080;        // set our port
+//CORS middleware
+app.use(cors());
+
+var port = process.env.PORT || 3000;        // set our port
 
 // ROUTES FOR OUR API
 // =============================================================================
@@ -45,6 +50,7 @@ router.use('/image', imageRouter);
 router.use(function(req, res, next) {
     // do logging
     console.log('Something is happening.');
+
     next(); // make sure we go to the next routes and don't stop here
 });
 
@@ -58,6 +64,9 @@ router.get('/', function(req, res) {
 // REGISTER OUR ROUTES -------------------------------
 // all of our routes will be prefixed with /api
 app.use('/api', router);
+
+//static
+app.use(express.static(process.cwd() + '/public'));
 
 // START THE SERVER
 // =============================================================================
