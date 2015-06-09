@@ -7,6 +7,8 @@ var Img = require('../models/image.js'),
 
 var upload = function(image, mainImage, folder, callback){
 
+	var fileName = image.originalname
+
 	var dirPath = process.cwd() + '/public' + '/images/uploads/' + folder;
 
 	fs.readFile(image.path, function (err, data) {
@@ -22,12 +24,12 @@ var upload = function(image, mainImage, folder, callback){
 	    }
 
 	    //path to write files
-	    var newPath = dirPath + '/fullsize/' + image.originalname;
-	    var thumbPath = dirPath + '/thumbs/' + image.originalname;
+	    var newPath = dirPath + '/fullsize/' + fileName;
+	    var thumbPath = dirPath + '/thumbs/' + fileName;
 
 	    //paths to urls
-		var urlPath = '/images/uploads/' + folder + '/fullsize/' + image.originalname;
-		var thumbnailUrlPath = '/images/uploads/' + folder + '/thumbs/'  + image.originalname;
+		var urlPath = '/images/uploads/' + folder + '/fullsize/' + fileName;
+		var thumbnailUrlPath = '/images/uploads/' + folder + '/thumbs/'  + fileName;
 
 		fs.rename(image.path, newPath);
 
@@ -44,7 +46,7 @@ var upload = function(image, mainImage, folder, callback){
 			console.log('write file to uploads/fullsize folder')
 
 
-			Img.create({url: urlPath, thumbnailUrl: thumbnailUrlPath, main: mainImage}, function(err, imageDetail) {
+			Img.create({url: urlPath, thumbnailUrl: thumbnailUrlPath, main: mainImage, name: fileName}, function(err, imageDetail) {
 				if(err) {
 					console.log('The full image couldnt be saved');
 					return callback(err);
@@ -121,8 +123,8 @@ var getImagesData = function(plant_id, callback){
 					return callback(err);
 				}
 
-				image.url = 'localhost:3000' + image.url;
-				image.thumbnailUrl = 'localhost:3000' + image.thumbnailUrl;
+				image.url = 'http://localhost:3000' + image.url;
+				image.thumbnailUrl = 'http://localhost:3000' + image.thumbnailUrl;
 				
 				images.push(image);
 

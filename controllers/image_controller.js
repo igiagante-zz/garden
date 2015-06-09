@@ -113,12 +113,18 @@ var deleteImage = function(req, res) {
         });
     };
 
+var postImage = function(req, res){
+
+    console.log(req.files);
+};
+
 module.exports = {
     getMainImage: getMainImage,
     getImages: getImages,
     getImageFiles: getImageFiles,
     deleteImage : deleteImage,
-    addImage: addImage
+    addImage: addImage,
+    postImage: postImage
 };
 
 
