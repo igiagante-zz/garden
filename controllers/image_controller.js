@@ -66,11 +66,9 @@ var addImage = function(req, res) {
 
     logger.info(' mainImage ' + req.params.mainImage);
 
-    var dirImageName = req.files.image.originalname.split('.')[0];
+    var folder = req.files.image.originalname.split('.')[0];
 
-    var dirPath = '/images/uploads/' + dirImageName;
-
-    imageService.upload(req.files.image, req.params.mainImage, dirPath, function callback(error, images) {
+    imageService.upload(req.files.image, req.params.mainImage, folder, function callback(error, imageId) {
         
         if(error) {
             return res.send(error).status(500);
@@ -82,9 +80,9 @@ var addImage = function(req, res) {
                 return res.send(err).status(500);
             }
 
-            logger.info('adding images to array : ' + images)
+            logger.info('adding images to array : ' + imageId)
 
-            plant.images = plant.images.concat(images);
+            plant.images = plant.images.concat(imageId);
 
             // save the plant
             plant.save(function(err) {

@@ -5,7 +5,9 @@ var Img = require('../models/image.js'),
 	Images = require('../models/image.js'),
 	im = require('imagemagick');
 
-var upload = function(image, mainImage, path, callback){
+var upload = function(image, mainImage, folder, callback){
+
+	var dirPath = process.cwd() + '/public' + '/images/uploads/' + folder;
 
 	fs.readFile(image.path, function (err, data) {
 		if(err) {
@@ -13,17 +15,19 @@ var upload = function(image, mainImage, path, callback){
 		}
 
 		// Create the folder for a specific plant
-	    if (!fs.existsSync(path)){
-	    	fs.mkdirSync(path);
-	        fs.mkdirSync(path + '/fullsize/');
-	        fs.mkdirSync(path + '/thumbs/');
+	    if (!fs.existsSync(dirPath)){
+	    	fs.mkdirSync(dirPath);
+	        fs.mkdirSync(dirPath + '/fullsize/');
+	        fs.mkdirSync(dirPath + '/thumbs/');
 	    }
 
-		var newPath = path + '/fullsize/' + image.originalname;
+	    //path to write files
+	    var newPath = dirPath + '/fullsize/' + image.originalname;
+	    var thumbPath = dirPath + '/thumbs/' + image.originalname;
 
-		var thumbPath = path + '/thumbs/'  + image.originalname;
-
-		var images = [];
+	    //paths to urls
+		var urlPath = '/images/uploads/' + folder + '/fullsize/' + image.originalname;
+		var thumbnailUrlPath = '/images/uploads/' + folder + '/thumbs/'  + image.originalname;
 
 		fs.rename(image.path, newPath);
 
@@ -39,13 +43,12 @@ var upload = function(image, mainImage, path, callback){
 
 			console.log('write file to uploads/fullsize folder')
 
-			Img.create({ kind: "detail", url: newPath, main: mainImage}, function(err, imageDetail) {
+
+			Img.create({url: urlPath, thumbnailUrl: thumbnailUrlPath, main: mainImage}, function(err, imageDetail) {
 				if(err) {
 					console.log('The full image couldnt be saved');
 					return callback(err);
 				}
-				//adding imageDetail to images array
-				images.push(imageDetail.id);
 
 				console.log(' image fullsize uploaded ' + image.originalname);
 
@@ -62,20 +65,7 @@ var upload = function(image, mainImage, path, callback){
 			  
 			  		console.log('resized image to fit within 200x200px');
 
-					Img.create({ kind: "thumbnail", url: thumbPath, main: mainImage }, function(err, imageThumb){
-					
-						if(err) {
-							console.log('The thumb image couldnt be saved');
-							return callback(err);
-						}	
-
-						//adding imageThumb.id to images array
-						images.push(imageThumb.id);		
-
-						console.log('images : ' + images);		
-
-						return callback(undefined, images);	
-					});
+					return callback(undefined, imageDetail.id);	
 				});			
 			});	
 		});		 
@@ -130,6 +120,9 @@ var getImagesData = function(plant_id, callback){
 					console.log('The image wasn\'t found');
 					return callback(err);
 				}
+
+				image.url = 'localhost:3000' + image.url;
+				image.thumbnailUrl = 'localhost:3000' + image.thumbnailUrl;
 				
 				images.push(image);
 
