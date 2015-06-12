@@ -62,6 +62,7 @@ var getImageFiles = function(req, res) {
     });
 };
 
+//Add image from one pl
 var addImage = function(req, res) {
 
     logger.info(' mainImage ' + req.params.mainImage);
@@ -70,31 +71,15 @@ var addImage = function(req, res) {
     var image = req.files.image;
     var mainImage = req.params.mainImage;
 
-    imageService.upload(image, mainImage , folder, function callback(error, imageId) {
-        
-        if(error) {
-            return res.send(error).status(500);
+    Plant.findById(req.params.plant_id, function(err, plant) {
+
+        if (err) {                
+            return res.send(err).status(500);
         }
 
-        console.log('Trying to save imageId with its plant');
-        
-        Plant.findById(req.params.plant_id, function(err, plant) {
-
-            if (err) {                
-                return res.send(err).status(500);
-            }
-
-            logger.info('adding images to array : ' + imageId)
-
-            plant.images = plant.images.concat(imageId);
-
-            // save the plant
-            plant.save(function(err) {
-                if (err) {                
-                    return res.send(err).status(500);
-                }
-                res.json(plant);
-            });
+        imageService.upload(image, folder, plant.id, function(err, data){
+            console.log('data : ' + data);
+            res.json(data);
         });
     });
 };

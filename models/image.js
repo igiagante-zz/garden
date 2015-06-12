@@ -6,7 +6,8 @@ var Images = new Schema({
     url: { type: String, required: true },
     main: { type: Number, default: 0 },
     name: { type: String, required: true },
-    size: Number
+    size: Number,
+    plantId: { type: Schema.Types.ObjectId, required: true }
 });
 
 module.exports = mongoose.model('Images', Images);

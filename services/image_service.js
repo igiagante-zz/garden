@@ -6,7 +6,7 @@ var Img = require('../models/image.js'),
 	async = require('async'),
 	im = require('imagemagick');
 
-var upload = function(image, mainImage, folder, populateDataCallback){
+var upload = function(image, folder, plantId, mainCallback){
 
 	var fileName = image.originalname;
 	var mainPath = process.cwd() + '/public' + '/images/uploads/' + folder;
@@ -15,23 +15,52 @@ var upload = function(image, mainImage, folder, populateDataCallback){
     var newPath = mainPath + '/fullsize/' + fileName;
     var thumbPath = mainPath + '/thumbs/' + fileName;  
 
-	var createImageDirectory = function(folder, createImageDirectory){
-	
-		var fullsizeImagePath = mainPath + '/fullsize/';
+    var mainImage = image.mainImage;
+
+    var checkDirectoriesExist = function(existDirectoriesCallback){
+
+    	var fullsizeImagePath = mainPath + '/fullsize/';
 		var thumbImagePath = mainPath + '/thumbs/';
 
 		var directories = [mainPath, fullsizeImagePath, thumbImagePath];
 
+		var created = false;
+
+		var iterator = function(dir, callback){
+			fs.exists(dir, function(exist){
+				if(exist) {
+					created = true;
+				}
+				callback(null);
+			});
+		};
+
+		async.each(directories, iterator, function(err){
+		  if (err) return existDirectoriesCallback(err);
+		  existDirectoriesCallback(null, directories, created);
+		});
+	};
+
+	var createImageDirectory = function(results, createImageDirectoryCallback){
+
+		var directories = results[0];
+		var created = results[1];
+
 		var iterator = function(d, cb){
-		  fs.mkdir(d, cb);
+			fs.mkdir(d, cb);
+		}
+
+		if(created) {
+			console.log('directories are already created');
+			createImageDirectoryCallback(null, 'directories are already created');
 		}
 
 		async.each(directories, iterator, function(err){
 		  if (err) return createImageDirectoryCallback(err);
-		  logger.debug('all dirs created, moving on');  
+		  console.log('directories created'); 
 		});
 
-		createImageDirectory(null, 'directories created');
+		createImageDirectoryCallback(null, 'directories created');
 	};
 
 	var readImageFile = function(image, readImageFileCallback){
@@ -74,153 +103,176 @@ var upload = function(image, mainImage, folder, populateDataCallback){
 		var urlPath = '/images/uploads/' + folder + '/fullsize/' + fileName;
 		var thumbnailUrlPath = '/images/uploads/' + folder + '/thumbs/'  + fileName;
 
-		Img.create({url: urlPath, thumbnailUrl: thumbnailUrlPath, main: mainImage, name: fileName}, 
-			function(err, imageDetail) {
+		Img.create({url: urlPath, thumbnailUrl: thumbnailUrlPath, main: mainImage, name: fileName, plantId: plantId}, 
+			function(err, image) {
 				if(err) {
 					console.log('The full image couldnt be saved');
 					return createImageCallback(err);
 				}
-
-				createImageCallback(null, imageDetail.id);	
+				createImageCallback(null, image);	
 			});
 	};
 
 	async.auto({
 
-	    get_data: function(callback){
-	        logger.debug('Reading image file');	
-	        readImageFile(image, callback);
+	    checkDirectoriesExistFn: function(callback){
+	        logger.debug('Check if directories were created before');
+	        checkDirectoriesExist(callback);
 	    },
 
-	    make_folder: function(callback){
-	        console.debug('Creating directories');
-	        createImageDirectory(folder, callback);
-	    },
-
-	    write_file: ['get_data', 'make_folder', function(callback, results){
-	    	console.debug('Writing image file');
-	        writeImageFile(results.get_data, callback);
+	    createImageDirectoriesFn: ['checkDirectoriesExistFn', function(callback, results){
+	        logger.debug('Creating directories');
+	        createImageDirectory(results.checkDirectoriesExistFn, callback);
 	    }],
 
-	    resize_image: ['get_data', 'make_folder', function(callback, results){
-	    	console.debug('Resize image to create a thumbnail');
+	    readImageFileFn: ['createImageDirectoriesFn', function(callback, results){
+	        logger.debug('Reading image file');	
+	        readImageFile(image, callback);
+	    }],
+
+	    writeFileFn: ['readImageFileFn', function(callback, results){
+	    	logger.debug('Writing image file');
+	        writeImageFile(results.readImageFileFn, callback);
+	    }],
+
+	    resizeImageFn: ['readImageFileFn', 'createImageDirectoriesFn', function(callback, results){
+	    	logger.debug('Resize image to create a thumbnail');
 	        resizeImage(callback);
 	    }],
 
-	    create_image: ['write_file', function(callback, results){
-	    	console.debug('Save image data in database');
+	    createImageFn: ['writeFileFn', function(callback, results){
+	    	logger.debug('Save image data in database');
 	        createImage(callback);
+	    }]
+
+	}, function(err, results) {
+		logger.debug('results = ', results);
+	    logger.error('err = ', err);
+		mainCallback(undefined, results.createImageFn);
+	});
+};
+
+//put all main image attributes in 0
+var clearMainImageAttribute = function(plantId, resetMainImageCallback){
+
+	Images.find({ plantId: plantId }, function(err, image){
+		if(err) {
+			console.log('The image wasn\'t found');
+			return resetMainImageCallback(err);
+		}
+
+		if(image !== null){
+			mainImage.main = 0;
+		}
+
+		// save the plant
+        image.save(function(err) {
+            if (err) return resetMainImageCallback(err);
+            return resetMainImageCallback(null);
+        });
+	});
+};
+
+//put main image attribute in 1 for a specific plant
+var setMainImage = function(image, setMainImagecallback){
+
+	var plantId = image.plantId;
+	var imageId = image.imageId;
+	var main = image.main;
+	
+	Images.findOne({ _id : imageId, plantId : plantId }, function(err, image) {
+
+		if(err) {
+			console.log('The image wasn\'t found');
+			return callback(err);
+		}
+
+		if(image !== null){
+			mainImage.main = main;
+		}
+		// save the plant
+        image.save(function(err) {
+            if (err) return setMainImagecallback(err);
+            return setMainImagecallback(undefined, image);
+        });
+	});
+};
+
+//put attribute mainImage in 0 or 1
+var resetMainImage = function(plantId, mainImageData){
+
+	async.auto({
+
+		getPlantIdFn: function(callback){
+	        logger.debug('Get Plant Data');	
+	        
+	        Plant.findById(plantId, function(err, plant) {
+
+		        if(err) {
+					console.log('The plant wasn\'t found');
+					return callback(err);
+				}
+				callback(null, plant.id);
+			});
+	    },
+
+	    clearMainImageAttributeFn: ['getPlantDataFn', function(callback, results){
+	        logger.debug('Clear main image attribute in all images from one plant');	
+	        clearMainImageAttribute(results.getPlantIdFn, callback);
+	    }],
+
+	    setMainImageFn: ['getPlantDataFn', function(callback, results){
+	        logger.debug('Set main image attribute in one plant');	
+	        setMainImage(mainImageData, callback);
 	    }]
 	    
 	}, function(err, results) {
 	    logger.error('err = ', err);
-	    populateDataCallback(undefined, results.create_image);
+	});	
+};
+
+var getMainImage = function(plantId, callback){
+
+	Images.findOne({ plantId : plantId, 'main' : 1 }, function(err, image) {
+
+		if(err) {
+			console.log('The image wasn\'t found');
+			return callback(err);
+		}
+
+		if(image !== null){
+			return callback(undefined, image);
+		}
 	});
 };
 
-var imageFiles = function(plant_id, callback){
+var getImagesFilesData = function(plant_id, callback){
 
-	var imagesData = [];
+	var files = [];
 
-	getImagesData(plant_id , function callback(error, images) {
-        
-        if(error) {
-            return res.send(error).status(500);
-        }
-        
-        imagesData = imagesData.concat(images);
+	Images.find({ plantId : plantId }, function(err, images) {
 
-		var files = [];
-
-		for (var i = 0; i < imagesData.length; i++) {
-			fs.readFile(imagesData[i].url, function (err, data) {
-				if(err) {
-					console.log('The file wasn\'t found ' + imagesData[i].url);
-					throw err;
-				}
-			  	files.push(data);
-			});
-		};
-
-		return callback(undefined, files);
-    });
-};
-
-var getImagesData = function(plant_id, callback){
-
-	var images = [];
-
-	Plant.findById(plant_id, function(err, plant) {
-
-        if(err) {
-			console.log('The plant wasn\'t found');
+		if(err) {
+			console.log('The image wasn\'t found');
 			return callback(err);
 		}
 
-		var imageIds = plant.images;
+		files = files.concat(images);
+	});
 
-        imageIds.forEach(function(imageId){
-        		
-        	Images.findById(imageId, function(err, image) {
-        		if(err) {
-					console.log('The image wasn\'t found');
-					return callback(err);
-				}
-
-				image.url = 'http://localhost:3000' + image.url;
-				image.thumbnailUrl = 'http://localhost:3000' + image.thumbnailUrl;
-				
-				images.push(image);
-
-				//check if all the images were added.
-		    	if(images.length === imageIds.length){
-		    		return callback(undefined, images);
-		    	}
-        	});
-        });    
-    });
-};
-
-var mainImage = function(plant_id, callback){
-
-	var images = [];
-
-	var mainImage = {};
-
-	Plant.findById(plant_id, function(err, plant) {
-
-        if(err) {
-			console.log('The plant wasn\'t found');
-			return callback(err);
+	for (var i = 0; i < files.length; i++) {
+		if(files[i] !== undefined){
+			files[i].url = 'http://localhost:3000' + image.url;
+			files[i].thumbnailUrl = 'http://localhost:3000' + image.thumbnailUrl;
 		}
+	}
 
-        plant.images.forEach(function(imageId){
-
-        	// _id -> without _ it does not work !!!
-        	Images.findOne({ _id : imageId, 'kind' : 'thumbnail' }, function(err, image) {
-
-        		if(err) {
-					console.log('The image wasn\'t found');
-				}
-
-				if(image !== null){
-
-					mainImage.id = image.id;
-					mainImage.kind = image.kind;
-					mainImage.url = image.url;
-					mainImage.main = image.main;
-
-					return callback(undefined, mainImage);
-				}
-        	});
-        });	 	   
-    });    
+	return callback(undefined, files);
 };
-
 
 module.exports = {
-	getImagesData : getImagesData,
-	mainImage : mainImage,
-	imageFiles : imageFiles,
-	upload : upload
+	getMainImage : getMainImage,
+	getImagesFilesData : getImagesFilesData,
+	upload : upload,
+	resetMainImage : resetMainImage
 }
