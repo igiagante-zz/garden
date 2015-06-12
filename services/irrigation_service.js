@@ -153,7 +153,6 @@ var initnutrients = function(irrigations, callbackOut, populateCallback){
 		function(callback){
 			sumQuantityOfNutrientsUsed(callback);		
 		}
-
 	]);
 
 };

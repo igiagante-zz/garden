@@ -67,12 +67,16 @@ var addImage = function(req, res) {
     logger.info(' mainImage ' + req.params.mainImage);
 
     var folder = req.files.image.originalname.split('.')[0];
+    var image = req.files.image;
+    var mainImage = req.params.mainImage;
 
-    imageService.upload(req.files.image, req.params.mainImage, folder, function callback(error, imageId) {
+    imageService.upload(image, mainImage , folder, function callback(error, imageId) {
         
         if(error) {
             return res.send(error).status(500);
         }
+
+        console.log('Trying to save imageId with its plant');
         
         Plant.findById(req.params.plant_id, function(err, plant) {
 

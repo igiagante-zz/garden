@@ -3,23 +3,24 @@ var Img = require('../models/image.js'),
 	logger = require('../utils/logger'),
 	Plant = require('../models/plant.js'),
 	Images = require('../models/image.js'),
+	async = require('async'),
 	im = require('imagemagick');
 
-var upload = function(image, mainImage, folder, callback){
+var upload = function(image, mainImage, folder, populateDataCallback){
 
 	var fileName = image.originalname;
+	var mainPath = process.cwd() + '/public' + '/images/uploads/' + folder;
 
 	//path to write files
-    var newPath = dirPath + '/fullsize/' + fileName;
-    var thumbPath = dirPath + '/thumbs/' + fileName;
+    var newPath = mainPath + '/fullsize/' + fileName;
+    var thumbPath = mainPath + '/thumbs/' + fileName;  
 
-	var directories = [mainPath, fullsizeImagePath, thumbImagePath];
+	var createImageDirectory = function(folder, createImageDirectory){
+	
+		var fullsizeImagePath = mainPath + '/fullsize/';
+		var thumbImagePath = mainPath + '/thumbs/';
 
-	var createImageDirectory = function(folder, createImageDirectoryCallback){
-
-		var mainPath = process.cwd() + '/public' + '/images/uploads/' + folder;
-		var fullsizeImagePath = dirPath + '/fullsize/';
-		var thumbImagePath = dirPath + '/thumbs/';
+		var directories = [mainPath, fullsizeImagePath, thumbImagePath];
 
 		var iterator = function(d, cb){
 		  fs.mkdir(d, cb);
@@ -27,31 +28,30 @@ var upload = function(image, mainImage, folder, callback){
 
 		async.each(directories, iterator, function(err){
 		  if (err) return createImageDirectoryCallback(err);
-		  logger.log('all dirs created, moving on');
-		  createImageDirectoryCallback();
+		  logger.debug('all dirs created, moving on');  
 		});
+
+		createImageDirectory(null, 'directories created');
 	};
 
 	var readImageFile = function(image, readImageFileCallback){
 
 		fs.readFile(image.path, function (err, data) {
 			fs.rename(image.path, newPath);
-			readImageFileCallback();
-		}
+			readImageFileCallback(null, data);
+		});
 	};
 
-	var writeImageFile = function(writeImageCallback){
+	var writeImageFile = function(data, writeImageCallback){
 		
 		fs.writeFile(newPath, data, function (err) {
 
-			console.log('writing file in ... ' + newPath);
-
 			if(err) {
-				logger.debug('todo mal ------ ' + err)
+				logger.error('todo mal ------ ' + err)
 				return writeImageCallback(err);
 			}
-			writeImageCallback();
-		}
+			writeImageCallback(null, 'file created');
+		});
 	};
 
 	var resizeImage = function(resizeImageCallback){
@@ -61,13 +61,10 @@ var upload = function(image, mainImage, folder, callback){
 			function(err, stdout, stderr){
 		
 			if (err) {
-				console.log('The thumbnail image couldnt be saved');
+				logger.error('The thumbnail image couldnt be saved');
 				return resizeImageCallback(err);
 			}
-	  
-	  		console.log('resized image to fit within 200x200px');
-
-			return resizeImageCallback(undefined, imageDetail.id);	
+			resizeImageCallback(null, 'success');	
 		});	
 	};
 
@@ -77,78 +74,47 @@ var upload = function(image, mainImage, folder, callback){
 		var urlPath = '/images/uploads/' + folder + '/fullsize/' + fileName;
 		var thumbnailUrlPath = '/images/uploads/' + folder + '/thumbs/'  + fileName;
 
-		Img.create({url: urlPath, thumbnailUrl: thumbnailUrlPath, main: mainImage, name: fileName}, function(err, imageDetail) {
-			if(err) {
-				console.log('The full image couldnt be saved');
-				return createImageCallback(err);
-			}
+		Img.create({url: urlPath, thumbnailUrl: thumbnailUrlPath, main: mainImage, name: fileName}, 
+			function(err, imageDetail) {
+				if(err) {
+					console.log('The full image couldnt be saved');
+					return createImageCallback(err);
+				}
 
-			console.log(' image fullsize uploaded ' + image.originalname);
-
-			console.log(' resizing fullsize uploaded ' + image.originalname);		
-
-			createImageCallback();	
-		});
+				createImageCallback(null, imageDetail.id);	
+			});
 	};
 
+	async.auto({
 
-	//Image Creation Process 
-	async.waterfall([
+	    get_data: function(callback){
+	        logger.debug('Reading image file');	
+	        readImageFile(image, callback);
+	    },
 
-		//Create directory to persist user plants' images
-	    async.apply(createImageDirectory(createImageDirectoryCallback)),
+	    make_folder: function(callback){
+	        console.debug('Creating directories');
+	        createImageDirectory(folder, callback);
+	    },
 
-		//Read image file
-	    async.apply(readImageFile(readImageFileCallback)),
+	    write_file: ['get_data', 'make_folder', function(callback, results){
+	    	console.debug('Writing image file');
+	        writeImageFile(results.get_data, callback);
+	    }],
 
-	    //Resize image in order to create a thumbnail
-	    async.apply(resizeImage(resizeImageCallback)),
+	    resize_image: ['get_data', 'make_folder', function(callback, results){
+	    	console.debug('Resize image to create a thumbnail');
+	        resizeImage(callback);
+	    }],
 
-	    //Write image file in disk
-	    async.apply(writeImageFile(writeImageCallback)),
-
-	    //Save image data in database
-	    async.apply(createImage(createImageCallback))
-
-	});
-
-	fs.readFile(image.path, function (err, data) {
-		if(err) {
-			callback(err);
-		}
-
-		// Create the folder for a specific plant
-	    if (!fs.existsSync(dirPath)){
-	    	fs.mkdirSync(dirPath);
-	        fs.mkdirSync(dirPath + '/fullsize/');
-	        fs.mkdirSync(dirPath + '/thumbs/');
-	    }
-
-	    //path to write files
-	    var newPath = dirPath + '/fullsize/' + fileName;
-	    var thumbPath = dirPath + '/thumbs/' + fileName;
-
-	    //paths to urls
-		var urlPath = '/images/uploads/' + folder + '/fullsize/' + fileName;
-		var thumbnailUrlPath = '/images/uploads/' + folder + '/thumbs/'  + fileName;
-
-		fs.rename(image.path, newPath);
-
-		/// write file to uploads/fullsize folder
-		fs.writeFile(newPath, data, function (err) {
-
-			console.log('writing file in ... ' + newPath);
-
-			if(err) {
-				logger.debug('todo mal ------ ' + err)
-				return callback(err);
-			}
-
-			console.log('write file to uploads/fullsize folder')
-
-
-				
-		});		 
+	    create_image: ['write_file', function(callback, results){
+	    	console.debug('Save image data in database');
+	        createImage(callback);
+	    }]
+	    
+	}, function(err, results) {
+	    logger.error('err = ', err);
+	    populateDataCallback(undefined, results.create_image);
 	});
 };
 
