@@ -41,10 +41,7 @@ var upload = function(image, folder, plantId, mainCallback){
 		});
 	};
 
-	var createImageDirectory = function(results, createImageDirectoryCallback){
-
-		var directories = results[0];
-		var created = results[1];
+	var createImageDirectory = function(directories, created, createImageDirectoryCallback){
 
 		var iterator = function(d, cb){
 			fs.mkdir(d, cb);
@@ -52,15 +49,14 @@ var upload = function(image, folder, plantId, mainCallback){
 
 		if(created) {
 			console.log('directories are already created');
-			createImageDirectoryCallback(null, 'directories are already created');
+			createImageDirectoryCallback(null);
+		}else{
+			async.each(directories, iterator, function(err){
+			  if (err) return createImageDirectoryCallback(err);
+			  console.log('directories created'); 
+			  createImageDirectoryCallback(null);
+			});
 		}
-
-		async.each(directories, iterator, function(err){
-		  if (err) return createImageDirectoryCallback(err);
-		  console.log('directories created'); 
-		});
-
-		createImageDirectoryCallback(null, 'directories created');
 	};
 
 	var readImageFile = function(image, readImageFileCallback){
@@ -79,7 +75,7 @@ var upload = function(image, folder, plantId, mainCallback){
 				logger.error('todo mal ------ ' + err)
 				return writeImageCallback(err);
 			}
-			writeImageCallback(null, 'file created');
+			writeImageCallback(null);
 		});
 	};
 
@@ -93,7 +89,7 @@ var upload = function(image, folder, plantId, mainCallback){
 				logger.error('The thumbnail image couldnt be saved');
 				return resizeImageCallback(err);
 			}
-			resizeImageCallback(null, 'success');	
+			resizeImageCallback(null);	
 		});	
 	};
 
@@ -113,6 +109,41 @@ var upload = function(image, folder, plantId, mainCallback){
 			});
 	};
 
+	async.waterfall([
+	    function(callback) {
+	        logger.debug('Check if directories were created before');
+	        checkDirectoriesExist(callback);
+	    },
+	    function(directories, created, callback) {
+	      	logger.debug('Creating directories');
+	        createImageDirectory(directories, created, callback);
+	    },
+	    function(callback) {
+	        logger.debug('Reading image file');	
+	        readImageFile(image, callback);
+	    },
+	    function(data, callback) {
+	        logger.debug('Writing image file');
+	        writeImageFile(data, callback);
+	    },
+	    function(callback) {
+	        logger.debug('Resize image to create a thumbnail');
+	        resizeImage(callback);
+	    },
+	    function(callback) {
+	        logger.debug('Save image data in database');
+	        createImage(callback);
+	    },
+	    function(image, callback) {
+	        logger.debug('Save image data in database');
+	        mainCallback(undefined, image);
+	    }
+	], function (err, result) {
+	    logger.debug('result = ', result);
+	    logger.error('err = ', err);
+	});
+
+	/*
 	async.auto({
 
 	    checkDirectoriesExistFn: function(callback){
@@ -149,7 +180,7 @@ var upload = function(image, folder, plantId, mainCallback){
 		logger.debug('results = ', results);
 	    logger.error('err = ', err);
 		mainCallback(undefined, results.createImageFn);
-	});
+	}); */
 };
 
 //put all main image attributes in 0
