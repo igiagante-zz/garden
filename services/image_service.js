@@ -142,45 +142,6 @@ var upload = function(image, folder, plantId, mainCallback){
 	    logger.debug('result = ', result);
 	    logger.error('err = ', err);
 	});
-
-	/*
-	async.auto({
-
-	    checkDirectoriesExistFn: function(callback){
-	        logger.debug('Check if directories were created before');
-	        checkDirectoriesExist(callback);
-	    },
-
-	    createImageDirectoriesFn: ['checkDirectoriesExistFn', function(callback, results){
-	        logger.debug('Creating directories');
-	        createImageDirectory(results.checkDirectoriesExistFn, callback);
-	    }],
-
-	    readImageFileFn: ['createImageDirectoriesFn', function(callback, results){
-	        logger.debug('Reading image file');	
-	        readImageFile(image, callback);
-	    }],
-
-	    writeFileFn: ['readImageFileFn', function(callback, results){
-	    	logger.debug('Writing image file');
-	        writeImageFile(results.readImageFileFn, callback);
-	    }],
-
-	    resizeImageFn: ['readImageFileFn', 'createImageDirectoriesFn', function(callback, results){
-	    	logger.debug('Resize image to create a thumbnail');
-	        resizeImage(callback);
-	    }],
-
-	    createImageFn: ['writeFileFn', function(callback, results){
-	    	logger.debug('Save image data in database');
-	        createImage(callback);
-	    }]
-
-	}, function(err, results) {
-		logger.debug('results = ', results);
-	    logger.error('err = ', err);
-		mainCallback(undefined, results.createImageFn);
-	}); */
 };
 
 //put all main image attributes in 0
