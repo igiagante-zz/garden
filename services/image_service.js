@@ -6,7 +6,12 @@ var Img = require('../models/image.js'),
 	async = require('async'),
 	im = require('imagemagick');
 
-var upload = function(image, folder, plantId, mainCallback){
+/* --------------------------------- Add images ------------------------------ */
+
+var addImage = function(image, addImageCallback){
+
+	var folder = image.originalname.split('.')[0];
+	var plantId = image.plantId;
 
 	var fileName = image.originalname;
 	var mainPath = process.cwd() + '/public' + '/images/uploads/' + folder;
@@ -14,8 +19,6 @@ var upload = function(image, folder, plantId, mainCallback){
 	//path to write files
     var newPath = mainPath + '/fullsize/' + fileName;
     var thumbPath = mainPath + '/thumbs/' + fileName;  
-
-    var mainImage = image.mainImage;
 
     var checkDirectoriesExist = function(existDirectoriesCallback){
 
@@ -99,7 +102,7 @@ var upload = function(image, folder, plantId, mainCallback){
 		var urlPath = '/images/uploads/' + folder + '/fullsize/' + fileName;
 		var thumbnailUrlPath = '/images/uploads/' + folder + '/thumbs/'  + fileName;
 
-		Img.create({url: urlPath, thumbnailUrl: thumbnailUrlPath, main: mainImage, name: fileName, plantId: plantId}, 
+		Img.create({url: urlPath, thumbnailUrl: thumbnailUrlPath, main: image.main, name: fileName, plantId: plantId}, 
 			function(err, image) {
 				if(err) {
 					console.log('The full image couldnt be saved');
@@ -136,7 +139,7 @@ var upload = function(image, folder, plantId, mainCallback){
 	    },
 	    function(image, callback) {
 	        logger.debug('Save image data in database');
-	        mainCallback(undefined, image);
+	        addImageCallback(undefined, image);
 	    }
 	], function (err, result) {
 	    logger.debug('result = ', result);
@@ -144,83 +147,228 @@ var upload = function(image, folder, plantId, mainCallback){
 	});
 };
 
-//put all main image attributes in 0
-var clearMainImageAttribute = function(plantId, resetMainImageCallback){
 
-	Images.find({ plantId: plantId }, function(err, image){
-		if(err) {
-			console.log('The image wasn\'t found');
-			return resetMainImageCallback(err);
-		}
+var addImages = function(images, addImagesCallback){
 
-		if(image !== null){
-			mainImage.main = 0;
-		}
-
-		// save the plant
-        image.save(function(err) {
-            if (err) return resetMainImageCallback(err);
-            return resetMainImageCallback(null);
-        });
+	async.each(images, addImage(), function(err){
+   		return addImagesCallback(err)
 	});
+	/*
+	var imagesAdded = [];
+
+	for (var i = 0; i < images.length; i++) {	
+
+		addImage(images[i], function(image, addImagesCallback){
+			imagesAdded.push(image);
+
+			if(imagesAdded.length == images.length){
+				addImagesCallback(null, images);
+			}
+		});
+	};*/
 };
 
-//put main image attribute in 1 for a specific plant
-var setMainImage = function(image, setMainImagecallback){
+/* --------------------------------- Add images ------------------------------ */
 
-	var plantId = image.plantId;
-	var imageId = image.imageId;
-	var main = image.main;
+
+/* --------------------------------- Update images ------------------------------ */
+
+var updateImage = function(image, callback){
 	
-	Images.findOne({ _id : imageId, plantId : plantId }, function(err, image) {
-
+	Images.findOne({ _id : image.imageId, plantId : image.plantId }, function(err, imageDetail) {
 		if(err) {
 			console.log('The image wasn\'t found');
 			return callback(err);
 		}
-
-		if(image !== null){
-			mainImage.main = main;
+		if(imageDetail !== null){
+			imageDetail.main = image.main;
 		}
-		// save the plant
+		// save the image
         image.save(function(err) {
-            if (err) return setMainImagecallback(err);
-            return setMainImagecallback(undefined, image);
+            if (err) return callback(err);
+            return callback(undefined, imageDetail);
         });
 	});
 };
 
-//put attribute mainImage in 0 or 1
-var resetMainImage = function(plantId, mainImageData){
+var updateImages = function(images, updateImagesCallback){
 
-	async.auto({
+	async.each(images, updateImage(), function(err){
+   		return addImagesCallback(err);
+	});
+/*
+	var imagesUpdated = [];
 
-		getPlantIdFn: function(callback){
-	        logger.debug('Get Plant Data');	
-	        
-	        Plant.findById(plantId, function(err, plant) {
+	for (var i = 0; i < images.length; i++) {
+		updateImage(files[i], function(image, updateImagesCallback){
+			
+			imagesUpdated.push(image);
 
-		        if(err) {
-					console.log('The plant wasn\'t found');
-					return callback(err);
-				}
-				callback(null, plant.id);
-			});
+			if(imagesUpdated.length == images.length){
+				updateImagesCallback(null, images);
+			}
+		});
+	};
+	*/
+};
+
+/* --------------------------------- Update images ------------------------------ */
+
+/* --------------------------------- Delete images ------------------------------ */
+
+var deleteImage = function(image, deleteImageCallback) {
+	Images.find({ _id: image.id }).remove(deleteImageCallback()).exec();
+};
+
+var deleteImages = function(images, deleteImagesCallback) {
+
+	async.each(images, deleteImage(), function(err){
+   		return deleteImagesCallback(err);
+	});
+
+/*
+	var count = 0;
+
+	for (var i = 0; i < images.length; i++) {
+		
+		deleteImage(files[i], function(deleteImagesCallback){
+
+			count++;
+
+			if(count == images.length){
+				deleteImagesCallback(null, images);
+			}
+		});
+	};
+	*/
+};
+
+/* --------------------------------- Delete images ------------------------------ */
+
+/* ----- Functions used by filters function ------ */
+
+var imageExists = function(image, callback){
+    Image.findOne( _id : image.id, function(error, image){
+        if (err) {                
+            return res.send(err).status(500);
+        }
+        if(image !== undefined) {
+            callback(undefined, true);
+        }else{
+            callback(undefined, false);
+        }
+    });
+};
+
+var imageToBeDelete = function(image, callback){
+	if(image.delete === 'delete'){
+        callback(undefined, true);
+    }else{
+        callback(undefined, false);
+    }
+};
+
+var contains = function (haystack, needle) {
+    return !!~haystack.indexOf(needle);
+};
+
+/* ----- Functions used by filters function ------ */
+
+/* ----- Apply filters in oder to discriminate actions over the images ------ */
+
+var filterImages = function(images, filterImagesCallback){
+
+	var arrays = [];
+
+	//filter images to be updated
+	var imagesToBeUpdated = [];
+
+	async.filter(images, imageExists, function(results){
+    	imagesToBeUpdate = imagesToBeUpdate.concat(results);
+	});
+
+	arrays.push(imagesToBeUpdated);
+
+	//filter images to be added
+	var imagesToBeAdded = [];
+
+	//closure to check if an image should be added
+	var isImageAdded = function(image, callback){
+	    if(image !== undefined && contains(images, image)) {
+	        callback(undefined, true);
+	    }else{
+	        callback(undefined, false);
+	    }   
+	};
+
+	arrays.push(imagesToBeAdded);
+
+	async.filter(images, isImageAdded, function(results){
+    	imagesToBeAdded = imagesToBeAdded.concat(results);
+	});
+
+	//filter images to be deleted
+	var imagesToBeDeleted = [];
+
+	async.filter(images, imageToBeDelete, function(results){
+    	imagesToBeDelete = imagesToBeDelete.concat(results);
+	});
+
+	arrays.push(imagesToBeDeleted);
+
+	//return three arrays, each one with their corresponding image
+	console.log('arrays : ' arrays);
+
+	filterImagesCallback(undefined, arrays);
+};
+/* ----- Apply filters in oder to discriminate actions over the images ------ */
+
+var imagesProcess = function(images, imageProcessCallback){
+
+	logger.log(' -------------------------------------------------------------------------- ');
+	logger.log(' -------------------------- Start Images Process -------------------------- ');
+	logger.log(' -------------------------------------------------------------------------- ');
+
+	var imagesToBeUpdated = []; 
+	var imagesToBeAdded = [];
+	var imagesToBeDeleted = [];
+
+	var filterImagesCallback = function(arrays){
+		imagesToBeUpdated = arrays[0]; 
+		imagesToBeAdded = arrays[1]; 
+		imagesToBeDeleted = arrays[2]; 
+	};
+
+	//Filter images in different groups
+	logger.log(' -------------------   Filter images in different groups   ---------------------- ');
+	filterImages(images, filterImagesCallback);
+
+	async.parallel({
+	    addImagesFn: function(callback){	
+	    	logger.debug('Add new images');
+	    	addImages(imagesToBeAdded, callback);     
 	    },
-
-	    clearMainImageAttributeFn: ['getPlantDataFn', function(callback, results){
-	        logger.debug('Clear main image attribute in all images from one plant');	
-	        clearMainImageAttribute(results.getPlantIdFn, callback);
-	    }],
-
-	    setMainImageFn: ['getPlantDataFn', function(callback, results){
-	        logger.debug('Set main image attribute in one plant');	
-	        setMainImage(mainImageData, callback);
-	    }]
-	    
-	}, function(err, results) {
-	    logger.error('err = ', err);
-	});	
+	    updateImagesFn: function(callback){
+	    	logger.debug('Update images');
+	        updateImages(imagesToBeUpdated, callback);
+	    },
+	    deleteImagesFn: function(callback){
+	    	logger.debug('Delete images');
+	    	deleteImages(imagesToBeDeleted, callback);
+	    }
+	},
+	function(err, results) {
+	    // results is now equals to: {addImagesFn: [], updateImagesFn: []}
+	    /*
+	    var newImageList = [];
+	    newImageList = newImageList.concat(addImages);
+	    newImageList = newImageList.concat(updateImages);
+	    imageProcessCallback(undefined, newImageList); */
+	    logger.debug('Return the new images array');
+	    Images.find(function(err, images){
+	    	return imageProcessCallback(undefined, images);
+	    });
+	});
 };
 
 var getMainImage = function(plantId, callback){
@@ -238,7 +386,7 @@ var getMainImage = function(plantId, callback){
 	});
 };
 
-var getImagesFilesData = function(plant_id, callback){
+var getImagesFilesData = function(plantId, callback){
 
 	var files = [];
 
@@ -265,6 +413,5 @@ var getImagesFilesData = function(plant_id, callback){
 module.exports = {
 	getMainImage : getMainImage,
 	getImagesFilesData : getImagesFilesData,
-	upload : upload,
-	resetMainImage : resetMainImage
+	imagesProcess : imagesProcess
 }

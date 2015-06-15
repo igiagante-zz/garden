@@ -8,7 +8,7 @@ var express = require('express'),
 //Each plant has a main image to use like portrait in the gallery
 var getMainImage = function(req, res) {
     
-    imageService.mainImage(req.params.plant_id, function callback(error, image) {
+    imageService.getMainImage(req.params.plant_id, function callback(error, image) {
         
         if(error) {
             return res.send(error).status(500);
@@ -17,7 +17,19 @@ var getMainImage = function(req, res) {
     }); 
 };
 
-var getImages = function(req, res) {       
+var setMainImage = function(req, res){
+
+    var mainImageData = {};
+    mainImageData.plantId = req.params.plantId;
+    mainImageData.imageId = req.body.imageId;
+    mainImageData.main = req.body.main;
+
+    imageService.updateImage(mainImageData, function(err, data){
+        res.json(data);
+    });
+};
+
+var getImagesData = function(req, res) {       
     
     logger.info(' Trying to get all images from one plant with id ' + req.params.plant_id);
 
@@ -30,12 +42,25 @@ var getImages = function(req, res) {
         return;
     }
 
-    imageService.getImagesData(req.params.plant_id, function callback(error, images) {
+    imageService.getImagesFilesData(req.params.plant_id, function callback(error, images) {
         
         if(error) {
             return res.send(error).status(500);
         }
 
+        res.json({"files" : images});
+    });
+};
+
+var imagesProcess = function(req, res) {
+
+    var files = req.body.files;
+
+    imageService.imagesProcess(files, function callback(error, images) {
+        
+        if(error) {
+            return res.send(error).status(500);
+        }
         res.json({"files" : images});
     });
 };
@@ -62,58 +87,10 @@ var getImageFiles = function(req, res) {
     });
 };
 
-//Add image from one pl
-var addImage = function(req, res) {
-
-    logger.info(' mainImage ' + req.params.mainImage);
-
-    var folder = req.files.image.originalname.split('.')[0];
-    var image = req.files.image;
-    var mainImage = req.params.mainImage;
-
-    Plant.findById(req.params.plant_id, function(err, plant) {
-
-        if (err) {                
-            return res.send(err).status(500);
-        }
-
-        imageService.upload(image, folder, plant.id, function(err, data){
-            console.log('data : ' + data);
-            res.json(data);
-        });
-    });
-};
-
-var deleteImage = function(req, res) {
-        Images.remove({ 
-            _id : req.params.image_id
-        }, function(err, image) {
-            if (err)
-                res.send(err);
-            
-            logger.debug(' the image with id: ' + req.params.image_id + ' was deleted. ' );
-
-            // get and return all the todos after you create another
-            image.find(function(err, images) {
-                if (err)
-                    res.send(err)
-                res.json(images);
-            });
-        });
-    };
-
-var postImage = function(req, res){
-
-    console.log(req.files);
-};
-
 module.exports = {
     getMainImage: getMainImage,
-    getImages: getImages,
-    getImageFiles: getImageFiles,
-    deleteImage : deleteImage,
-    addImage: addImage,
-    postImage: postImage
+    getImagesData : getImagesData,
+    imagesProcess: imagesProcess
 };
 
 
