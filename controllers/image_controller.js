@@ -56,6 +56,8 @@ var imagesProcess = function(req, res) {
 
     var files = req.body.files;
 
+    console.log('files : ' + files);
+
     imageService.imagesProcess(files, function callback(error, images) {
         
         if(error) {

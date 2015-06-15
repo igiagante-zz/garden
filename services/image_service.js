@@ -8,7 +8,7 @@ var Img = require('../models/image.js'),
 
 /* --------------------------------- Add images ------------------------------ */
 
-var addImage = function(image, addImageCallback){
+var addImage = function(image){
 
 	var folder = image.originalname.split('.')[0];
 	var plantId = image.plantId;
@@ -136,10 +136,6 @@ var addImage = function(image, addImageCallback){
 	    function(callback) {
 	        logger.debug('Save image data in database');
 	        createImage(callback);
-	    },
-	    function(image, callback) {
-	        logger.debug('Save image data in database');
-	        addImageCallback(undefined, image);
 	    }
 	], function (err, result) {
 	    logger.debug('result = ', result);
@@ -151,7 +147,10 @@ var addImage = function(image, addImageCallback){
 var addImages = function(images, addImagesCallback){
 
 	async.each(images, addImage, function(err){
-   		return addImagesCallback(err)
+		if(err) {
+			return addImagesCallback(err);
+		}
+   		return addImagesCallback();
 	});
 	/*
 	var imagesAdded = [];
@@ -252,7 +251,7 @@ var deleteImages = function(images, deleteImagesCallback) {
 /* ----- Functions used by filters function ------ */
 
 var imageExists = function(image, callback){
-    Image.findOne( _id : image.id, function(error, image){
+    Image.findOne( {_id : image.id }, function(error, image){
         if (err) {                
             return res.send(err).status(500);
         }
@@ -321,7 +320,7 @@ var filterImages = function(images, filterImagesCallback){
 	arrays.push(imagesToBeDeleted);
 
 	//return three arrays, each one with their corresponding image
-	console.log('arrays : ' arrays);
+	console.log('arrays : ' + arrays);
 
 	filterImagesCallback(undefined, arrays);
 };
