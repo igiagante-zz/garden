@@ -150,7 +150,7 @@ var addImage = function(image, addImageCallback){
 
 var addImages = function(images, addImagesCallback){
 
-	async.each(images, addImage(), function(err){
+	async.each(images, addImage, function(err){
    		return addImagesCallback(err)
 	});
 	/*
@@ -186,15 +186,19 @@ var updateImage = function(image, callback){
 		// save the image
         image.save(function(err) {
             if (err) return callback(err);
-            return callback(undefined, imageDetail);
+            return callback();
         });
 	});
 };
 
 var updateImages = function(images, updateImagesCallback){
 
-	async.each(images, updateImage(), function(err){
-   		return addImagesCallback(err);
+	async.each(images, updateImage, function(err){
+
+		if(err) {
+			return updateImagesCallback(err);
+		}
+   		return addImagesCallback();
 	});
 /*
 	var imagesUpdated = [];
@@ -222,7 +226,7 @@ var deleteImage = function(image, deleteImageCallback) {
 
 var deleteImages = function(images, deleteImagesCallback) {
 
-	async.each(images, deleteImage(), function(err){
+	async.each(images, deleteImage, function(err){
    		return deleteImagesCallback(err);
 	});
 
