@@ -10,15 +10,22 @@ var Img = require('../models/image.js'),
 
 var addImage = function(image){
 
-	var folder = image.originalname.split('.')[0];
-	var plantId = image.plantId;
+	var mainPath;
+    var newPath;
+    var folder;
 
-	var fileName = image.originalname;
-	var mainPath = process.cwd() + '/public' + '/images/uploads/' + folder;
-
-	//path to write files
-    var newPath = mainPath + '/fullsize/' + fileName;
-    var thumbPath = mainPath + '/thumbs/' + fileName;  
+    var getPlantInfo = function(plantId, getPlantInfoCallback){
+		Plant.findById(plantId, function(error, plant){
+			if(error) {
+				console.log('The image wasn\'t found');
+				return readImageFileDataCallback(error);
+			}
+			folder = plant.name;
+			mainPath = process.cwd() + '/public' + '/images/uploads/' + folder;
+			newPath = mainPath + '/fullsize/' + image.originalname;
+			getPlantInfoCallback(null);
+		});
+	};
 
     var checkDirectoriesExist = function(existDirectoriesCallback){
 
@@ -62,7 +69,7 @@ var addImage = function(image){
 		}
 	};
 
-	var readImageFile = function(image, readImageFileCallback){
+	var renameImageFilePath = function(image, readImageFileCallback){
 
 		fs.readFile(image.path, function (err, data) {
 			fs.rename(image.path, newPath);
@@ -84,6 +91,8 @@ var addImage = function(image){
 
 	var resizeImage = function(resizeImageCallback){
 
+		var thumbPath = mainPath + '/thumbs/' + image.originalname;  
+
 		im.resize({ srcPath: newPath, dstPath: thumbPath, width: 200 }, 
 
 			function(err, stdout, stderr){
@@ -98,11 +107,24 @@ var addImage = function(image){
 
 	var createImage = function(createImageCallback){
 
+		var fileName = image.originalname;
+		var fileType = image.mimetype;
+		var fileSize = image.size;
+
 		//paths to urls
 		var urlPath = '/images/uploads/' + folder + '/fullsize/' + fileName;
 		var thumbnailUrlPath = '/images/uploads/' + folder + '/thumbs/'  + fileName;
+		var deleteUrlPath = '/images/uploads/' + folder;
 
-		Img.create({url: urlPath, thumbnailUrl: thumbnailUrlPath, main: image.main, name: fileName, plantId: plantId}, 
+		Img.create({ 
+			url: urlPath, 
+			thumbnailUrl: thumbnailUrlPath, 
+			delete_url: deleteUrlPath,
+			name: fileName,
+			type: fileType,
+			size: fileSize,
+			main: image.main, 			 
+			plantId: plantId }, 
 			function(err, image) {
 				if(err) {
 					console.log('The full image couldnt be saved');
@@ -110,9 +132,13 @@ var addImage = function(image){
 				}
 				createImageCallback(null, image);	
 			});
-	};
+	}
 
 	async.waterfall([
+		function(callback) {
+	        logger.debug('Get info from the plant');
+	        getPlantInfo(callback);
+	    },
 	    function(callback) {
 	        logger.debug('Check if directories were created before');
 	        checkDirectoriesExist(callback);
@@ -123,7 +149,7 @@ var addImage = function(image){
 	    },
 	    function(callback) {
 	        logger.debug('Reading image file');	
-	        readImageFile(image, callback);
+	        renameImageFilePath(image, callback);
 	    },
 	    function(data, callback) {
 	        logger.debug('Writing image file');
@@ -150,21 +176,8 @@ var addImages = function(images, addImagesCallback){
 		if(err) {
 			return addImagesCallback(err);
 		}
-   		return addImagesCallback();
+   		return addImagesCallback(null);
 	});
-	/*
-	var imagesAdded = [];
-
-	for (var i = 0; i < images.length; i++) {	
-
-		addImage(images[i], function(image, addImagesCallback){
-			imagesAdded.push(image);
-
-			if(imagesAdded.length == images.length){
-				addImagesCallback(null, images);
-			}
-		});
-	};*/
 };
 
 /* --------------------------------- Add images ------------------------------ */
@@ -199,51 +212,135 @@ var updateImages = function(images, updateImagesCallback){
 		}
    		return addImagesCallback();
 	});
-/*
-	var imagesUpdated = [];
-
-	for (var i = 0; i < images.length; i++) {
-		updateImage(files[i], function(image, updateImagesCallback){
-			
-			imagesUpdated.push(image);
-
-			if(imagesUpdated.length == images.length){
-				updateImagesCallback(null, images);
-			}
-		});
-	};
-	*/
 };
 
 /* --------------------------------- Update images ------------------------------ */
 
 /* --------------------------------- Delete images ------------------------------ */
 
-var deleteImage = function(image, deleteImageCallback) {
-	Images.find({ _id: image.id }).remove(deleteImageCallback()).exec();
+var removeFile = function(path, removeFileCallback) {
+
+	fs.exists(path, function(exists){
+		if(exists){
+			fs.unlink(path, function (error) {
+				if(error) {
+				    logger.error('The image couldn\'t be deleted');
+				    logger.error(error);
+				    return removeFileCallback(error);
+				}
+				logger.info('Image successfully deleted');
+				removeFileCallback(null);
+			});
+		}else{
+			removeFileCallback(null);
+		}		
+	});
 };
 
-var deleteImages = function(images, deleteImagesCallback) {
+var deleteDirectories = function(folderName, deleteDirectoriesCallback){
 
-	async.each(images, deleteImage, function(err){
-   		return deleteImagesCallback(err);
-	});
+	var path = process.cwd() + '/public' + '/images/uploads/' + folderName;
+	var fullsizePath = path + '/fullsize/';
+	var thumbsPath = path + '/thumbs/';
 
-/*
-	var count = 0;
+	logger.debug('Delete directories');
 
-	for (var i = 0; i < images.length; i++) {
-		
-		deleteImage(files[i], function(deleteImagesCallback){
-
-			count++;
-
-			if(count == images.length){
-				deleteImagesCallback(null, images);
+	var ifExistDirDelete = function(path, cb){
+		fs.exists(path, function(exists){
+			if(exists){
+				fs.rmdir(path, cb);
+			}else{
+				cb();
 			}
 		});
 	};
-	*/
+
+	var directories = [path, fullsizePath, thumbsPath];
+
+	async.each(directories, ifExistDirDelete, function(err){
+		if (err) return deleteDirectoriesCallback(err);
+		deleteDirectoriesCallback(null);
+	});
+}
+
+var deleteImage = function(imageId, deleteImageCallback) {
+	Images.find({ _id: imageId }).remove(function(error){
+        if(error) {
+            logger.error('The image couldn\'t be saved');
+            logger.error(error);
+            return deleteImageCallback(error);
+        }
+        var message = 'Image successfully deleted from Database';
+        logger.debug(message);
+        deleteImageCallback(null, message);
+    }).exec();
+};
+
+var deleteProcess = function(image, deleteProcessCallback){
+
+	var folderName = image.name.split('.')[0];
+	var path = process.cwd() + '/public' + '/images/uploads/' + folderName;
+	var fullsizePath = path + '/fullsize/' + image.name;
+	var thumbsPath = path + '/thumbs/' + image.name;
+
+	async.series([ 
+		function(deleteProcessCallback){
+			logger.debug('Remove thumbnail file');
+			removeFile(thumbsPath, deleteProcessCallback);
+		},
+		function(callback){
+			logger.debug('Remove fullsize file');
+			removeFile(fullsizePath, callback);
+		},
+		function(callback){
+			logger.debug('Remove fullsize file');
+			deleteDirectories(folderName, callback);
+		},
+		function(callback){
+			logger.debug('Remove image data from database');
+			deleteImage(image.id, callback);
+		}
+	]);
+};
+
+var readImageFileData = function(imageId, readImageFileDataCallback){
+
+	Images.findOne({_id : imageId}, function(err, image) {
+		if(err) {
+			console.log('The image wasn\'t found');
+			return readImageFileDataCallback(err);
+		}	
+
+		if(image === undefined || image === null){
+			return readImageFileDataCallback('The image does not exist');
+		}
+		console.log('image : ' + image);
+		readImageFileDataCallback(null, image);
+	});
+};
+
+var deleteImageProcess = function(imageId, mainCallback){
+ 	
+ 	async.waterfall([
+	    function(callback) {
+	        logger.log('Reading image data from database');
+	        readImageFileData(imageId, callback);
+	    },
+	    function(image, callback) {
+	      	logger.debug('After found the image, lets execute image delete process');
+	        deleteProcess(image, callback);
+	    },
+	    function(message, callback) {
+	        logger.debug('Lets see if the image was successfully deleted');	
+	        mainCallback(message);
+	    }
+	], function (err, result) {
+	    logger.debug('result = ', result);
+	    logger.error('err = ', err);
+	    if(err){
+	    	mainCallback(err);
+	    }
+	});
 };
 
 /* --------------------------------- Delete images ------------------------------ */
@@ -261,14 +358,6 @@ var imageExists = function(image, callback){
             callback(undefined, false);
         }
     });
-};
-
-var imageToBeDelete = function(image, callback){
-	if(image.delete === 'delete'){
-        callback(undefined, true);
-    }else{
-        callback(undefined, false);
-    }
 };
 
 var contains = function (haystack, needle) {
@@ -310,21 +399,13 @@ var filterImages = function(images, filterImagesCallback){
     	imagesToBeAdded = imagesToBeAdded.concat(results);
 	});
 
-	//filter images to be deleted
-	var imagesToBeDeleted = [];
-
-	async.filter(images, imageToBeDelete, function(results){
-    	imagesToBeDelete = imagesToBeDelete.concat(results);
-	});
-
-	arrays.push(imagesToBeDeleted);
-
 	//return three arrays, each one with their corresponding image
 	console.log('arrays : ' + arrays);
 
 	filterImagesCallback(undefined, arrays);
 };
 /* ----- Apply filters in oder to discriminate actions over the images ------ */
+
 
 var imagesProcess = function(images, imageProcessCallback){
 
@@ -334,18 +415,16 @@ var imagesProcess = function(images, imageProcessCallback){
 
 	var imagesToBeUpdated = []; 
 	var imagesToBeAdded = [];
-	var imagesToBeDeleted = [];
 
 	var filterImagesCallback = function(arrays){
 		imagesToBeUpdated = arrays[0]; 
-		imagesToBeAdded = arrays[1]; 
-		imagesToBeDeleted = arrays[2]; 
+		imagesToBeAdded = arrays[1];  
 	};
 
 	//Filter images in different groups
 	logger.log(' -------------------   Filter images in different groups   ---------------------- ');
 	filterImages(images, filterImagesCallback);
-
+	
 	async.parallel({
 	    addImagesFn: function(callback){	
 	    	logger.debug('Add new images');
@@ -354,10 +433,6 @@ var imagesProcess = function(images, imageProcessCallback){
 	    updateImagesFn: function(callback){
 	    	logger.debug('Update images');
 	        updateImages(imagesToBeUpdated, callback);
-	    },
-	    deleteImagesFn: function(callback){
-	    	logger.debug('Delete images');
-	    	deleteImages(imagesToBeDeleted, callback);
 	    }
 	},
 	function(err, results) {
@@ -372,6 +447,7 @@ var imagesProcess = function(images, imageProcessCallback){
 	    	return imageProcessCallback(undefined, images);
 	    });
 	});
+	
 };
 
 var getMainImage = function(plantId, callback){
@@ -389,32 +465,21 @@ var getMainImage = function(plantId, callback){
 	});
 };
 
-var getImagesFilesData = function(plantId, callback){
+var getImagesFilesData = function(plant_id, callback){
 
-	var files = [];
-
-	Images.find({ plantId : plantId }, function(err, images) {
+	Images.find({ plantId : plant_id }, function(err, images) {
 
 		if(err) {
 			console.log('The image wasn\'t found');
 			return callback(err);
 		}
-
-		files = files.concat(images);
+		return callback(undefined, images);
 	});
-
-	for (var i = 0; i < files.length; i++) {
-		if(files[i] !== undefined){
-			files[i].url = 'http://localhost:3000' + image.url;
-			files[i].thumbnailUrl = 'http://localhost:3000' + image.thumbnailUrl;
-		}
-	}
-
-	return callback(undefined, files);
 };
 
 module.exports = {
 	getMainImage : getMainImage,
 	getImagesFilesData : getImagesFilesData,
+	deleteImageProcess : deleteImageProcess,
 	imagesProcess : imagesProcess
 }

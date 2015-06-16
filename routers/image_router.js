@@ -11,4 +11,6 @@ router.get('/:plant_id/main', imageController.getMainImage);
 //add image to plant
 router.post('/:plant_id', imageController.imagesProcess);
 
+router.delete('/:image_id', imageController.deleteImage);
+
 module.exports = router;

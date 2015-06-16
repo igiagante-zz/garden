@@ -42,28 +42,74 @@ var getImagesData = function(req, res) {
         return;
     }
 
-    imageService.getImagesFilesData(req.params.plant_id, function callback(error, images) {
+    imageService.getImagesFilesData(req.params.plant_id, function callback(error, files) {
+
+        for (var i = 0; i < files.length; i++) {
+            if(files[i] !== undefined){
+                files[i].url = 'http://localhost:3000' + files[i].url;
+                files[i].thumbnailUrl = 'http://localhost:3000' + files[i].thumbnailUrl;
+            }
+        }
         
         if(error) {
             return res.send(error).status(500);
         }
 
-        res.json({"files" : images});
+        res.json({"files" : files});
     });
 };
 
 var imagesProcess = function(req, res) {
 
-    var files = req.body.files;
+    /*
+    var fileKey = Object.keys(req.files)[0];
+    var file = req.files[fileKey];
 
-    console.log('files : ' + files);
+    console.log('file : ' + JSON.stringify(file));
 
-    imageService.imagesProcess(files, function callback(error, images) {
+    var files = req.files;
+
+    for(var i = 0; i < files.length; i++){
+        console.log('imageid: ' + JSON.stringify(files[i])._id);
+      }
+
+    return;
+*/
+    var plantId = req.params.plant_id;
+
+    req.assert('plant_id', 'plantId should not be empty', plantId).notEmpty();
+
+    var errors = req.validationErrors();
+    
+    if (errors) {
+        res.status(400).send('There have been validation errors: ' + util.inspect(errors));
+        return;
+    }
+
+    imageService.imagesProcess(plantId, files, function callback(error, images) {
         
         if(error) {
             return res.send(error).status(500);
         }
         res.json({"files" : images});
+    });
+};
+
+var deleteImage = function(req, res) {
+
+    var imageId = req.params.image_id;
+
+    req.assert('image_id', 'ImageId should not be empty', imageId).notEmpty();
+
+    var errors = req.validationErrors();
+    
+    if (errors) {
+        res.status(400).send('There have been validation errors: ' + util.inspect(errors));
+        return;
+    }
+
+    imageService.deleteImageProcess(imageId, function(message){
+        res.json(message);
     });
 };
 
@@ -92,6 +138,7 @@ var getImageFiles = function(req, res) {
 module.exports = {
     getMainImage: getMainImage,
     getImagesData : getImagesData,
+    deleteImage : deleteImage,
     imagesProcess: imagesProcess
 };
 
