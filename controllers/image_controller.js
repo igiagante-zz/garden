@@ -31,8 +31,6 @@ var setMainImage = function(req, res){
 
 var getImagesData = function(req, res) {       
     
-    logger.info(' Trying to get all images from one plant with id ' + req.params.plant_id);
-
     req.assert('plant_id', 'plantId should not be empty', req.params.plant_id).notEmpty();
 
     var errors = req.validationErrors();
@@ -55,27 +53,15 @@ var getImagesData = function(req, res) {
             return res.send(error).status(500);
         }
 
-        res.json({"files" : files});
+        res.json({"files" : [files]});
     });
 };
 
 var imagesProcess = function(req, res) {
 
-    /*
+    var plantId = req.params.plant_id;
     var fileKey = Object.keys(req.files)[0];
     var file = req.files[fileKey];
-
-    console.log('file : ' + JSON.stringify(file));
-
-    var files = req.files;
-
-    for(var i = 0; i < files.length; i++){
-        console.log('imageid: ' + JSON.stringify(files[i])._id);
-      }
-
-    return;
-*/
-    var plantId = req.params.plant_id;
 
     req.assert('plant_id', 'plantId should not be empty', plantId).notEmpty();
 
@@ -86,12 +72,12 @@ var imagesProcess = function(req, res) {
         return;
     }
 
-    imageService.imagesProcess(plantId, files, function callback(error, images) {
+    imageService.addImage(req.params.plant_id, file, function callback(error, files) {
         
         if(error) {
             return res.send(error).status(500);
         }
-        res.json({"files" : images});
+        res.json({"files" : [files]});
     });
 };
 
@@ -108,8 +94,8 @@ var deleteImage = function(req, res) {
         return;
     }
 
-    imageService.deleteImageProcess(imageId, function(message){
-        res.json(message);
+    imageService.deleteImageProcess(imageId, function(files){
+        res.json({"files" : [files]});
     });
 };
 

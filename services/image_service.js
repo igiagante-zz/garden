@@ -4,23 +4,43 @@ var Img = require('../models/image.js'),
 	Plant = require('../models/plant.js'),
 	Images = require('../models/image.js'),
 	async = require('async'),
-	im = require('imagemagick');
+	im = require('imagemagick'),
+	plantService = require('./plant_service.js');
 
 /* --------------------------------- Add images ------------------------------ */
 
-var addImage = function(image){
+var addImage = function(plantId, image, mainCallback){
 
 	var mainPath;
     var newPath;
     var folder;
 
-    var getPlantInfo = function(plantId, getPlantInfoCallback){
-		Plant.findById(plantId, function(error, plant){
-			if(error) {
-				console.log('The image wasn\'t found');
-				return readImageFileDataCallback(error);
+	var checkImageExist = function(checkImageExistCallback) {
+        
+        var fileName = image.originalname;
+   
+        Images.findOne({name : fileName}, function(err, image) {
+			if(err) {
+				return checkImageExistCallback(err);
+			}	
+
+			if(image != null){
+				logger.debug('fileName : ' + fileName);
+				logger.debug('image : ' + image);
+				return checkImageExistCallback('The image already exists. Try with other file, please!');
+			}else{
+				checkImageExistCallback(null);
 			}
-			folder = plant.name;
+		});
+    };
+
+    var getPlantInfo = function(plantId, getPlantInfoCallback){
+
+	plantService.getPlantName(plantId, function(error, plantName){
+			if(error){
+	            return getPlantInfoCallback(error);
+			}
+			folder = plantName;
 			mainPath = process.cwd() + '/public' + '/images/uploads/' + folder;
 			newPath = mainPath + '/fullsize/' + image.originalname;
 			getPlantInfoCallback(null);
@@ -32,6 +52,7 @@ var addImage = function(image){
     	var fullsizeImagePath = mainPath + '/fullsize/';
 		var thumbImagePath = mainPath + '/thumbs/';
 
+		//It's important the order of the directories
 		var directories = [mainPath, fullsizeImagePath, thumbImagePath];
 
 		var created = false;
@@ -40,6 +61,8 @@ var addImage = function(image){
 			fs.exists(dir, function(exist){
 				if(exist) {
 					created = true;
+				}else{
+					created = false;					
 				}
 				callback(null);
 			});
@@ -58,12 +81,12 @@ var addImage = function(image){
 		}
 
 		if(created) {
-			console.log('directories are already created');
+			logger.debug('directories are already created');
 			createImageDirectoryCallback(null);
 		}else{
 			async.each(directories, iterator, function(err){
 			  if (err) return createImageDirectoryCallback(err);
-			  console.log('directories created'); 
+			  logger.debug('directories created'); 
 			  createImageDirectoryCallback(null);
 			});
 		}
@@ -80,9 +103,8 @@ var addImage = function(image){
 	var writeImageFile = function(data, writeImageCallback){
 		
 		fs.writeFile(newPath, data, function (err) {
-
 			if(err) {
-				logger.error('todo mal ------ ' + err)
+				logger.error(' The data could not be persisted ' + err);
 				return writeImageCallback(err);
 			}
 			writeImageCallback(null);
@@ -127,17 +149,21 @@ var addImage = function(image){
 			plantId: plantId }, 
 			function(err, image) {
 				if(err) {
-					console.log('The full image couldnt be saved');
+					logger.error('The full image couldnt be saved');
 					return createImageCallback(err);
 				}
 				createImageCallback(null, image);	
 			});
 	}
 
-	async.waterfall([
+	async.waterfall([		
+		function(callback) {
+	        logger.debug('Check if image already exists');
+	        checkImageExist(callback);
+	    },
 		function(callback) {
 	        logger.debug('Get info from the plant');
-	        getPlantInfo(callback);
+	        getPlantInfo(plantId, callback);
 	    },
 	    function(callback) {
 	        logger.debug('Check if directories were created before');
@@ -162,21 +188,15 @@ var addImage = function(image){
 	    function(callback) {
 	        logger.debug('Save image data in database');
 	        createImage(callback);
+	    },
+	    function(image, callback) {
+	        mainCallback(null, image);
 	    }
 	], function (err, result) {
-	    logger.debug('result = ', result);
 	    logger.error('err = ', err);
-	});
-};
-
-
-var addImages = function(images, addImagesCallback){
-
-	async.each(images, addImage, function(err){
-		if(err) {
-			return addImagesCallback(err);
-		}
-   		return addImagesCallback(null);
+	    if(err){
+	    	return mainCallback(err);
+	    }   
 	});
 };
 
@@ -189,7 +209,7 @@ var updateImage = function(image, callback){
 	
 	Images.findOne({ _id : image.imageId, plantId : image.plantId }, function(err, imageDetail) {
 		if(err) {
-			console.log('The image wasn\'t found');
+			logger.debug('The image wasn\'t found');
 			return callback(err);
 		}
 		if(imageDetail !== null){
@@ -203,16 +223,6 @@ var updateImage = function(image, callback){
 	});
 };
 
-var updateImages = function(images, updateImagesCallback){
-
-	async.each(images, updateImage, function(err){
-
-		if(err) {
-			return updateImagesCallback(err);
-		}
-   		return addImagesCallback();
-	});
-};
 
 /* --------------------------------- Update images ------------------------------ */
 
@@ -228,10 +238,11 @@ var removeFile = function(path, removeFileCallback) {
 				    logger.error(error);
 				    return removeFileCallback(error);
 				}
-				logger.info('Image successfully deleted');
+				logger.debug('Image successfully deleted');
 				removeFileCallback(null);
 			});
 		}else{
+			logger.debug('file does not exist : ' + path);
 			removeFileCallback(null);
 		}		
 	});
@@ -248,14 +259,21 @@ var deleteDirectories = function(folderName, deleteDirectoriesCallback){
 	var ifExistDirDelete = function(path, cb){
 		fs.exists(path, function(exists){
 			if(exists){
-				fs.rmdir(path, cb);
+				fs.rmdir(path, function(err){
+					if(err){
+						logger.debug('Fail delete directory');
+						logger.debug(err);
+					}
+					cb(null);
+				});
 			}else{
-				cb();
+				cb(null);
 			}
 		});
 	};
 
-	var directories = [path, fullsizePath, thumbsPath];
+	//the order of the directories are important!
+	var directories = [fullsizePath, thumbsPath, path];
 
 	async.each(directories, ifExistDirDelete, function(err){
 		if (err) return deleteDirectoriesCallback(err);
@@ -270,52 +288,70 @@ var deleteImage = function(imageId, deleteImageCallback) {
             logger.error(error);
             return deleteImageCallback(error);
         }
-        var message = 'Image successfully deleted from Database';
-        logger.debug(message);
-        deleteImageCallback(null, message);
+        logger.debug('Image was successfully deleted from Database');
+        deleteImageCallback(null);
     }).exec();
 };
 
 var deleteProcess = function(image, deleteProcessCallback){
 
-	var folderName = image.name.split('.')[0];
-	var path = process.cwd() + '/public' + '/images/uploads/' + folderName;
-	var fullsizePath = path + '/fullsize/' + image.name;
-	var thumbsPath = path + '/thumbs/' + image.name;
+	var folder;
+	var path;
+	var plantId = image.plantId;
+	
+	var getPlantInfo = function(plantId, getPlantInfoCallback){
 
-	async.series([ 
-		function(deleteProcessCallback){
+		plantService.getPlantName(plantId, function(error, plantName){
+			if(error){
+	            return getPlantInfoCallback(error);
+			}
+			folder = plantName;
+			path = process.cwd() + '/public' + '/images/uploads/' + folder;
+			getPlantInfoCallback(null);
+		});
+	};
+
+	async.series([
+		function(callback) {
+	        logger.debug('Get info from the plant');
+	        getPlantInfo(plantId, callback);
+	    },
+		function(callback){
 			logger.debug('Remove thumbnail file');
-			removeFile(thumbsPath, deleteProcessCallback);
+			var thumbsPath = path + '/thumbs/' + image.name;
+			removeFile(thumbsPath, callback);
 		},
 		function(callback){
 			logger.debug('Remove fullsize file');
+			var fullsizePath = path + '/fullsize/' + image.name;
 			removeFile(fullsizePath, callback);
 		},
 		function(callback){
-			logger.debug('Remove fullsize file');
-			deleteDirectories(folderName, callback);
+			logger.debug('Remove directories in case they don\'t contain more images');
+			deleteDirectories(folder, callback);
 		},
 		function(callback){
 			logger.debug('Remove image data from database');
 			deleteImage(image.id, callback);
-		}
+		},
+	    function(callback) {
+	        deleteProcessCallback(null, image);
+	    }
 	]);
 };
 
-var readImageFileData = function(imageId, readImageFileDataCallback){
+var readImageData = function(imageId, readImageDataCallback){
 
 	Images.findOne({_id : imageId}, function(err, image) {
 		if(err) {
-			console.log('The image wasn\'t found');
-			return readImageFileDataCallback(err);
+			logger.debug('The image wasn\'t found');
+			return readImageDataCallback(err);
 		}	
 
 		if(image === undefined || image === null){
-			return readImageFileDataCallback('The image does not exist');
+			return readImageDataCallback('The image does not exist');
 		}
-		console.log('image : ' + image);
-		readImageFileDataCallback(null, image);
+		readImageDataCallback(null, image);
 	});
 };
 
@@ -323,19 +359,18 @@ var deleteImageProcess = function(imageId, mainCallback){
  	
  	async.waterfall([
 	    function(callback) {
-	        logger.log('Reading image data from database');
-	        readImageFileData(imageId, callback);
+	        logger.debug('Reading image data from database');
+	        readImageData(imageId, callback);
 	    },
 	    function(image, callback) {
 	      	logger.debug('After found the image, lets execute image delete process');
 	        deleteProcess(image, callback);
 	    },
-	    function(message, callback) {
-	        logger.debug('Lets see if the image was successfully deleted');	
-	        mainCallback(message);
+	    function(image, callback) {
+	        logger.debug('The image was successfully deleted');	
+	        mainCallback(image);
 	    }
 	], function (err, result) {
-	    logger.debug('result = ', result);
 	    logger.error('err = ', err);
 	    if(err){
 	    	mainCallback(err);
@@ -345,117 +380,12 @@ var deleteImageProcess = function(imageId, mainCallback){
 
 /* --------------------------------- Delete images ------------------------------ */
 
-/* ----- Functions used by filters function ------ */
-
-var imageExists = function(image, callback){
-    Image.findOne( {_id : image.id }, function(error, image){
-        if (err) {                
-            return res.send(err).status(500);
-        }
-        if(image !== undefined) {
-            callback(undefined, true);
-        }else{
-            callback(undefined, false);
-        }
-    });
-};
-
-var contains = function (haystack, needle) {
-    return !!~haystack.indexOf(needle);
-};
-
-/* ----- Functions used by filters function ------ */
-
-/* ----- Apply filters in oder to discriminate actions over the images ------ */
-
-var filterImages = function(images, filterImagesCallback){
-
-	var arrays = [];
-
-	//filter images to be updated
-	var imagesToBeUpdated = [];
-
-	async.filter(images, imageExists, function(results){
-    	imagesToBeUpdate = imagesToBeUpdate.concat(results);
-	});
-
-	arrays.push(imagesToBeUpdated);
-
-	//filter images to be added
-	var imagesToBeAdded = [];
-
-	//closure to check if an image should be added
-	var isImageAdded = function(image, callback){
-	    if(image !== undefined && contains(images, image)) {
-	        callback(undefined, true);
-	    }else{
-	        callback(undefined, false);
-	    }   
-	};
-
-	arrays.push(imagesToBeAdded);
-
-	async.filter(images, isImageAdded, function(results){
-    	imagesToBeAdded = imagesToBeAdded.concat(results);
-	});
-
-	//return three arrays, each one with their corresponding image
-	console.log('arrays : ' + arrays);
-
-	filterImagesCallback(undefined, arrays);
-};
-/* ----- Apply filters in oder to discriminate actions over the images ------ */
-
-
-var imagesProcess = function(images, imageProcessCallback){
-
-	logger.log(' -------------------------------------------------------------------------- ');
-	logger.log(' -------------------------- Start Images Process -------------------------- ');
-	logger.log(' -------------------------------------------------------------------------- ');
-
-	var imagesToBeUpdated = []; 
-	var imagesToBeAdded = [];
-
-	var filterImagesCallback = function(arrays){
-		imagesToBeUpdated = arrays[0]; 
-		imagesToBeAdded = arrays[1];  
-	};
-
-	//Filter images in different groups
-	logger.log(' -------------------   Filter images in different groups   ---------------------- ');
-	filterImages(images, filterImagesCallback);
-	
-	async.parallel({
-	    addImagesFn: function(callback){	
-	    	logger.debug('Add new images');
-	    	addImages(imagesToBeAdded, callback);     
-	    },
-	    updateImagesFn: function(callback){
-	    	logger.debug('Update images');
-	        updateImages(imagesToBeUpdated, callback);
-	    }
-	},
-	function(err, results) {
-	    // results is now equals to: {addImagesFn: [], updateImagesFn: []}
-	    /*
-	    var newImageList = [];
-	    newImageList = newImageList.concat(addImages);
-	    newImageList = newImageList.concat(updateImages);
-	    imageProcessCallback(undefined, newImageList); */
-	    logger.debug('Return the new images array');
-	    Images.find(function(err, images){
-	    	return imageProcessCallback(undefined, images);
-	    });
-	});
-	
-};
-
 var getMainImage = function(plantId, callback){
 
 	Images.findOne({ plantId : plantId, 'main' : 1 }, function(err, image) {
 
 		if(err) {
-			console.log('The image wasn\'t found');
+			logger.debug('The image wasn\'t found');
 			return callback(err);
 		}
 
@@ -470,7 +400,7 @@ var getImagesFilesData = function(plant_id, callback){
 	Images.find({ plantId : plant_id }, function(err, images) {
 
 		if(err) {
-			console.log('The image wasn\'t found');
+			logger.debug('The image wasn\'t found');
 			return callback(err);
 		}
 		return callback(undefined, images);
@@ -481,5 +411,5 @@ module.exports = {
 	getMainImage : getMainImage,
 	getImagesFilesData : getImagesFilesData,
 	deleteImageProcess : deleteImageProcess,
-	imagesProcess : imagesProcess
+	addImage : addImage
 }
