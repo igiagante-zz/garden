@@ -9,6 +9,25 @@ var Img = require('../models/image.js'),
 
 /* --------------------------------- Add images ------------------------------ */
 
+var createImageResource = function(image){
+
+	imageResource = {};
+
+	imageResource.url = image.url;
+	imageResource.thumbnailUrl = image.thumbnailUrl;
+	imageResource.name = image.name;
+	imageResource.type = image.type;
+	imageResource.size = image.size;
+	imageResource.deleteUrl = image.deleteUrl;
+	imageResource.main = image.main;
+	imageResource.links = [
+		{
+			"plant" : "/api/plants/" + image.plantId
+		}
+	];
+	return imageResource;
+};
+
 var addImage = function(plantId, image, mainCallback){
 
 	var mainPath;
@@ -68,7 +87,8 @@ var addImage = function(plantId, image, mainCallback){
 			});
 		};
 
-		async.each(directories, iterator, function(err){
+		//The next iterator is only called once the current one has completed
+		async.eachSeries(directories, iterator, function(err){
 		  if (err) return existDirectoriesCallback(err);
 		  existDirectoriesCallback(null, directories, created);
 		});
@@ -84,7 +104,8 @@ var addImage = function(plantId, image, mainCallback){
 			logger.debug('directories are already created');
 			createImageDirectoryCallback(null);
 		}else{
-			async.each(directories, iterator, function(err){
+			//The next iterator is only called once the current one has completed
+			async.eachSeries(directories, iterator, function(err){
 			  if (err) return createImageDirectoryCallback(err);
 			  logger.debug('directories created'); 
 			  createImageDirectoryCallback(null);
@@ -129,23 +150,28 @@ var addImage = function(plantId, image, mainCallback){
 
 	var createImage = function(createImageCallback){
 
+		console.log('image : ' + JSON.stringify(image));
+
 		var fileName = image.originalname;
 		var fileType = image.mimetype;
 		var fileSize = image.size;
+		var mainImage = image.main;
 
 		//paths to urls
 		var urlPath = '/images/uploads/' + folder + '/fullsize/' + fileName;
 		var thumbnailUrlPath = '/images/uploads/' + folder + '/thumbs/'  + fileName;
-		var deleteUrlPath = '/images/uploads/' + folder;
+		var deleteUrlPath = '/api/image/id';
+
+		console.log(' MAIN : ' + mainImage);
 
 		Img.create({ 
 			url: urlPath, 
 			thumbnailUrl: thumbnailUrlPath, 
-			delete_url: deleteUrlPath,
+			deleteUrl: deleteUrlPath,
 			name: fileName,
 			type: fileType,
 			size: fileSize,
-			main: image.main, 			 
+			main: mainImage, 			 
 			plantId: plantId }, 
 			function(err, image) {
 				if(err) {
@@ -155,6 +181,27 @@ var addImage = function(plantId, image, mainCallback){
 				createImageCallback(null, image);	
 			});
 	}
+
+	var updateDeleteUrl = function(imageId, updateDeleteUrlCallback){
+
+		Images.findById(imageId, function(error, image){
+
+			if(error) {
+				logger.error('The image was not found');
+				return updateDeleteUrlCallback(error);
+			}
+
+			image.deleteUrl = '/api/images/' + imageId;
+
+			image.save(function(error) {
+	            if(error) {
+					logger.error('The image was not updated');
+					return updateDeleteUrlCallback(error);
+				}
+	            updateDeleteUrlCallback(null, image);
+	        });
+		});
+	};
 
 	async.waterfall([		
 		function(callback) {
@@ -188,6 +235,10 @@ var addImage = function(plantId, image, mainCallback){
 	    function(callback) {
 	        logger.debug('Save image data in database');
 	        createImage(callback);
+	    },
+	    function(image, callback) {
+	        logger.debug('Update delete url');
+	        updateDeleteUrl(image.id, callback);
 	    },
 	    function(image, callback) {
 	        mainCallback(null, image);
@@ -397,13 +448,20 @@ var getMainImage = function(plantId, callback){
 
 var getImagesFilesData = function(plant_id, callback){
 
+	var imagesResources = [];
+
 	Images.find({ plantId : plant_id }, function(err, images) {
 
 		if(err) {
 			logger.debug('The image wasn\'t found');
 			return callback(err);
 		}
-		return callback(undefined, images);
+
+		for (var i = 0; i < images.length; i++) {
+			imagesResources.push(createImageResource(images[i]));
+			if(images.length === imagesResources.length)
+				return callback(undefined, imagesResources);
+		};
 	});
 };
 

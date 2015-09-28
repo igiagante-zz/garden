@@ -46,6 +46,7 @@ var getImagesData = function(req, res) {
             if(files[i] !== undefined){
                 files[i].url = 'http://localhost:3000' + files[i].url;
                 files[i].thumbnailUrl = 'http://localhost:3000' + files[i].thumbnailUrl;
+                files[i].deleteUrl = 'http://localhost:3000' + files[i].deleteUrl;
             }
         }
         
@@ -53,7 +54,7 @@ var getImagesData = function(req, res) {
             return res.send(error).status(500);
         }
 
-        res.json({"files" : [files]});
+        res.json({"files": files});
     });
 };
 

@@ -40,11 +40,11 @@ var router = express.Router(),             // get an instance of the express Rou
 	plantRouter = require('./routers/plant_router.js'),
 	imageRouter = require('./routers/image_router.js');
 
-router.use('/dosis', dosisRouter);
-router.use('/garden', gardenRouter);
-router.use('/irrigation', irrigationRouter);
-router.use('/plant', plantRouter);
-router.use('/image', imageRouter);
+router.use('/doses', dosisRouter);
+router.use('/gardens', gardenRouter);
+router.use('/irrigations', irrigationRouter);
+router.use('/plants', plantRouter);
+router.use('/images', imageRouter);
 
 // middleware to use for all requests
 router.use(function(req, res, next) {
