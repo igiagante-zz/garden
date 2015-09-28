@@ -8,7 +8,7 @@ var createNutrient = function(req, res) {
         Nutrient.create({
             name: req.body.name,  
             quantity: req.body.quantity,
-            dosis_id: req.body.dosis_id
+            dose_id: req.body.dose_id
         }, function(err, nutrient) {
             if (err)
                 res.send(err);
@@ -36,7 +36,7 @@ var updateNutrient = function(req, res) {
 
         nutrient.name = req.body.name;  
         nutrient.quantity = req.body.quantity;
-        nutrient.dosis_id = req.body.dosis_id;
+        nutrient.dose_id = req.body.dose_id;
 
         // save the nutrient
         nutrient.save(function(err) {

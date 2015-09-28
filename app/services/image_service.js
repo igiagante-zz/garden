@@ -52,7 +52,7 @@ var addImage = function(plantId, image, mainCallback){
     	var fullsizeImagePath = mainPath + '/fullsize/';
 		var thumbImagePath = mainPath + '/thumbs/';
 
-		//It's important the order of the directories
+		//It's important the order of these directories!!
 		var directories = [mainPath, fullsizeImagePath, thumbImagePath];
 
 		var created = false;
@@ -78,7 +78,7 @@ var addImage = function(plantId, image, mainCallback){
 
 		var iterator = function(d, cb){
 			fs.mkdir(d, cb);
-		}
+		};
 
 		if(created) {
 			logger.debug('directories are already created');
@@ -154,7 +154,7 @@ var addImage = function(plantId, image, mainCallback){
 				}
 				createImageCallback(null, image);	
 			});
-	}
+	};
 
 	async.waterfall([		
 		function(callback) {
@@ -279,7 +279,7 @@ var deleteDirectories = function(folderName, deleteDirectoriesCallback){
 		if (err) return deleteDirectoriesCallback(err);
 		deleteDirectoriesCallback(null);
 	});
-}
+};
 
 var deleteImage = function(imageId, deleteImageCallback) {
 	Images.find({ _id: imageId }).remove(function(error){

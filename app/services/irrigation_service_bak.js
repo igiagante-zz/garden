@@ -1,18 +1,18 @@
-var dosesevice = require('./dosis_service')
+var dosesevice = require('./services/dose_service')
 var Garden = require('../models/garden')
 var Irrigation = require('../models/irrigation')
-var Dosis = require('../models/dosis')
+var dose = require('models/dose')
 var async = require('async')
 
 var nutrientsTemp = [];
 var nutrients = [];
 
-var irrigationSevice = {};
+var irrigationService = {};
 var irrigationsOut = [];
 
 var ObjectId = require('mongoose').Types.ObjectId
 
-irrigationSevice.calculateUseOfNutrient = function(garden_id){
+irrigationService.calculateUseOfNutrient = function(garden_id){
 
 		async.series([
 			//Load irrigations
@@ -26,7 +26,7 @@ irrigationSevice.calculateUseOfNutrient = function(garden_id){
 			   				irrigationDate: irrigations[i].irrigationDate,
 			   				quantity: irrigations[i].quantity,
 			   				gardenId: irrigations[i].gardenId,
-			   				dosisId: irrigations[i].dosisId
+			   				doseId: irrigations[i].doseId
 			   			}
 			   			);
 			   		};
@@ -55,19 +55,19 @@ var initnutrients = function(irrigations){
 	doses = [];	
 
 	console.log('------------------------------------------------------------------------------  ');
-	console.log('----------------  irrigations insise of initnutrients method ----------------- ' );
+	console.log('----------------  irrigations inside of initnutrients method ----------------- ' );
 	console.log('------------------------------------------------------------------------------  ');
 
-	//get all the dosis
+	//get all the doses
 	for (var i = 0; i < irrigations.length; i++) {
 
 		async.series([ 
 			function(callback){
-				if(irrigations[i].dosisId !== null){
-					Dosis.findById(irrigations[i].dosisId, function(err, dosis){
+				if(irrigations[i].doseId !== null){
+					dose.findById(irrigations[i].doseId, function(err, dose){
 						if(err)
 							console.log(err);
-						doses.push(dosis);
+						doses.push(dose);
 					callback();	
 					});
 				}
@@ -75,7 +75,7 @@ var initnutrients = function(irrigations){
 
 			function(callback){
 				if(doses !== undefined){
-					//get all the nutrients used by the dosis
+					//get all the nutrients used by the dose
 					for (var i = 0; i < doses.length; i++) {
 						for (var j = 0; j < doses[i].nutrients.length; j++) {
 							//it creates a nutrients temp array to manipulate later
@@ -110,7 +110,7 @@ var initnutrients = function(irrigations){
 				console.log("nutrientsTemp: " + nutrientsTemp);
 				console.log("nutrients: " + nutrients);
 				if(nutrientsTemp !== undefined && nutrients !== undefined){	
-					//it loops the nutrients temp array and acumulates the values from each nutrient
+					//it loops the nutrients temp array and accumulates the values from each nutrient
 					for (var i = 0; i < nutrientsTemp.length; i++) {
 						for (var j = 0; j < nutrients.length; j++) {
 							//increment the quantity of one nutrient		
@@ -131,4 +131,4 @@ var initnutrients = function(irrigations){
 
 };
 
-module.exports = irrigationSevice;
+module.exports = irrigationService;

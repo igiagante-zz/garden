@@ -1,11 +1,11 @@
 // Load required packages
 var mongoose = require('mongoose');
 
-// Define our dosis schema
-var dosisSchema = new mongoose.Schema({
+// Define our dose schema
+var doseSchema = new mongoose.Schema({
 	created: { type: Date, default: new Date() },
 	water: Number,
-	phDosis: Number,
+	phDose: Number,
 	ph: Number,
 	ec: Number,
 	nutrients: [
@@ -17,4 +17,4 @@ var dosisSchema = new mongoose.Schema({
 });
 
 // Export the Mongoose model
-module.exports = mongoose.model('Dosis', dosisSchema);
+module.exports = mongoose.model('Dose', doseSchema);

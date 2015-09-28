@@ -6,7 +6,7 @@ var Schema = mongoose.Schema
 var nutrientSchema = new mongoose.Schema({
   name: String,
   quantity: Number,
-  dosis_id: Schema.Types.ObjectId
+  dose_id: Schema.Types.ObjectId
 });
 
 // Export the Mongoose model

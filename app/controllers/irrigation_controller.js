@@ -19,7 +19,7 @@ var createIrrigation = function(req, res) {
             irrigationDate: req.body.irrigationDate,  
             quantity: req.body.quantity,
             gardenId: req.body.gardenId,
-            dosisId: req.body.dosisId
+            doseId: req.body.doseId
         }, function(err, irrigation) {
             if (err)
                 res.send(err);
@@ -48,7 +48,7 @@ var updateIrrigation = function(req, res) {
         irrigation.irrigationDate = req.body.irrigationDate;  
         irrigation.quantity = req.body.quantity;
         irrigation.gardenId = req.body.gardenId;
-        irrigation.dosisId = req.body.dosisId;
+        irrigation.doseId = req.body.doseId;
 
         // save the irrigation
         irrigation.save(function(err) {
