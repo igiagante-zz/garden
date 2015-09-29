@@ -2,7 +2,6 @@ var express = require('express'),
     router = express.Router(),
     Plant = require('../models/plant'),
     Garden = require('../models/garden'),
-    imageService = require('../services/image_service.js'),
     logger = require('../utils/logger'),
     util = require('util');
 
@@ -19,7 +18,7 @@ var createPlant = function(req, res) {
         return;
       }
 
-    Garden.findById(req.body.gardenId, function(err, garden){
+    Garden.findById(req.body.gardenId, function(err){
 
         if(err)
             res.send(err);
@@ -31,7 +30,7 @@ var createPlant = function(req, res) {
             ecSoil: req.body.ecSoil,
             harvest: req.body.harvest,
             gardenId: req.body.gardenId
-        }, function(err, plant) {
+        }, function(err) {
             if (err)
                 res.send(err);
             
@@ -91,7 +90,6 @@ var deletePlant = function(req, res) {
             });
         });
     };
-
 
 var getPlant = function(req, res) {
         Plant.findById(req.params.plant_id, function(err, plant) {

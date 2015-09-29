@@ -2,30 +2,43 @@
  * Created by igiagante on 28/9/15.
  */
 
-var Sensor = require('models/sensor');
+var Sensor = require('../models/sensor'),
+    Measure = require('../models/measure'),
+    async = require('async');
 
-var processSensor = function(sensor, callback){
+var processSensor = function(measure, callback){
 
-    Sensor.create({
-        id: sensor.id,
-        name: sensor.name,
-        measure: sensor.measure,
-        unit: sensor.unit
+    Measure.create({
+        measureDate: measure.measureDate,
+        measure: measure.measure,
+        unit: measure.unit,
+        sensorId: measure.sensorId
     }, function(err) {
         if (err){
             callback(err);
         }
+        callback();
     });
 };
 
-var processData = function(sensors, callback){
+var processData = function(measures, callback){
 
-    async.each(sensors, processSensor, function(err){
+    async.each(measures, processSensor, function(err){
         if (err) return callback(err);
-        callback(null, "all data persisted");
+        callback(null, "all measures were successfully persisted!");
+    });
+};
+
+//return all the measures done by one sensor
+var getSensorMeasuares = function(sensorId, callback) {
+
+    Measure.find({ "sensorId" : sensorId }, function(error, measures){
+        if(error) callback(error);
+        callback(null, measures);
     });
 };
 
 module.exports = {
-    processData : processData
+    processData : processData,
+    getSensorMeasures : getSensorMeasuares
 };

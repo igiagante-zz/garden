@@ -64,7 +64,7 @@ var deleteGarden = function(req, res) {
             // get and return all the todos after you create another
             Garden.find(function(err, gardens) {
                 if (err)
-                    res.send(err)
+                    res.send(err);
                 res.json(gardens);
             });
         });
@@ -74,7 +74,7 @@ var deleteGarden = function(req, res) {
 var getAll = function(req, res) {       
             Garden.find(function(err, gardens) {
                 if (err)
-                    res.send(err)
+                    res.send(err);
                 res.json(gardens);
             });
 };

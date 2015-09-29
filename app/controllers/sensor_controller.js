@@ -8,15 +8,27 @@ var sensorService = require('../services/sensor_service');
 
 //process all data related to the sensors
 var processDataSensor = function(req, res) {
-    var sensors = req.body.sensors;
-    sensorService.processData(sensors);
+    sensorService.processData(req.body.measures, function(error, result){
+        if(error) res.json(error);
+
+        console.log("result: " + result);
+
+        res.json(result);
+    });
 };
 
-var test = function(req, res) {
-    res.json(req.sensors);
+
+var measures = function(req, res) {
+
+    console.log("req: " + req.params.sensor_id);
+
+    sensorService.getSensorMeasures(req.params.sensor_id, function(error, measures){
+        if(error) res.json(error);
+        res.json(measures);
+    });
 };
 
 module.exports = {
     processDataSensor : processDataSensor,
-    test : test
+    measures : measures
 };

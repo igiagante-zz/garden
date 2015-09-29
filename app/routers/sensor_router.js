@@ -9,5 +9,7 @@ var express = require('express'),
 //process sensor's data
 router.post('/', sensorController.processDataSensor);
 
-//test connection
-router.post('/test', sensorController.test);
+//get measures from one sensor
+router.get('/measures/:sensor_id', sensorController.measures);
+
+module.exports = router;

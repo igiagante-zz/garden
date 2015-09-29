@@ -1,15 +1,14 @@
-var Garden = require('../models/garden')
-var Irrigation = require('../models/irrigation')
-var Dose = require('models/dose')
-var async = require('async')
-var logger = require('../utils/logger')
+var Garden = require('../models/garden'),
+	Irrigation = require('../models/irrigation'),
+	Dose = require('../models/dose'),
+	async = require('async'),
+	logger = require('../utils/logger');
 
 var irrigationsOut = [];
 
 var calculateUseOfNutrient = function(garden_id, populateCallback){
 
 		async.series([
-
 			//Load irrigations
 				function(callback) {
 					Irrigation.find({ "gardenId" : garden_id}, function(err, irrigations){ 
@@ -57,7 +56,7 @@ var initNutrients = function(irrigations, callbackOut, populateCallback){
 
 	var readIrrigations = function(irrigations, callback) {
     
-    var index = 0;
+    	var index = 0;
     	var readCallback = function(error, data) {
 	        if(error) {
 	            callback(error, undefined);

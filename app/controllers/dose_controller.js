@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router(); 
-var Dose = require('models/Dose');
+var Dose = require('../models/dose');
 
 //create a dose
 var createDose = function(req, res) {
