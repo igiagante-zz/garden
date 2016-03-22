@@ -10,6 +10,7 @@ var doseSchema = new mongoose.Schema({
 	ec: Number,
 	nutrients: [
 		{
+			_id: Number,
 			name: String,
 			quantity: Number
 		}

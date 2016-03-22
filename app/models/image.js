@@ -10,7 +10,9 @@ var Images = new Schema({
     type: { type: String, required: true },
     size: Number,
     main: { type: Boolean, default: 0 },
-    plantId: { type: Schema.Types.ObjectId, required: true }
+    plantId: { type: Schema.Types.ObjectId, required: true },
+    flavorId: { type: Schema.Types.ObjectId, required: true },
+    nutrientId: { type: Schema.Types.ObjectId, required: true }
 });
 
 module.exports = mongoose.model('Images', Images);

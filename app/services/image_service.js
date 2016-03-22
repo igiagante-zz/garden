@@ -139,7 +139,7 @@ var addImage = function(plantId, image, mainCallback){
 		var deleteUrlPath = '/images/uploads/' + folder;
 
 		Img.create({ 
-			url: urlPath, 
+			url: urlPath,
 			thumbnailUrl: thumbnailUrlPath, 
 			delete_url: deleteUrlPath,
 			name: fileName,
@@ -149,7 +149,7 @@ var addImage = function(plantId, image, mainCallback){
 			plantId: plantId }, 
 			function(err, image) {
 				if(err) {
-					logger.error('The full image couldnt be saved');
+					logger.error('The full image could not be saved');
 					return createImageCallback(err);
 				}
 				createImageCallback(null, image);	

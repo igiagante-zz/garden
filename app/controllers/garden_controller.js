@@ -2,11 +2,15 @@ var express = require('express');
 var router = express.Router(); 
 var Garden = require('../models/garden')
 
-//create a garden
+/**
+ * Create a garden
+ * @param req
+ * @param res
+ */
 var createGarden = function(req, res) {
         
         Garden.create({  
-            name: req.body.name,
+            name: req.body.name
         }, function(err, garden) {
             if (err)
                 res.send(err);
@@ -20,7 +24,11 @@ var createGarden = function(req, res) {
         });       
     };
 
-//update a garden
+/**
+ * Update a garden
+ * @param req
+ * @param res
+ */
 var updateGarden = function(req, res) {
 
     console.log(req.params);
@@ -43,8 +51,12 @@ var updateGarden = function(req, res) {
         });
     });
 };
-    
-//retrieve one garden
+
+/**
+ * Get a garden
+ * @param req
+ * @param res
+ */
 var getGarden = function(req, res) {
         Garden.findById(req.params.garden_id, function(err, garden) {
             if (err)
@@ -53,7 +65,11 @@ var getGarden = function(req, res) {
         });
     };
 
-//delete a garden
+/**
+ * Delete a garden
+ * @param req
+ * @param res
+ */
 var deleteGarden = function(req, res) {
         Garden.remove({ 
             _id : req.params.garden_id 
@@ -70,7 +86,11 @@ var deleteGarden = function(req, res) {
         });
     };
 
-//get all gardens
+/**
+ * Get all the gardens
+ * @param req
+ * @param res
+ */
 var getAll = function(req, res) {       
             Garden.find(function(err, gardens) {
                 if (err)

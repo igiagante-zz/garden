@@ -8,7 +8,7 @@ var nutrientsUsed = function(req, res) {
     var populateCallback = function(error, nutrients) {
         //req, res
         res.json(nutrients);
-    }    
+    };
     irrigationService.calculateUseOfNutrient(req.params.garden_id, populateCallback);
 };
 
