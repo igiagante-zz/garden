@@ -6,42 +6,56 @@ var fs = require('fs'),
     logger = require('../utils/logger'),
     async = require('async'),
     im = require('imagemagick')
-    mongoose = require('mongoose');
-    Schema = mongoose.Schema;
+    mongoose = require('mongoose'),
+    _ = require('lodash'),
+    path = require('path');
 
-var pathImagesUploaded = process.cwd() + '/public/images/uploads/';
+var parentDir = path.resolve(process.cwd(), '..');
+var pathImagesUploaded = parentDir + '/public/images/uploads/';
 
 var getMainImagePath = function(folderName, imageFileName) {
-    return pathImages + folderName + '/fullsize/' + imageFileName;
+    return pathImagesUploaded + folderName + '/fullsize/' + imageFileName;
 };
 
 var getThumbImagePath = function(folderName, imageFileName) {
-    return pathImages + folderName + '/thumb/' + imageFileName;
+    return pathImagesUploaded + folderName + '/thumb/' + imageFileName;
 };
 
 /**
  * Convert files data into json array
+ * @param plantName name of the plant
  * @param files
  * @param forPlant Inform if the images belong to one plant.
+ * @param main Indicates if the image is the main image of the folder.
  * @returns {Array}
  */
-var getImageData = function(files, forPlant) {
+var getImageData = function(plantName, files, forPlant, main) {
 
     var imageData = [];
 
-    for(var key in Object.keys(files)) {
-        var file = req.files[key];
+    // Object.keys
+    var keys = Object.keys(files);
+
+    for (var i = 0; i < keys.length; ++i) {
+
+        var file = files[keys[i]];
+
+        //paths to urls
+        var urlPath = getMainImagePath(plantName, file.originalname);
+        var thumbnailUrlPath = getThumbImagePath(plantName, file.originalname);
 
         var data = {};
-        data._id = Types.ObjectId();
-        data.url =  file.url;
+        data._id = mongoose.Types.ObjectId();
+        data.url =  urlPath;
+
+        var fileName  = _.split(file.originalname, '.', 2);
 
         if(forPlant) {
-            data.thumbnailUrl = file.thumbnail_url;
+            data.thumbnailUrl = thumbnailUrlPath;
             data.name = file.name;
-            data.type = file.type;
+            data.type = file.mimetype;
             data.size = file.size;
-            data.main = file.main;
+            data.main = main === fileName[0];
         }
 
         imageData.push(data);
@@ -91,7 +105,7 @@ var createImageDirectory = function(directories, created, createImageDirectoryCa
         createImageDirectoryCallback(null);
     }else{
         async.each(directories, iterator, function(err){
-            if (err) return createImageDirectoryCallback(err);
+            if (err) return createImageDirectoryCallback(err + ' could not be created');
             logger.debug('directories created');
             createImageDirectoryCallback(null);
         });
@@ -107,8 +121,8 @@ var createImageDirectory = function(directories, created, createImageDirectoryCa
 var checkIfImageDirectoriesExist = function(folderName, existDirectoriesCallback){
 
     var mainPath = pathImagesUploaded + folderName;
-    var fullsizeImagePath = getMainImagePath(folderName, null);
-    var thumbImagePath = getThumbImagePath(folderName, null);
+    var fullsizeImagePath = getMainImagePath(folderName, "");
+    var thumbImagePath = getThumbImagePath(folderName, "");
 
     //It's important the order of these directories!!
     var directories = [mainPath, fullsizeImagePath, thumbImagePath];
@@ -151,7 +165,7 @@ var renameImageFilePath = function(image, newPath, readImageFileCallback){
  * @param data
  * @param writeImageCallback
  */
-var writeImageFile = function(data, writeImageCallback){
+var writeImageFile = function(data, newPath, writeImageCallback){
 
     fs.writeFile(newPath, data, function (err) {
         if(err) {
@@ -233,6 +247,8 @@ var deleteImageDirectories = function(folderName, deleteDirectoriesCallback){
  */
 var persistImageFile = function(folderName, image, mainCallback) {
 
+    var newPath = getMainImagePath(folderName, image.originalname);
+
     async.waterfall([
 
         function(callback) {
@@ -245,25 +261,23 @@ var persistImageFile = function(folderName, image, mainCallback) {
         },
         function(callback) {
             logger.debug('Reading image file');
-            var newPath = getMainImagePath(folderName, image.originalname);
             renameImageFilePath(image, newPath, callback);
         },
         function(data, callback) {
             logger.debug('Writing image file');
-            writeImageFile(data, callback);
+            writeImageFile(data, newPath, callback);
         },
         function(callback) {
             logger.debug('Resize image to create a thumbnail');
-            resizeImage(callback);
+            resizeImage(folderName, image.originalname, callback);
         },
-        function(image, callback) {
+        function(callback) {
             mainCallback(null, image);
         }
     ], function (err, result) {
         logger.error('err = ', err);
-        if(err){
-            return mainCallback(err);
-        }
+        if(err)
+            mainCallback(err);
     });
 };
 
@@ -297,22 +311,14 @@ var deleteImageFile = function(folderName, imageName, deleteProcessCallback){
 };
 
 /**
- * Verify if one or more images should be delete
+ * Verify if one or more images should be deleted from database.
  * @param imagesFromDB
  * @param images
  * @returns {Array}
  */
 var verifyIfImagesShouldBeDeleted = function(imagesFromDB, images) {
 
-    var imagesToDelete = [];
-
-    for( var i = 0; i < imagesFromDB.length; i++ ) {
-        if(imagesFromDB[i]._id === images._id) {
-            imagesToDelete.push(imagesFromDB[i]);
-        }
-    }
-
-    return imagesToDelete;
+    return _.differenceBy(imagesFromDB, images, '_id');
 };
 
 module.exports = {

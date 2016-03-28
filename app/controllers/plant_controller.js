@@ -4,7 +4,8 @@ var express = require('express'),
     Garden = require('../models/garden'),
     logger = require('../utils/logger'),
     imageService = require('../services/images_service_new'),
-    util = require('util');
+    util = require('util'),
+    _ = require('lodash');
 
 
 /**
@@ -14,7 +15,12 @@ var express = require('express'),
  * @param callback
  */
 var persistImageFiles = function(folderName, files, callback) {
-    for(var file in files) {
+
+    // Object.keys
+    var keys = Object.keys(files);
+
+    for (var i = 0; i < keys.length; ++i) {
+        var file = files[keys[i]];
         imageService.persistImageFile(folderName, file, callback);
     }
 };
@@ -38,9 +44,10 @@ var createPlant = function(req, res) {
       }
 
     var imagesData;
+    var plantName = req.body.name;
 
     if(req.files !== null) {
-        imagesData = imageService.getImageData(req.files);
+        imagesData = imageService.getImageData(plantName, req.files, true);
     }
 
     Garden.findById(req.body.gardenId, function(err){
@@ -60,10 +67,8 @@ var createPlant = function(req, res) {
             if (err)
                 res.send(err);
 
-            var namePlant = req.body.name;
-
             //persist images for one plant
-            persistImageFiles(namePlant, req.files, function(err, result) {
+            persistImageFiles(plantName, req.files, function(err, result) {
                 if(err)
                     logger.debug(' One image could not be saved ' + err);
                 logger.debug(' the image was persisted successfully ' + result);
@@ -86,7 +91,12 @@ var createPlant = function(req, res) {
  * @param callback
  */
 var deleteImageFiles = function(folderName, imagesData, callback) {
-    for(var image in imagesData) {
+
+    // Object.keys
+    var keys = Object.keys(imagesData);
+
+    for (var i = 0; i < keys.length; ++i) {
+        var image = files[keys[i]];
         imageService.deleteImageFile(folderName, image.name, callback);
     }
 };
@@ -99,28 +109,27 @@ var deleteImageFiles = function(folderName, imagesData, callback) {
 var updatePlant = function(req, res) {
 
     var imagesData;
-
-    if(req.files !== undefined) {
-        imagesData = imageService.getImageData(req.files);
-    }
+    var plantName = req.body.name;
 
     logger.debug(' -------------------- Update a plant  -------------------- ');
-
-    logger.info(imagesData);
 
     Plant.findById(req.params.plant_id, function(err, plant) {
 
         if (err)
             res.send(err);
 
-        plant.name = req.body.name; 
+        plant.name = req.body.name;
         plant.size = req.body.size;
         plant.phSoil = req.body.phSoil;
         plant.ecSoil = req.body.ecSoil;
         plant.harvest = req.body.harvest;
         plant.irrigations = req.body.irrigations;
         plant.gardenId = req.body.gardenId;
-        plant.images = imagesData;
+
+        //Get image data sent by request
+        if(req.files !== undefined) {
+            imagesData = imageService.getImageData(plantName, req.files, true, req.body.main);
+        }
 
         var imagesToBeDelete = imageService.verifyIfImagesShouldBeDeleted(plant.images, imagesData);
 
@@ -129,16 +138,49 @@ var updatePlant = function(req, res) {
             if (err)
                 res.send(err);
 
+            //persist images for one plant
+            persistImageFiles(plantName, req.files, function(err, result) {
+                if(err){
+                    logger.debug(' One image could not be saved ' + err);
+                    res.send(err);
+                }
+                logger.debug(' the image was persisted successfully ' + result);
+            });
+
             //delete images for one plant
             deleteImageFiles(req.body.name, imagesToBeDelete, function(err, result) {
-                if(err)
+                if(err){
                     logger.debug(' One image could not be deleted ' + err);
+                    res.send(err);
+                }
                 logger.debug(' the image was deleted successfully ' + result);
             });
 
-            res.json(plant);
         });
+        res.json(req.body);
     });
+};
+
+var saveImageFiles = function(plantName, files, saveImageFilesCallback){
+
+    async.series([
+        function(callback){
+            logger.debug('Persist images');
+            persistImageFiles(plantName, files, callback);
+        },
+        function(imagesFromDB, imagesFromRequest, callback){
+            logger.debug('Delete images');
+            var imagesToBeDelete = imageService.verifyIfImagesShouldBeDeleted(imagesFromDB, imagesFromRequest);
+            deleteImageFiles(plantName, imagesToBeDelete, callback);
+        },
+        function(callback) {
+            deleteProcessCallback(null, imageName);
+        }
+    ]);
+};
+
+var callback = function(res) {
+    return res.json(req.body);
 };
 
 /**
