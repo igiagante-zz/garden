@@ -52,7 +52,7 @@ var getImageData = function(plantName, files, forPlant, main) {
 
         if(forPlant) {
             data.thumbnailUrl = thumbnailUrlPath;
-            data.name = file.name;
+            data.name = file.originalname;
             data.type = file.mimetype;
             data.size = file.size;
             data.main = main === fileName[0];

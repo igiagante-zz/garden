@@ -72,14 +72,10 @@ var createPlant = function(req, res) {
                 if(err)
                     logger.debug(' One image could not be saved ' + err);
                 logger.debug(' the image was persisted successfully ' + result);
+
+                res.json(req.body);
             });
-            
-            // get and return all the plants after you create another
-            Plant.find(function(err, plants) {
-                if (err)
-                    res.send(err);
-                res.json(plants);
-            });
+
         }); 
     });
 };
@@ -133,31 +129,30 @@ var updatePlant = function(req, res) {
 
         var imagesToBeDelete = imageService.verifyIfImagesShouldBeDeleted(plant.images, imagesData);
 
-        // save the plant
-        plant.save(function(err) {
-            if (err)
+        //persist images for one plant
+        persistImageFiles(plantName, req.files, function(err, result) {
+            if(err){
+                logger.debug(' One image could not be saved ' + err);
                 res.send(err);
+            }
+            logger.debug(' the image was persisted successfully ' + result);
 
-            //persist images for one plant
-            persistImageFiles(plantName, req.files, function(err, result) {
-                if(err){
-                    logger.debug(' One image could not be saved ' + err);
-                    res.send(err);
-                }
-                logger.debug(' the image was persisted successfully ' + result);
+            plant.images = imagesData;
+
+            plant.save(function (err) {
+                if (err) res.send(err);
+                res.send(plant);
             });
-
-            //delete images for one plant
-            deleteImageFiles(req.body.name, imagesToBeDelete, function(err, result) {
-                if(err){
-                    logger.debug(' One image could not be deleted ' + err);
-                    res.send(err);
-                }
-                logger.debug(' the image was deleted successfully ' + result);
-            });
-
         });
-        res.json(req.body);
+
+        //delete images for one plant
+        deleteImageFiles(req.body.name, imagesToBeDelete, function(err, result) {
+            if(err){
+                logger.debug(' One image could not be deleted ' + err);
+                res.send(err);
+            }
+            logger.debug(' the image was deleted successfully ' + result);
+        });
     });
 };
 
@@ -179,7 +174,10 @@ var saveImageFiles = function(plantName, files, saveImageFilesCallback){
     ]);
 };
 
-var callback = function(res) {
+var callback = function(res, req) {
+
+
+
     return res.json(req.body);
 };
 
@@ -189,22 +187,22 @@ var callback = function(res) {
  * @param res
  */
 var deletePlant = function(req, res) {
-        Plant.remove({ 
-            _id : req.params.plant_id 
-        }, function(err, plant) {
+    Plant.remove({
+        _id : req.params.plant_id
+    }, function(err, plant) {
+        if (err)
+            res.send(err);
+
+        logger.debug(' the plant with id: ' + req.params.plant_id + ' was deleted. ' );
+
+        // get and return all the todos after you create another
+        plant.find(function(err, plants) {
             if (err)
                 res.send(err);
-            
-            logger.debug(' the plant with id: ' + req.params.plant_id + ' was deleted. ' );
-
-            // get and return all the todos after you create another
-            plant.find(function(err, plants) {
-                if (err)
-                    res.send(err);
-                res.json(plants);
-            });
+            res.json(plants);
         });
-    };
+    });
+};
 
 /**
  * Get a plant
