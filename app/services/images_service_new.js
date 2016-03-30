@@ -27,9 +27,10 @@ var getThumbImagePath = function(folderName, imageFileName) {
  * @param files
  * @param forPlant Inform if the images belong to one plant.
  * @param main Indicates if the image is the main image of the folder.
+ * @param callback
  * @returns {Array}
  */
-var getImageData = function(plantName, files, forPlant, main) {
+var getImageData = function(plantName, files, forPlant, main, callback) {
 
     var imageData = [];
 
@@ -61,7 +62,7 @@ var getImageData = function(plantName, files, forPlant, main) {
         imageData.push(data);
     }
 
-    return imageData;
+    callback(undefined, imageData);
 };
 
 /**
@@ -316,9 +317,8 @@ var deleteImageFile = function(folderName, imageName, deleteProcessCallback){
  * @param images
  * @returns {Array}
  */
-var verifyIfImagesShouldBeDeleted = function(imagesFromDB, images) {
-
-    return _.differenceBy(imagesFromDB, images, '_id');
+var verifyIfImagesShouldBeDeleted = function(imagesFromDB, images, callback) {
+    callback(undefined, _.differenceBy(imagesFromDB, images, '_id'));
 };
 
 module.exports = {

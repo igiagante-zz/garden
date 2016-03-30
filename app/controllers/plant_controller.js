@@ -5,6 +5,7 @@ var express = require('express'),
     logger = require('../utils/logger'),
     imageService = require('../services/images_service_new'),
     util = require('util'),
+    async = require('async'),
     _ = require('lodash');
 
 
@@ -122,63 +123,59 @@ var updatePlant = function(req, res) {
         plant.irrigations = req.body.irrigations;
         plant.gardenId = req.body.gardenId;
 
-        //Get image data sent by request
-        if(req.files !== undefined) {
-            imagesData = imageService.getImageData(plantName, req.files, true, req.body.main);
-        }
+        imageService.getImageData(plantName, req.files, true, req.body.main, function(err, data) {
+            imagesData = data;
 
-        var imagesToBeDelete = imageService.verifyIfImagesShouldBeDeleted(plant.images, imagesData);
+            var flow = {
+                persistImages: async.apply(persistImages, plantName, req.files),
+                getImagesToBeDelete: async.apply(getImagesToBeDelete, plant, imagesData),
+                deleteImages: ['getImagesToBeDelete', async.apply(deleteImages, plantName)],
+                savePlant: ['persistImages', async.apply(savePlant, plant)]
+            };
 
-        //persist images for one plant
-        persistImageFiles(plantName, req.files, function(err, result) {
-            if(err){
-                logger.debug(' One image could not be saved ' + err);
-                res.send(err);
-            }
-            logger.debug(' the image was persisted successfully ' + result);
+            async.auto(flow, function (error, results) {
+                if(error) {
+                    return res.send(error);
+                }
+                plant.images = imagesData;
 
-            plant.images = imagesData;
-
-            plant.save(function (err) {
-                if (err) res.send(err);
                 res.send(plant);
             });
-        });
-
-        //delete images for one plant
-        deleteImageFiles(req.body.name, imagesToBeDelete, function(err, result) {
-            if(err){
-                logger.debug(' One image could not be deleted ' + err);
-                res.send(err);
-            }
-            logger.debug(' the image was deleted successfully ' + result);
         });
     });
 };
 
-var saveImageFiles = function(plantName, files, saveImageFilesCallback){
-
-    async.series([
-        function(callback){
-            logger.debug('Persist images');
-            persistImageFiles(plantName, files, callback);
-        },
-        function(imagesFromDB, imagesFromRequest, callback){
-            logger.debug('Delete images');
-            var imagesToBeDelete = imageService.verifyIfImagesShouldBeDeleted(imagesFromDB, imagesFromRequest);
-            deleteImageFiles(plantName, imagesToBeDelete, callback);
-        },
-        function(callback) {
-            deleteProcessCallback(null, imageName);
-        }
-    ]);
+var getImagesToBeDelete = function(imagesFromDB, imagesData, callback){
+    imageService.verifyIfImagesShouldBeDeleted(imagesFromDB, imagesData, callback);
 };
 
-var callback = function(res, req) {
+var persistImages = function(plantName, files, callback){
+    persistImageFiles(plantName, files, function(err, result) {
+        if(err){
+            logger.debug(' One image could not be saved ' + err);
+            return callback(err);
+        }
+        logger.debug(' the image was persisted successfully ' + result);
+        callback(undefined, result);
+    });
+};
 
+var deleteImages = function(plantName, callback, imagesToBeDelete){
+    //delete images for one plant
+    deleteImageFiles(plantName, imagesToBeDelete, function(err, result) {
+        if(err){
+            logger.debug(' One image could not be deleted ' + err);
+            return callback(err);
+        }
+        logger.debug(' the image was deleted successfully ' + result);
+        callback(undefined, result);
+    });
+};
 
-
-    return res.json(req.body);
+var savePlant = function(plant, callback){
+    plant.save(function (err) {
+        callback(err, plant);
+    });
 };
 
 /**
