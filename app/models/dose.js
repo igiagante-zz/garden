@@ -1,20 +1,29 @@
 // Load required packages
 var mongoose = require('mongoose');
 
-// Define our dose schema
+// Define the dose schema
 var doseSchema = new mongoose.Schema({
-	created: { type: Date, default: new Date() },
 	water: Number,
 	phDose: Number,
 	ph: Number,
 	ec: Number,
 	nutrients: [
 		{
-			_id: Number,
+            _id: Schema.Types.ObjectId,
 			name: String,
-			quantity: Number
+			ph: Number,
+            npk: String,
+            description: String,
+            images: [
+                {
+                    _id: Schema.Types.ObjectId,
+                    url: { type: String, required: true },
+                    thumbnailUrl: { type: String, required: true }
+                }
+            ]
 		}
-	]
+	],
+    editable: {type: Boolean, required:true}
 });
 
 // Export the Mongoose model

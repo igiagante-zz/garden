@@ -2,7 +2,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-// Define our irrigation schema
+// Define the irrigation schema
 var irrigationSchema = new mongoose.Schema({
   irrigationDate: {type: Date, default: new Date()},
   quantity: Number,

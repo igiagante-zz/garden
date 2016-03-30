@@ -11,7 +11,11 @@ var measureSchema = new mongoose.Schema({
     measureDate: {type: Date, default: new Date()},
     measure: Number,
     unit: String,
-    sensorId: { type: Schema.Types.ObjectId, required: true }
+    sensor: {
+        name: { type: String, required: true }
+    },
+    gardenId: { type: Schema.Types.ObjectId, required: true },
+    plantId: { type: Schema.Types.ObjectId }
 });
 
 // Export the Mongoose model
