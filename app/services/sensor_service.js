@@ -2,8 +2,7 @@
  * Created by igiagante on 28/9/15.
  */
 
-var Sensor = require('../models/sensor'),
-    Measure = require('../models/measure'),
+var Measure = require('../models/measure'),
     async = require('async');
 
 var processSensor = function(measure, callback){

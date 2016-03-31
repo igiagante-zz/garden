@@ -2,7 +2,7 @@
  * Created by igiagante on 22/3/16.
  */
 
-var fs = require('fs'),
+var fs = require('extfs'),
     logger = require('../utils/logger'),
     async = require('async'),
     im = require('imagemagick')
@@ -210,12 +210,12 @@ var removeFile = function(path, removeFileCallback) {
  */
 var deleteImageDirectories = function(folderName, deleteDirectoriesCallback){
 
-    var fullsizePath = getMainImagePath(folderName, null);
-    var thumbsPath = getThumbImagePath(folderName, null);
+    var fullsizePath = getMainImagePath(folderName, "");
+    var thumbsPath = getThumbImagePath(folderName, "");
 
     logger.debug('Delete directories');
 
-    var ifExistDirDelete = function(path, cb){
+    var ifExistDirDelete = function(path, callback){
         fs.exists(path, function(exists){
             if(exists){
                 fs.rmdir(path, function(err){
@@ -223,20 +223,26 @@ var deleteImageDirectories = function(folderName, deleteDirectoriesCallback){
                         logger.debug('Fail delete directory');
                         logger.debug(err);
                     }
-                    cb(null);
+                    callback(undefined);
                 });
             }else{
-                cb(null);
+                callback(undefined);
             }
         });
     };
 
-    //the order of the directories are important!
-    var directories = [fullsizePath, thumbsPath, path];
+    fs.isEmpty(fullsizePath, function(empty, callback){
+        if(empty) {
+            //the order of the directories are important!
+            var directories = [fullsizePath, thumbsPath, pathImagesUploaded];
 
-    async.each(directories, ifExistDirDelete, function(err){
-        if (err) return deleteDirectoriesCallback(err);
-        deleteDirectoriesCallback(null);
+            async.each(directories, ifExistDirDelete, function(err){
+                if (err) return deleteDirectoriesCallback(err);
+                deleteDirectoriesCallback(undefined);
+            });
+        } else {
+            deleteDirectoriesCallback(undefined);
+        }
     });
 };
 
@@ -314,11 +320,11 @@ var deleteImageFile = function(folderName, imageName, deleteProcessCallback){
 /**
  * Verify if one or more images should be deleted from database.
  * @param imagesFromDB
- * @param images
+ * @param imagesFromRequest
  * @returns {Array}
  */
-var verifyIfImagesShouldBeDeleted = function(imagesFromDB, images, callback) {
-    callback(undefined, _.differenceBy(imagesFromDB, images, '_id'));
+var verifyIfImagesShouldBeDeleted = function(imagesFromDB, imagesFromRequest, callback) {
+    callback(undefined, _.differenceBy(imagesFromDB, imagesFromRequest, 'name'));
 };
 
 module.exports = {

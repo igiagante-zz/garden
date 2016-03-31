@@ -1,5 +1,6 @@
 // Load required packages
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'),
+	Schema = mongoose.Schema;
 
 // Define the dose schema
 var doseSchema = new mongoose.Schema({

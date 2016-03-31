@@ -82,20 +82,71 @@ var createPlant = function(req, res) {
 };
 
 /**
- * Delete one or more image in the folder's plant
+ * Delete one or more image (file) in the folder's plant
  * @param folderName
- * @param imagesData
+ * @param files
  * @param callback
  */
-var deleteImageFiles = function(folderName, imagesData, callback) {
+var deleteImageFiles = function(folderName, files, callback) {
+
+    if(_.isEmpty(files)){
+        return callback(undefined);
+    }
 
     // Object.keys
-    var keys = Object.keys(imagesData);
+    var keys = Object.keys(files);
 
     for (var i = 0; i < keys.length; ++i) {
         var image = files[keys[i]];
         imageService.deleteImageFile(folderName, image.name, callback);
     }
+};
+
+/** ------------------------------ Update Plant Flow ------------------------------------------ **/
+
+/**
+ * Persist images for one plant.
+ * @param plantName the plant name
+ * @param files the files to be persisted
+ * @param callback
+ */
+var persistImages = function(plantName, files, callback){
+    persistImageFiles(plantName, files, function(err, result) {
+        if(err){
+            logger.debug(' One image could not be saved ' + err);
+            return callback(err);
+        }
+        logger.debug(' the image was persisted successfully ' + result);
+        callback(undefined, result);
+    });
+};
+
+/**
+ * Verify if there are some images to be deleted.
+ * @param imagesFromDB images data obtained from database
+ * @param imagesFromRequest images data obtained from request
+ * @param callback
+ */
+var getImagesToBeDelete = function(imagesFromDB, imagesFromRequest, callback){
+    imageService.verifyIfImagesShouldBeDeleted(imagesFromDB, imagesFromRequest, callback);
+};
+
+/**
+ * Delete file images for one plant.
+ * @param plantName the name of the plant
+ * @param callback callback for the async auto
+ * @param results results obtained from the last function in async
+ */
+var deleteImages = function(plantName, callback, results){
+    //delete images for one plant
+    deleteImageFiles(plantName, results.getImagesToBeDelete, function(err, result) {
+        if(err){
+            logger.debug(' One image could not be deleted ' + err);
+            return callback(err);
+        }
+        logger.debug(' the image was deleted successfully ' + result);
+        callback(undefined, result);
+    });
 };
 
 /**
@@ -105,7 +156,6 @@ var deleteImageFiles = function(folderName, imagesData, callback) {
  */
 var updatePlant = function(req, res) {
 
-    var imagesData;
     var plantName = req.body.name;
 
     logger.debug(' -------------------- Update a plant  -------------------- ');
@@ -123,60 +173,40 @@ var updatePlant = function(req, res) {
         plant.irrigations = req.body.irrigations;
         plant.gardenId = req.body.gardenId;
 
-        imageService.getImageData(plantName, req.files, true, req.body.main, function(err, data) {
-            imagesData = data;
+        var imagesFromDB = JSON.parse(JSON.stringify(plant.images));
+
+        //Get images data from files sent through the request
+        imageService.getImageData(plantName, req.files, true, req.body.main, function(err, imagesData) {
 
             var flow = {
                 persistImages: async.apply(persistImages, plantName, req.files),
-                getImagesToBeDelete: async.apply(getImagesToBeDelete, plant, imagesData),
+                getImagesToBeDelete: async.apply(getImagesToBeDelete, imagesFromDB, imagesData),
                 deleteImages: ['getImagesToBeDelete', async.apply(deleteImages, plantName)],
-                savePlant: ['persistImages', async.apply(savePlant, plant)]
+                savePlant: ['persistImages', 'deleteImages', function (callback) {
+
+                    plant.images = imagesData;
+
+                    logger.debug('images: ' + JSON.parse(JSON.stringify(plant.images)));
+
+                    plant.save(function (err) {
+                        callback(err, plant);
+                    });
+
+                    callback(undefined, plant);
+                }]
             };
 
             async.auto(flow, function (error, results) {
                 if(error) {
                     return res.send(error);
                 }
-                plant.images = imagesData;
-
                 res.send(plant);
             });
         });
     });
 };
 
-var getImagesToBeDelete = function(imagesFromDB, imagesData, callback){
-    imageService.verifyIfImagesShouldBeDeleted(imagesFromDB, imagesData, callback);
-};
-
-var persistImages = function(plantName, files, callback){
-    persistImageFiles(plantName, files, function(err, result) {
-        if(err){
-            logger.debug(' One image could not be saved ' + err);
-            return callback(err);
-        }
-        logger.debug(' the image was persisted successfully ' + result);
-        callback(undefined, result);
-    });
-};
-
-var deleteImages = function(plantName, callback, imagesToBeDelete){
-    //delete images for one plant
-    deleteImageFiles(plantName, imagesToBeDelete, function(err, result) {
-        if(err){
-            logger.debug(' One image could not be deleted ' + err);
-            return callback(err);
-        }
-        logger.debug(' the image was deleted successfully ' + result);
-        callback(undefined, result);
-    });
-};
-
-var savePlant = function(plant, callback){
-    plant.save(function (err) {
-        callback(err, plant);
-    });
-};
+/** ------------------------------ Update Plant Flow Finish ------------------------------------------ **/
 
 /**
  * Delete a plant
