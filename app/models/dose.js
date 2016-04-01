@@ -15,6 +15,7 @@ var doseSchema = new mongoose.Schema({
 			ph: Number,
             npk: String,
             description: String,
+            quantityUsed: Number,
             images: [
                 {
                     _id: Schema.Types.ObjectId,

@@ -2,30 +2,33 @@ var express = require('express');
 var router = express.Router(); 
 var Nutrient = require('../models/nutrient')
 
-//create a nutrient
+/**
+ * Create one nutrient
+ * @param req
+ * @param res
+ */
 var createNutrient = function(req, res) {
         
         Nutrient.create({
             name: req.body.name,  
-            quantity: req.body.quantity,
-            dose_id: req.body.dose_id
+            ph: req.body.quantity,
+            npk: req.body.npk,
+            description: req.body.description,
+            images: req.body.images
         }, function(err, nutrient) {
             if (err)
                 res.send(err);
             
-            // get and return all the todos after you create another
-            Nutrient.find(function(err, nutrients) {
-                if (err)
-                    res.send(err)
-                res.json(nutrients);
-            });
+            res.json(nutrient);
         });       
     };
 
-//update a nutrient
+/**
+ * Update one nutrient
+ * @param req
+ * @param res
+ */
 var updateNutrient = function(req, res) {
-
-    console.log(req.params);
 
     Nutrient.findById(req.params.nutrient_id, function(err, nutrient) {
 
@@ -35,8 +38,9 @@ var updateNutrient = function(req, res) {
         console.log(nutrient);
 
         nutrient.name = req.body.name;  
-        nutrient.quantity = req.body.quantity;
-        nutrient.dose_id = req.body.dose_id;
+        nutrient.ph = req.body.ph;
+        nutrient.npk = req.body.npk;
+        nutrient.description = req.body.description;
 
         // save the nutrient
         nutrient.save(function(err) {

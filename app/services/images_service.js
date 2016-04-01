@@ -22,50 +22,6 @@ var getThumbImagePath = function(folderName, imageFileName) {
 };
 
 /**
- * Convert files data into json array
- * @param plantName name of the plant
- * @param files
- * @param forPlant Inform if the images belong to one plant.
- * @param main Indicates if the image is the main image of the folder.
- * @param callback
- * @returns {Array}
- */
-var getImageData = function(plantName, files, forPlant, main, callback) {
-
-    var imageData = [];
-
-    // Object.keys
-    var keys = Object.keys(files);
-
-    for (var i = 0; i < keys.length; ++i) {
-
-        var file = files[keys[i]];
-
-        //paths to urls
-        var urlPath = getMainImagePath(plantName, file.originalname);
-        var thumbnailUrlPath = getThumbImagePath(plantName, file.originalname);
-
-        var data = {};
-        data._id = mongoose.Types.ObjectId();
-        data.url =  urlPath;
-
-        var fileName  = _.split(file.originalname, '.', 2);
-
-        if(forPlant) {
-            data.thumbnailUrl = thumbnailUrlPath;
-            data.name = file.originalname;
-            data.type = file.mimetype;
-            data.size = file.size;
-            data.main = main === fileName[0];
-        }
-
-        imageData.push(data);
-    }
-
-    callback(undefined, imageData);
-};
-
-/**
  * Resize image size.
  * @param folderName - the folder name
  * @param imageFileName - the original file name
@@ -163,7 +119,7 @@ var renameImageFilePath = function(image, newPath, readImageFileCallback){
 
 /**
  * Write the Image data into a file.
- * @param data
+ * @param newPath
  * @param writeImageCallback
  */
 var writeImageFile = function(data, newPath, writeImageCallback){
@@ -231,7 +187,7 @@ var deleteImageDirectories = function(folderName, deleteDirectoriesCallback){
         });
     };
 
-    fs.isEmpty(fullsizePath, function(empty, callback){
+    fs.isEmpty(fullsizePath, function(empty){
         if(empty) {
             //the order of the directories are important!
             var directories = [fullsizePath, thumbsPath, pathImagesUploaded];
@@ -318,14 +274,169 @@ var deleteImageFile = function(folderName, imageName, deleteProcessCallback){
 };
 
 /**
+ * Persist each image in the folder's plant
+ * @param folderName
+ * @param files
+ * @param callback
+ */
+var persistImageFiles = function(folderName, files, callback) {
+    // Object.keys
+    var keys = Object.keys(files);
+
+    for (var i = 0; i < keys.length; ++i) {
+        var file = files[keys[i]];
+        persistImageFile(folderName, file, callback);
+    }
+};
+
+/**
+ * Persist images for one plant.
+ * @param plantName the plant name
+ * @param files the files to be persisted
+ * @param callback
+ */
+var persistImages = function(plantName, files, callback){
+    persistImageFiles(plantName, files, function(err, result) {
+        if(err){
+            logger.debug(' One image could not be saved ' + err);
+            return callback(err);
+        }
+        logger.debug(' the image was persisted successfully ' + result);
+        callback(undefined, result);
+    });
+};
+
+/**
  * Verify if one or more images should be deleted from database.
  * @param imagesFromDB
  * @param imagesFromRequest
+ * @param callback
  * @returns {Array}
  */
 var verifyIfImagesShouldBeDeleted = function(imagesFromDB, imagesFromRequest, callback) {
     callback(undefined, _.differenceBy(imagesFromDB, imagesFromRequest, 'name'));
 };
+
+/**
+ * Delete one or more image (file) in the folder's plant
+ * @param folderName
+ * @param files
+ * @param callback
+ */
+var deleteImageFiles = function(folderName, files, callback) {
+
+    if(_.isEmpty(files)){
+        return callback(undefined);
+    }
+
+    // Object.keys
+    var keys = Object.keys(files);
+
+    for (var i = 0; i < keys.length; ++i) {
+        var image = files[keys[i]];
+        deleteImageFile(folderName, image.name, callback);
+    }
+};
+
+/**
+ * Delete file images for one plant.
+ * @param plantName the name of the plant
+ * @param callback callback for the async auto
+ * @param results results obtained from the last function in async
+ */
+var deleteImages = function(plantName, callback, results){
+    //delete images for one plant
+    deleteImageFiles(plantName, results.getImagesToBeDelete, function(err, result) {
+        if(err){
+            logger.debug(' One image could not be deleted ' + err);
+            return callback(err);
+        }
+        logger.debug(' the image was deleted successfully ' + result);
+        callback(undefined, result);
+    });
+};
+
+/** ------------------------------ Update Plant Flow ------------------------------------------ **/
+
+/**
+ * Convert files data into json array
+ * @param folderName name of the plant
+ * @param files
+ * @param forPlant Inform if the images belong to one plant.
+ * @param main Indicates if the image is the main image of the folder.
+ * @param callback
+ * @returns {Array}
+ */
+var getImageData = function(folderName, files, forPlant, main, callback) {
+
+    var imageData = [];
+
+    // Object.keys
+    var keys = Object.keys(files);
+
+    for (var i = 0; i < keys.length; ++i) {
+
+        var file = files[keys[i]];
+
+        //paths to urls
+        var urlPath = getMainImagePath(folderName, file.originalname);
+        var thumbnailUrlPath = getThumbImagePath(folderName, file.originalname);
+
+        var data = {};
+        data._id = mongoose.Types.ObjectId();
+        data.url =  urlPath;
+
+        var fileName  = _.split(file.originalname, '.', 2);
+
+        if(forPlant) {
+            data.thumbnailUrl = thumbnailUrlPath;
+            data.name = file.originalname;
+            data.type = file.mimetype;
+            data.size = file.size;
+            data.main = main === fileName[0];
+        }
+
+        imageData.push(data);
+    }
+
+    callback(undefined, imageData);
+};
+
+/**
+ * Each entity which has images can use this process to update its images.
+ * @param files Files to be persisted
+ * @param imagesFromRequest {Array} json array with images data from request
+ * @param imagesFromDB {Array} json array with images data from database
+ * @param model The schema which update the document
+ * @param folderName
+ * @param callback
+ */
+var processImageUpdate = function(files, imagesFromRequest, imagesFromDB, model, folderName, callback) {
+
+    var flow = {
+        persistImages: async.apply(persistImages, folderName, files),
+        getImagesToBeDelete: async.apply(verifyIfImagesShouldBeDeleted, imagesFromDB, imagesFromRequest),
+        deleteImages: ['getImagesToBeDelete', async.apply(deleteImages, folderName)],
+        savePlant: ['persistImages', 'deleteImages', function (callback) {
+
+            model.images = imagesFromRequest;
+
+            model.save(function (err) {
+                callback(err, model);
+            });
+
+            callback(undefined, model);
+        }]
+    };
+
+    async.auto(flow, function (error, results) {
+        if (error) {
+            return callback(error);
+        }
+        callback(undefined, model);
+    });
+};
+/** ------------------------------ Update Plant Flow Finish ------------------------------------------ **/
 
 module.exports = {
     getImageData: getImageData,
@@ -338,6 +449,7 @@ module.exports = {
     deleteImageDirectories: deleteImageDirectories,
     persistImageFile: persistImageFile,
     deleteImageFile: deleteImageFile,
-    verifyIfImagesShouldBeDeleted: verifyIfImagesShouldBeDeleted
+    verifyIfImagesShouldBeDeleted: verifyIfImagesShouldBeDeleted,
+    processImageUpdate: processImageUpdate
 };
 

@@ -3,9 +3,8 @@ var express = require('express'),
     Plant = require('../models/plant'),
     Garden = require('../models/garden'),
     logger = require('../utils/logger'),
-    imageService = require('../services/images_service_new'),
+    imageService = require('../services/images_service'),
     util = require('util'),
-    async = require('async'),
     _ = require('lodash');
 
 
@@ -105,51 +104,6 @@ var deleteImageFiles = function(folderName, files, callback) {
 /** ------------------------------ Update Plant Flow ------------------------------------------ **/
 
 /**
- * Persist images for one plant.
- * @param plantName the plant name
- * @param files the files to be persisted
- * @param callback
- */
-var persistImages = function(plantName, files, callback){
-    persistImageFiles(plantName, files, function(err, result) {
-        if(err){
-            logger.debug(' One image could not be saved ' + err);
-            return callback(err);
-        }
-        logger.debug(' the image was persisted successfully ' + result);
-        callback(undefined, result);
-    });
-};
-
-/**
- * Verify if there are some images to be deleted.
- * @param imagesFromDB images data obtained from database
- * @param imagesFromRequest images data obtained from request
- * @param callback
- */
-var getImagesToBeDelete = function(imagesFromDB, imagesFromRequest, callback){
-    imageService.verifyIfImagesShouldBeDeleted(imagesFromDB, imagesFromRequest, callback);
-};
-
-/**
- * Delete file images for one plant.
- * @param plantName the name of the plant
- * @param callback callback for the async auto
- * @param results results obtained from the last function in async
- */
-var deleteImages = function(plantName, callback, results){
-    //delete images for one plant
-    deleteImageFiles(plantName, results.getImagesToBeDelete, function(err, result) {
-        if(err){
-            logger.debug(' One image could not be deleted ' + err);
-            return callback(err);
-        }
-        logger.debug(' the image was deleted successfully ' + result);
-        callback(undefined, result);
-    });
-};
-
-/**
  * Update a plant
  * @param req
  * @param res
@@ -173,40 +127,22 @@ var updatePlant = function(req, res) {
         plant.irrigations = req.body.irrigations;
         plant.gardenId = req.body.gardenId;
 
+        //convert model to json and then to Array
         var imagesFromDB = JSON.parse(JSON.stringify(plant.images));
 
         //Get images data from files sent through the request
         imageService.getImageData(plantName, req.files, true, req.body.main, function(err, imagesData) {
 
-            var flow = {
-                persistImages: async.apply(persistImages, plantName, req.files),
-                getImagesToBeDelete: async.apply(getImagesToBeDelete, imagesFromDB, imagesData),
-                deleteImages: ['getImagesToBeDelete', async.apply(deleteImages, plantName)],
-                savePlant: ['persistImages', 'deleteImages', function (callback) {
-
-                    plant.images = imagesData;
-
-                    logger.debug('images: ' + JSON.parse(JSON.stringify(plant.images)));
-
-                    plant.save(function (err) {
-                        callback(err, plant);
-                    });
-
-                    callback(undefined, plant);
-                }]
-            };
-
-            async.auto(flow, function (error, results) {
-                if(error) {
-                    return res.send(error);
+            //Update images for one plant
+            imageService.processImageUpdate(req.files, imagesData, imagesFromDB, plant, plantName, function(err, result) {
+                if(err) {
+                    return res.send(err);
                 }
-                res.send(plant);
+                res.send(result);
             });
         });
     });
 };
-
-/** ------------------------------ Update Plant Flow Finish ------------------------------------------ **/
 
 /**
  * Delete a plant

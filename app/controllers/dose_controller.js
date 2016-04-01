@@ -2,7 +2,11 @@ var express = require('express');
 var router = express.Router(); 
 var Dose = require('../models/dose');
 
-//create a dose
+/**
+ * Create one dose with nutrients
+ * @param req
+ * @param res
+ */
 var createDose = function(req, res) {
 
     Dose.create({
@@ -18,38 +22,46 @@ var createDose = function(req, res) {
         // get and return all the doses after it creates a new one
         Dose.find(function(err, dose) {
                 if (err)
-                    res.send(err)
+                    res.send(err);
                 res.json(dose);
             });
         });       
     };
 
-//update a dose
+/**
+ * Update one dose with nutrients
+ * @param req
+ * @param res
+ */
 var updateDose = function(req, res) {
 
     Dose.findById(req.params.dose_id, function(err, dose) {
 
+    if (err)
+            res.send(err);
+
+    console.log(dose);
+
+    Dose.water = req.body.water;
+    Dose.phDose = req.body.ph_dose;
+    Dose.ec = req.body.ec;
+    Dose.ph = req.body.ph;
+    Dose.nutrients = req.body.nutrients;
+
+    // save the dose
+    Dose.save(function(err) {
             if (err)
-                    res.send(err);
-
-            console.log(dose);
-
-        Dose.water = req.body.water;
-        Dose.phDose = req.body.ph_dose;
-        Dose.ec = req.body.ec;
-        Dose.ph = req.body.ph;
-        Dose.nutrients = req.body.nutrients;
-
-        // save the dose
-        Dose.save(function(err) {
-                if (err)
-                    res.send(err);
-                res.json(dose);
-            });
+                res.send(err);
+            res.json(dose);
         });
-    };
-    
-//retrieve one dose
+    });
+};
+
+/**
+ * Get one dose
+ * @param req
+ * @param res
+ */
 var getDose = function(req, res) {
     Dose.findById(req.params.dose_id, function(err, dose) {
             if (err)
@@ -58,7 +70,11 @@ var getDose = function(req, res) {
         });
     };
 
-//delete one dose
+/**
+ * Delete one dose
+ * @param req
+ * @param res
+ */
 var deleteDose = function(req, res) {
         Dose.remove({
             _id : req.params.dose_id
@@ -74,7 +90,11 @@ var deleteDose = function(req, res) {
         });
     };
 
-//get all doses
+/**
+ * Get all the doses for one garden
+ * @param req
+ * @param res
+ */
 var getAll = function(req, res) {       
             Dose.find(function(err, doses) {
                 if (err)
