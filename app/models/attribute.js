@@ -25,6 +25,12 @@ var attributeSchema = new mongoose.Schema({
             name: String,
             percentage: Number
         }
+    ],
+    plagues: [
+        {
+            name: String,
+            percentage: Number
+        }
     ]
 });
 
