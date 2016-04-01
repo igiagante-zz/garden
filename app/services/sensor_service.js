@@ -29,7 +29,7 @@ var processData = function(measures, callback){
 };
 
 //return all the measures done by one sensor
-var getSensorMeasuares = function(sensorId, callback) {
+var getSensorMeasures = function(sensorId, callback) {
 
     Measure.find({ "sensorId" : sensorId }, function(error, measures){
         if(error) callback(error);
@@ -39,5 +39,5 @@ var getSensorMeasuares = function(sensorId, callback) {
 
 module.exports = {
     processData : processData,
-    getSensorMeasures : getSensorMeasuares
+    getSensorMeasures : getSensorMeasures
 };

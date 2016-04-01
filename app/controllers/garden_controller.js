@@ -14,13 +14,8 @@ var createGarden = function(req, res) {
         }, function(err, garden) {
             if (err)
                 res.send(err);
-            
-            // get and return all the gardens after you create another
-            Garden.find(function(err, gardens) {
-                if (err)
-                    res.send(err)
-                res.json(gardens);
-            });
+
+            res.json(garden);
         });       
     };
 

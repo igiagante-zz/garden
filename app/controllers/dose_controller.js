@@ -18,14 +18,9 @@ var createDose = function(req, res) {
         }, function(err, dose) {
             if (err)
                 res.send(err);
-            
-        // get and return all the doses after it creates a new one
-        Dose.find(function(err, dose) {
-                if (err)
-                    res.send(err);
-                res.json(dose);
-            });
-        });       
+
+            res.json(dose);
+        });
     };
 
 /**

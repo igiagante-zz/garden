@@ -12,7 +12,11 @@ var nutrientsUsed = function(req, res) {
     irrigationService.calculateUseOfNutrient(req.params.garden_id, populateCallback);
 };
 
-//create a irrigation
+/**
+ * Create one irrigation
+ * @param req
+ * @param res
+ */
 var createIrrigation = function(req, res) {
         
         Irrigation.create({
@@ -33,7 +37,11 @@ var createIrrigation = function(req, res) {
         });       
     };
 
-//update a irrigation
+/**
+ * Update one irrigation
+ * @param req
+ * @param res
+ */
 var updateIrrigation = function(req, res) {
 
     console.log(req.params);
@@ -58,8 +66,12 @@ var updateIrrigation = function(req, res) {
         });
     });
 };
-    
-//retrieve one irrigation
+
+/**
+ * Get one irrigation
+ * @param req
+ * @param res
+ */
 var getIrrigation = function(req, res) {
         Irrigation.findById(req.params.irrigation_id, function(err, irrigation) {
             if (err)
@@ -68,7 +80,11 @@ var getIrrigation = function(req, res) {
         });
     };
 
-//delete a irrigation
+/**
+ * Delete one irrigation
+ * @param req
+ * @param res
+ */
 var deleteIrrigation = function(req, res) {
         Irrigation.remove({ 
             _id : req.params.irrigation_id 
@@ -85,7 +101,11 @@ var deleteIrrigation = function(req, res) {
         });
     };
 
-//get all irrigations
+/**
+ * Get all the irrigations
+ * @param req
+ * @param res
+ */
 var getAll = function(req, res) {       
             Irrigation.find(function(err, irrigations) {
                 if (err)
