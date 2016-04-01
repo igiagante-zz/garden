@@ -8,6 +8,7 @@ var fs = require('extfs'),
     im = require('imagemagick')
     mongoose = require('mongoose'),
     _ = require('lodash'),
+    logger = require('../utils/logger'),
     path = require('path');
 
 var parentDir = path.resolve(process.cwd(), '..');
@@ -339,14 +340,14 @@ var deleteImageFiles = function(folderName, files, callback) {
 };
 
 /**
- * Delete file images for one plant.
- * @param plantName the name of the plant
+ * Delete file images for one model.
+ * @param modelName the name of the model
  * @param callback callback for the async auto
  * @param results results obtained from the last function in async
  */
-var deleteImages = function(plantName, callback, results){
+var deleteImages = function(modelName, callback, results){
     //delete images for one plant
-    deleteImageFiles(plantName, results.getImagesToBeDelete, function(err, result) {
+    deleteImageFiles(modelName, results.getImagesToBeDelete, function(err, result) {
         if(err){
             logger.debug(' One image could not be deleted ' + err);
             return callback(err);
@@ -362,12 +363,11 @@ var deleteImages = function(plantName, callback, results){
  * Convert files data into json array
  * @param folderName name of the plant
  * @param files
- * @param forPlant Inform if the images belong to one plant.
  * @param main Indicates if the image is the main image of the folder.
  * @param callback
  * @returns {Array}
  */
-var getImageData = function(folderName, files, forPlant, main, callback) {
+var getImageData = function(folderName, files, main, callback) {
 
     var imageData = [];
 
@@ -385,16 +385,15 @@ var getImageData = function(folderName, files, forPlant, main, callback) {
         var data = {};
         data._id = mongoose.Types.ObjectId();
         data.url =  urlPath;
+        data.name = file.originalname;
 
         var fileName  = _.split(file.originalname, '.', 2);
 
-        if(forPlant) {
-            data.thumbnailUrl = thumbnailUrlPath;
-            data.name = file.originalname;
-            data.type = file.mimetype;
-            data.size = file.size;
-            data.main = main === fileName[0];
-        }
+        data.thumbnailUrl = thumbnailUrlPath;
+        data.type = file.mimetype;
+        data.size = file.size;
+        data.main = main === fileName[0];
+
 
         imageData.push(data);
     }
@@ -450,6 +449,7 @@ module.exports = {
     persistImageFile: persistImageFile,
     deleteImageFile: deleteImageFile,
     verifyIfImagesShouldBeDeleted: verifyIfImagesShouldBeDeleted,
-    processImageUpdate: processImageUpdate
+    processImageUpdate: processImageUpdate,
+    persistImageFiles: persistImageFiles
 };
 

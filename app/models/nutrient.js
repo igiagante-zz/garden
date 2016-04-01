@@ -18,7 +18,11 @@ var nutrientSchema = new mongoose.Schema({
         {
             _id: Schema.Types.ObjectId,
             url: { type: String, required: true },
-            thumbnailUrl: { type: String, required: true }
+            thumbnailUrl: { type: String, required: true },
+            name: { type: String, required: true },
+            type: { type: String, required: true },
+            size: Number,
+            main: { type: Boolean, default: 0 }
         }
     ],
     nutrientDoseIds: [Schema.Types.ObjectId]

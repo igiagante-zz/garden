@@ -9,7 +9,7 @@ router.post('/', nutrientController.createNutrient);
 router.put('/:nutrient_id', nutrientController.updateNutrient);
     
 //retrieve one nutrient
-router.get('/:nutrient_id', nutrientController.getPNutrient);
+router.get('/:nutrient_id', nutrientController.getNutrient);
 
 //delete a nutrient
 router.delete('/:nutrient_id', nutrientController.deleteNutrient);

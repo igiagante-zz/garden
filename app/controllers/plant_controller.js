@@ -9,23 +9,6 @@ var express = require('express'),
 
 
 /**
- * Persist each image in the folder's plant
- * @param folderName
- * @param files
- * @param callback
- */
-var persistImageFiles = function(folderName, files, callback) {
-
-    // Object.keys
-    var keys = Object.keys(files);
-
-    for (var i = 0; i < keys.length; ++i) {
-        var file = files[keys[i]];
-        imageService.persistImageFile(folderName, file, callback);
-    }
-};
-
-/**
  * Create a plant
  * @param req request parameters
  * @param res response
@@ -38,16 +21,18 @@ var createPlant = function(req, res) {
     req.assert('gardenId', 'gardenId should not be empty', req.body.gardenId).notEmpty();
 
     var errors = req.validationErrors();
-      if (errors) {
+    if (errors) {
         res.status(400).send('There have been validation errors: ' + util.inspect(errors));
         return;
-      }
+    }
 
     var imagesData;
     var plantName = req.body.name;
 
     if(req.files !== null) {
-        imagesData = imageService.getImageData(plantName, req.files, true);
+        imageService.getImageData(plantName, req.files, true, req.body.main, function(err, data){
+            imagesData = data;
+        });
     }
 
     Garden.findById(req.body.gardenId, function(err){
@@ -68,7 +53,7 @@ var createPlant = function(req, res) {
                 res.send(err);
 
             //persist images for one plant
-            persistImageFiles(plantName, req.files, function(err, result) {
+            imageService.persistImageFiles(plantName, req.files, function(err, result) {
                 if(err)
                     logger.debug(' One image could not be saved ' + err);
                 logger.debug(' the image was persisted successfully ' + result);
@@ -80,27 +65,6 @@ var createPlant = function(req, res) {
     });
 };
 
-/**
- * Delete one or more image (file) in the folder's plant
- * @param folderName
- * @param files
- * @param callback
- */
-var deleteImageFiles = function(folderName, files, callback) {
-
-    if(_.isEmpty(files)){
-        return callback(undefined);
-    }
-
-    // Object.keys
-    var keys = Object.keys(files);
-
-    for (var i = 0; i < keys.length; ++i) {
-        var image = files[keys[i]];
-        imageService.deleteImageFile(folderName, image.name, callback);
-    }
-};
-
 /** ------------------------------ Update Plant Flow ------------------------------------------ **/
 
 /**
@@ -109,8 +73,6 @@ var deleteImageFiles = function(folderName, files, callback) {
  * @param res
  */
 var updatePlant = function(req, res) {
-
-    var plantName = req.body.name;
 
     logger.debug(' -------------------- Update a plant  -------------------- ');
 
@@ -131,10 +93,10 @@ var updatePlant = function(req, res) {
         var imagesFromDB = JSON.parse(JSON.stringify(plant.images));
 
         //Get images data from files sent through the request
-        imageService.getImageData(plantName, req.files, true, req.body.main, function(err, imagesData) {
+        imageService.getImageData(plant.name, req.files, req.body.main, function(err, imagesData) {
 
             //Update images for one plant
-            imageService.processImageUpdate(req.files, imagesData, imagesFromDB, plant, plantName, function(err, result) {
+            imageService.processImageUpdate(req.files, imagesData, imagesFromDB, plant, plant.name, function(err, result) {
                 if(err) {
                     return res.send(err);
                 }

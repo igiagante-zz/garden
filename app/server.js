@@ -32,12 +32,14 @@ var router = express.Router(),
 	gardenRouter = require('./routers/garden_router.js'),
 	irrigationRouter = require('./routers/irrigation_router.js'),
 	plantRouter = require('./routers/plant_router.js'),
+	nutrientRouter = require('./routers/nutrient_router.js');
 	sensorRouter = require('./routers/sensor_router.js');
 
 router.use('/doses', doseRouter);
 router.use('/garden', gardenRouter);
 router.use('/irrigation', irrigationRouter);
 router.use('/plant', plantRouter);
+router.use('/nutrient', nutrientRouter);
 router.use('/sensor', sensorRouter);
 
 // middleware to use for all requests
