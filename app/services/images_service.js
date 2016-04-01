@@ -275,7 +275,7 @@ var deleteImageFile = function(folderName, imageName, deleteProcessCallback){
 };
 
 /**
- * Persist each image in the folder's plant
+ * Persist each image in the folder's enity
  * @param folderName
  * @param files
  * @param callback
@@ -291,13 +291,13 @@ var persistImageFiles = function(folderName, files, callback) {
 };
 
 /**
- * Persist images for one plant.
- * @param plantName the plant name
+ * Persist images for one model.
+ * @param folderName the folder name
  * @param files the files to be persisted
  * @param callback
  */
-var persistImages = function(plantName, files, callback){
-    persistImageFiles(plantName, files, function(err, result) {
+var persistImages = function(folderName, files, callback){
+    persistImageFiles(folderName, files, function(err, result) {
         if(err){
             logger.debug(' One image could not be saved ' + err);
             return callback(err);
@@ -319,7 +319,7 @@ var verifyIfImagesShouldBeDeleted = function(imagesFromDB, imagesFromRequest, ca
 };
 
 /**
- * Delete one or more image (file) in the folder's plant
+ * Delete one or more image (file) in the folder's entity
  * @param folderName
  * @param files
  * @param callback
@@ -341,13 +341,13 @@ var deleteImageFiles = function(folderName, files, callback) {
 
 /**
  * Delete file images for one model.
- * @param modelName the name of the model
+ * @param folderName the name of the folder
  * @param callback callback for the async auto
  * @param results results obtained from the last function in async
  */
-var deleteImages = function(modelName, callback, results){
-    //delete images for one plant
-    deleteImageFiles(modelName, results.getImagesToBeDelete, function(err, result) {
+var deleteImages = function(folderName, callback, results){
+    //delete images for one model
+    deleteImageFiles(folderName, results.getImagesToBeDelete, function(err, result) {
         if(err){
             logger.debug(' One image could not be deleted ' + err);
             return callback(err);
@@ -357,11 +357,11 @@ var deleteImages = function(modelName, callback, results){
     });
 };
 
-/** ------------------------------ Update Plant Flow ------------------------------------------ **/
+/** ------------------------------ Update Model Flow ------------------------------------------ **/
 
 /**
  * Convert files data into json array
- * @param folderName name of the plant
+ * @param folderName the folder name
  * @param files
  * @param main Indicates if the image is the main image of the folder.
  * @param callback
@@ -416,7 +416,7 @@ var processImageUpdate = function(files, imagesFromRequest, imagesFromDB, model,
         persistImages: async.apply(persistImages, folderName, files),
         getImagesToBeDelete: async.apply(verifyIfImagesShouldBeDeleted, imagesFromDB, imagesFromRequest),
         deleteImages: ['getImagesToBeDelete', async.apply(deleteImages, folderName)],
-        savePlant: ['persistImages', 'deleteImages', function (callback) {
+        save: ['persistImages', 'deleteImages', function (callback) {
 
             model.images = imagesFromRequest;
 
@@ -435,7 +435,7 @@ var processImageUpdate = function(files, imagesFromRequest, imagesFromDB, model,
         callback(undefined, model);
     });
 };
-/** ------------------------------ Update Plant Flow Finish ------------------------------------------ **/
+/** ------------------------------ Update Flow Finish ------------------------------------------ **/
 
 module.exports = {
     getImageData: getImageData,
