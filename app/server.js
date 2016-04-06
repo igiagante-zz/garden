@@ -4,13 +4,22 @@ var express    = require('express'),        // call express
 	expressValidator = require('express-validator'),
 	multer = require('multer'),
 	logger = require('./utils/logger'),
-	cors = require('cors');
+	cors = require('cors'),
+	config = require('../config'),
+	mongoose = require('mongoose');
 
-// connect to the database
-var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/garden'); // connect to our database
+var app = express();  // define our app using express
 
-var app = express();                 // define our app using express
+app.configure(function () {
+	//...
+	// set the 'dbUrl' to the mongodb url that corresponds to the
+	// environment we are in
+	app.set('dbUrl', config.db[app.settings.env]);
+	// connect mongoose to the mongo dbUrl
+	mongoose.connect(app.get('dbUrl'));
+	//...
+});
+
 // configure app to use bodyParser()
 // this will let us get the data from a POST
 logger.debug("Setting parse urlencoded request bodies into req.body");

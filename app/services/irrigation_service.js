@@ -34,7 +34,7 @@ var getIrrigations = function(garden_id, fromDate, toDate, callback) {
                     doseId: irrigations[i].doseId
                 }
             );
-        };
+        }
         callback(undefined, irrigationsOut);
     });
 };
