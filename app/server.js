@@ -10,19 +10,17 @@ var express    = require('express'),        // call express
 
 var app = express();  // define our app using express
 
-app.configure(function () {
-	//...
-	// set the 'dbUrl' to the mongodb url that corresponds to the
-	// environment we are in
-	app.set('dbUrl', config.db[app.settings.env]);
-	// connect mongoose to the mongo dbUrl
-	mongoose.connect(app.get('dbUrl'));
-	//...
+// *** mongoose *** ///
+mongoose.connect(config.db[app.settings.env], function(err, res) {
+	if(err) {
+		logger.info('Error connecting to the database. ' + err);
+	} else {
+		logger.info('Connected to Database: ' + config.db[app.settings.env]);
+	}
 });
 
 // configure app to use bodyParser()
 // this will let us get the data from a POST
-logger.debug("Setting parse urlencoded request bodies into req.body");
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 app.use(multer()); // for parsing multipart/form-data
@@ -76,3 +74,5 @@ app.use(express.static(process.cwd() + '/public'));
 // =============================================================================
 app.listen(port);
 console.log(' Starting Server at port: ' + port);
+
+module.exports = app;

@@ -369,6 +369,9 @@ var deleteImages = function(folderName, callback, results){
  */
 var getImageData = function(folderName, files, main, callback) {
 
+    if(_.isEmpty(files))
+        return callback(undefined);
+
     var imageData = [];
 
     // Object.keys
@@ -418,7 +421,7 @@ var processImageUpdate = function(files, imagesFromRequest, imagesFromDB, model,
         deleteImages: ['getImagesToBeDelete', async.apply(deleteImages, folderName)],
         save: ['persistImages', 'deleteImages', function (callback) {
 
-            model.images = imagesFromRequest;
+        model.images = _.concat(model.images, imagesFromRequest);
 
             model.save(function (err) {
                 callback(err, model);

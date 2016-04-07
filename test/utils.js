@@ -8,11 +8,8 @@
 //  Modified from https://github.com/elliotf/mocha-mongoose
 
 
-var mongoose = require('mongoose'),
-    Schema = mongoose.Schema;
-
-var config = require('../config');
 var mongoose = require('mongoose');
+var config = require('../config');
 
 
 // ensure the NODE_ENV is set to 'test'

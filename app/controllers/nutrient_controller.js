@@ -11,7 +11,7 @@ var express = require('express'),
  */
 var createNutrient = function(req, res) {
 
-    var imagesData;
+    var imagesData = null;
     var nutrientName = req.body.name;
 
     if(req.files !== null) {
@@ -34,7 +34,7 @@ var createNutrient = function(req, res) {
         imageService.persistImageFiles(nutrient.name, req.files, function(err, result) {
             if(err)
                 return res.send(err);
-            res.json(req.body);
+            res.json(nutrient);
         });
     });
 };
@@ -51,28 +51,29 @@ var updateNutrient = function(req, res) {
         if (err)
                 res.send(err);
 
-        console.log(nutrient);
+        logger.info(nutrient);
+
+        //convert model to json and then to Array
+        var imagesFromDB = JSON.parse(JSON.stringify(nutrient.images));
 
         nutrient.name = req.body.name;  
         nutrient.ph = req.body.ph;
         nutrient.npk = req.body.npk;
         nutrient.description = req.body.description;
+        nutrient.images = req.body.images;
 
-        //convert model to json and then to Array
-        var imagesFromDB = JSON.parse(JSON.stringify(nutrient.images));
+        var flow = {
+            getImageData: async.apply(imageService.getImageData, nutrient.name, req.files, req.body.main),
+            processImageUpdate: ['getImageData', async.apply(imageService.processImageUpdate, req.files,
+                results.getImageData, imagesFromDB, nutrient, nutrient.name)]
+        };
 
-        //Get images data from files sent through the request
-        imageService.getImageData(nutrient.name, req.files, req.body.main, function(err, imagesData) {
-
-            //Update images for one nutrient
-            imageService.processImageUpdate(req.files, imagesData, imagesFromDB, nutrient, nutrient.name, function(err, result) {
-                if(err) {
-                    return res.send(err);
-                }
-                res.send(result);
-            });
+        async.auto(flow, function (error, results) {
+            if (error) {
+                return callback(error);
+            }
+            callback(undefined, model);
         });
-
     });
 };
     
@@ -106,7 +107,7 @@ var deleteNutrient = function(req, res) {
 var getAll = function(req, res) {       
             Nutrient.find(function(err, nutrients) {
                 if (err)
-                    res.send(err)
+                    res.send(err);
                 res.json(nutrients);
             });
 };
