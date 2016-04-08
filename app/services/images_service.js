@@ -310,12 +310,23 @@ var persistImages = function(folderName, files, callback){
 /**
  * Verify if one or more images should be deleted from database.
  * @param imagesFromDB
- * @param imagesFromRequest
+ * @param resourcesIds
  * @param callback
  * @returns {Array}
  */
-var verifyIfImagesShouldBeDeleted = function(imagesFromDB, imagesFromRequest, callback) {
-    callback(undefined, _.differenceBy(imagesFromDB, imagesFromRequest, 'name'));
+var verifyIfImagesShouldBeDeleted = function(imagesFromDB, resourcesIds, callback) {
+
+    var result = [];
+
+    _.forEach(imagesFromDB, function (imageData, key1) {
+        _.forEach(resourcesIds, function (id, key2) {
+            if (imageData.id === id) {
+                result.push(imageData);
+            }
+        });
+    });
+
+    callback(undefined, result);
 };
 
 /**
@@ -345,9 +356,9 @@ var deleteImageFiles = function(folderName, files, callback) {
  * @param callback callback for the async auto
  * @param results results obtained from the last function in async
  */
-var deleteImages = function(folderName, callback, results){
+var deleteImagesFiles = function(folderName, callback, results){
     //delete images for one model
-    deleteImageFiles(folderName, results.getImagesToBeDelete, function(err, result) {
+    deleteImageFiles(folderName, results.getImagesDataToBeDelete, function(err, result) {
         if(err){
             logger.debug(' One image could not be deleted ' + err);
             return callback(err);
@@ -355,6 +366,15 @@ var deleteImages = function(folderName, callback, results){
         logger.debug(' the image was deleted successfully ' + result);
         callback(undefined, result);
     });
+};
+
+/**
+ * Update images doc from one Model.
+ * @param model The model where the images belong to.
+ */
+var updateImagesDataFromModel = function(model, callback, results){
+    model.images = _.differenceBy(model.images, results.getImagesDataToBeDelete, 'id');
+    callback(undefined);
 };
 
 /** ------------------------------ Update Model Flow ------------------------------------------ **/
@@ -397,7 +417,6 @@ var getImageData = function(folderName, files, main, callback) {
         data.size = file.size;
         data.main = main === fileName[0];
 
-
         imageData.push(data);
     }
 
@@ -405,23 +424,35 @@ var getImageData = function(folderName, files, main, callback) {
 };
 
 /**
- * Each entity which has images can use this process to update its images.
- * @param files Files to be persisted
- * @param imagesFromRequest {Array} json array with images data from request
- * @param imagesFromDB {Array} json array with images data from database
+ * Each entity which contains images, can use this process to update its images.
+ * @param request
  * @param model The schema which update the document
- * @param folderName
  * @param callback
  */
-var processImageUpdate = function(files, imagesFromRequest, imagesFromDB, model, folderName, callback) {
+var processImageUpdate = function(request, model, callback) {
+
+    //convert model to json and then to Array
+    var imagesFromDB = JSON.parse(JSON.stringify(model.images));
+
+    var imagesDoc = null;
+    var resourcesIds = request.resourcesIds;
+    var folderName = model.name;
 
     var flow = {
-        persistImages: async.apply(persistImages, folderName, files),
-        getImagesToBeDelete: async.apply(verifyIfImagesShouldBeDeleted, imagesFromDB, imagesFromRequest),
-        deleteImages: ['getImagesToBeDelete', async.apply(deleteImages, folderName)],
-        save: ['persistImages', 'deleteImages', function (callback) {
 
-        model.images = _.concat(model.images, imagesFromRequest);
+        getImagesDataFromRequest: function (callback) {
+            getImageData(model.name, request.files, request.body.main, function(err, data){
+                if(err)
+                    return callback(err);
+                imagesDoc = data;
+                callback(undefined, data)
+            });
+        },
+        persistImages: ['getImagesDataFromRequest', async.apply(persistImages, folderName, files)],
+        getImagesDataToBeDelete: async.apply(verifyIfImagesShouldBeDeleted, imagesFromDB, resourcesIds),
+        deleteImagesFiles: ['getImagesToBeDelete', async.apply(deleteImagesFiles, folderName)],
+        deleteImages: ['getImagesToBeDelete', async.apply(updateImagesDataFromModel, model)],
+        save: ['persistImages', 'deleteImages', function (callback) {
 
             model.save(function (err) {
                 callback(err, model);

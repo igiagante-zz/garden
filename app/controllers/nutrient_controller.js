@@ -49,30 +49,19 @@ var updateNutrient = function(req, res) {
     Nutrient.findById(req.params.nutrient_id, function(err, nutrient) {
 
         if (err)
-                res.send(err);
+            res.send(err);
 
         logger.info(nutrient);
-
-        //convert model to json and then to Array
-        var imagesFromDB = JSON.parse(JSON.stringify(nutrient.images));
 
         nutrient.name = req.body.name;  
         nutrient.ph = req.body.ph;
         nutrient.npk = req.body.npk;
         nutrient.description = req.body.description;
-        nutrient.images = req.body.images;
 
-        var flow = {
-            getImageData: async.apply(imageService.getImageData, nutrient.name, req.files, req.body.main),
-            processImageUpdate: ['getImageData', async.apply(imageService.processImageUpdate, req.files,
-                results.getImageData, imagesFromDB, nutrient, nutrient.name)]
-        };
-
-        async.auto(flow, function (error, results) {
-            if (error) {
-                return callback(error);
-            }
-            callback(undefined, model);
+        imageService.processImageUpdate(req, nutrient, function(err, result) {
+           if(err)
+               res.send(err);
+            res.json(result);
         });
     });
 };
