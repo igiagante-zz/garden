@@ -13,7 +13,7 @@ var express = require('express'),
  * @param req request parameters
  * @param res response
  */
-var createPlant = function(req, res) {       
+var createPlant = function (req, res) {
 
     logger.debug(' -------------------- Create a new plant  -------------------- ');
 
@@ -29,38 +29,38 @@ var createPlant = function(req, res) {
     var imagesData;
     var plantName = req.body.name;
 
-    if(req.files !== null) {
-        imageService.getImageData(plantName, req.files, req.body.main, function(err, data){
+    if (req.files !== null) {
+        imageService.getImageData(plantName, req.files, req.body.main, function (err, data) {
             imagesData = data;
         });
     }
 
-    Garden.findById(req.body.gardenId, function(err){
+    Garden.findById(req.body.gardenId, function (err) {
 
-        if(err)
+        if (err)
             res.send(err);
 
         Plant.create({
-            name: req.body.name,  
+            name: req.body.name,
             size: req.body.size,
             phSoil: req.body.phSoil,
             ecSoil: req.body.ecSoil,
             harvest: req.body.harvest,
             gardenId: req.body.gardenId,
             images: imagesData
-        }, function(err, plant) {
+        }, function (err, plant) {
             if (err)
                 res.send(err);
 
             //persist images for one plant
-            imageService.persistImageFiles(plantName, req.files, function(err, result) {
-                if(err)
+            imageService.persistImageFiles(plantName, req.files, function (err, result) {
+                if (err)
                     res.send(' One image could not be saved ' + err);
-                logger.debug( ' the image was persisted successfully ');
+                logger.debug(' the image was persisted successfully ');
                 logger.debug(JSON.stringify(result));
                 res.json(plant);
             });
-        }); 
+        });
     });
 };
 
@@ -71,11 +71,11 @@ var createPlant = function(req, res) {
  * @param req
  * @param res
  */
-var updatePlant = function(req, res) {
+var updatePlant = function (req, res) {
 
     logger.debug(' -------------------- Update a plant  -------------------- ');
 
-    Plant.findById(req.params.plant_id, function(err, plant) {
+    Plant.findById(req.params.plant_id, function (err, plant) {
 
         if (err)
             res.send(err);
@@ -88,21 +88,15 @@ var updatePlant = function(req, res) {
         plant.irrigations = req.body.irrigations;
         plant.gardenId = req.body.gardenId;
 
-        //convert model to json and then to Array
-        var imagesFromDB = JSON.parse(JSON.stringify(plant.images));
-
-        //Get images data from files sent through the request
-        imageService.getImageData(plant.name, req.files, req.body.main, function(err, imagesData) {
-
-            //Update images for one plant
-            imageService.processImageUpdate(req.files, imagesData, imagesFromDB, plant, plant.name, function(err, result) {
-                if(err) {
-                    return res.send(err);
-                }
-                res.send(result);
-            });
+        //Update images for one plant
+        imageService.processImageUpdate(req, plant, function (err, result) {
+            if (err) {
+                return res.send(err);
+            }
+            res.send(result);
         });
     });
+
 };
 
 /**
@@ -110,17 +104,17 @@ var updatePlant = function(req, res) {
  * @param req
  * @param res
  */
-var deletePlant = function(req, res) {
+var deletePlant = function (req, res) {
     Plant.remove({
-        _id : req.params.plant_id
-    }, function(err, plant) {
+        _id: req.params.plant_id
+    }, function (err, plant) {
         if (err)
             res.send(err);
 
-        logger.debug(' the plant with id: ' + req.params.plant_id + ' was deleted. ' );
+        logger.debug(' the plant with id: ' + req.params.plant_id + ' was deleted. ');
 
         // get and return all the todos after you create another
-        plant.find(function(err, plants) {
+        plant.find(function (err, plants) {
             if (err)
                 res.send(err);
             res.json(plants);
@@ -133,8 +127,8 @@ var deletePlant = function(req, res) {
  * @param req
  * @param res
  */
-var getPlant = function(req, res) {
-    Plant.findById(req.params.plant_id, function(err, plant) {
+var getPlant = function (req, res) {
+    Plant.findById(req.params.plant_id, function (err, plant) {
         if (err)
             res.send(err);
         res.json(plant);
@@ -146,8 +140,8 @@ var getPlant = function(req, res) {
  * @param req
  * @param res
  */
-var getAll = function(req, res) {       
-    Plant.find(function(err, plants) {
+var getAll = function (req, res) {
+    Plant.find(function (err, plants) {
         if (err)
             res.send(err);
         res.json(plants);
@@ -159,9 +153,9 @@ var getAll = function(req, res) {
  * @param req
  * @param res
  */
-var getAllThePlantsForOneGarden = function(req, res) {
+var getAllThePlantsForOneGarden = function (req, res) {
 
-    Plant.find({gardenId : req.body.gardenId}, function(err, plants){
+    Plant.find({gardenId: req.body.gardenId}, function (err, plants) {
         if (err)
             res.send(err);
         res.json(plants);

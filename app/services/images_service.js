@@ -436,8 +436,10 @@ var processImageUpdate = function(request, model, callback) {
     //convert model to json and then to Array
     var imagesFromDB = JSON.parse(JSON.stringify(model.images));
 
+    //obtain resourcesIds in order to check if some picture needs to be updated
+    var resourcesIds = request.body.resourcesIds;
+
     var imagesDoc = null;
-    var resourcesIds = request.resourcesIds;
     var folderName = model.name;
 
     var flow = {
