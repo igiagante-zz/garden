@@ -5,11 +5,12 @@
 var fs = require('extfs'),
     logger = require('../utils/logger'),
     async = require('async'),
-    im = require('imagemagick')
+    im = require('imagemagick'),
     mongoose = require('mongoose'),
     _ = require('lodash'),
     logger = require('../utils/logger'),
-    path = require('path');
+    path = require('path'),
+    mkdir = require('mkdir-p');
 
 var parentDir = path.resolve(process.cwd(), '..');
 var pathImagesUploaded = parentDir + '/public/images/uploads/';
@@ -55,7 +56,7 @@ var resizeImage = function(folderName, imageFileName, resizeImageCallback){
 var createImageDirectory = function(directories, created, createImageDirectoryCallback){
 
     var iterator = function(d, cb){
-        fs.mkdir(d, cb);
+        mkdir(d, cb);
     };
 
     if(created) {
@@ -63,7 +64,8 @@ var createImageDirectory = function(directories, created, createImageDirectoryCa
         createImageDirectoryCallback(null);
     }else{
         async.each(directories, iterator, function(err){
-            if (err) return createImageDirectoryCallback(err + ' could not be created');
+            if (err)
+                return createImageDirectoryCallback(err + ' could not be created');
             logger.debug('directories created');
             createImageDirectoryCallback(null);
         });

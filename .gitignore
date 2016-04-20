@@ -19,5 +19,6 @@ images/
 
 dump/
 
-.idea*
+
+.idea/*
 *.iml

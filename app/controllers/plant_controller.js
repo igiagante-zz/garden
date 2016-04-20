@@ -30,7 +30,7 @@ var createPlant = function(req, res) {
     var plantName = req.body.name;
 
     if(req.files !== null) {
-        imageService.getImageData(plantName, req.files, true, req.body.main, function(err, data){
+        imageService.getImageData(plantName, req.files, req.body.main, function(err, data){
             imagesData = data;
         });
     }
@@ -48,19 +48,18 @@ var createPlant = function(req, res) {
             harvest: req.body.harvest,
             gardenId: req.body.gardenId,
             images: imagesData
-        }, function(err) {
+        }, function(err, plant) {
             if (err)
                 res.send(err);
 
             //persist images for one plant
             imageService.persistImageFiles(plantName, req.files, function(err, result) {
                 if(err)
-                    logger.debug(' One image could not be saved ' + err);
-                logger.debug(' the image was persisted successfully ' + result);
-
-                res.json(req.body);
+                    res.send(' One image could not be saved ' + err);
+                logger.debug( ' the image was persisted successfully ');
+                logger.debug(JSON.stringify(result));
+                res.json(plant);
             });
-
         }); 
     });
 };

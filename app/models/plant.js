@@ -24,6 +24,7 @@ var plantSchema = new mongoose.Schema({
     ],
     flavors: [
         {
+            _id: Schema.Types.ObjectId,
             name: {type: String, required: true},
             imageUrl: {type: String, required: true}
         }
