@@ -108,7 +108,6 @@ var persistImageFile = function(folderName, image, mainCallback) {
             callback(null, image);
         }
     ], function (err, result) {
-        logger.debug('err = ', err);
         if(err)
             return mainCallback(err);
         mainCallback(undefined, result);
@@ -122,6 +121,8 @@ var persistImageFile = function(folderName, image, mainCallback) {
  * @param persistImageFilesCallback
  */
 var persistImageFiles = function(folderName, files, persistImageFilesCallback) {
+
+    console.log('persistImageFiles called');
 
     //parallel implementation
     /*
@@ -187,8 +188,6 @@ var createImageDirectory = function(folderName, createImageDirectoryCallback){
         createImageDirectoryCallback(undefined);
     });
 };
-
-
 
 /**
  * Process Image files in order to persist each one of them
@@ -366,15 +365,15 @@ var deleteImageFilesProcess = function(folderName, callback, results){
  */
 var verifyIfImagesShouldBeDeleted = function(imagesFromDB, resourcesIds, callback) {
 
-    var result = _.differenceBy(imagesFromDB, resourcesIds, 'id');;
+    var result = [];
 
-    _.forEach(imagesFromDB, function (imageData, key1) {
-        _.forEach(resourcesIds, function (id, key2) {
-            if (imageData.id === id) {
-                result.push(imageData);
+    for (var key in imagesFromDB) {
+        for(var j = 0; j < resourcesIds.length; j++){
+            if (imagesFromDB[key]._id == resourcesIds[j]) {
+                result.push(imagesFromDB[key]);
             }
-        });
-    });
+        }
+    }
 
     logger.debug('The following images should be deleted. ');
     logger.debug(JSON.stringify(result));
@@ -426,6 +425,28 @@ var getImageData = function(folderName, files, imageMain, callback) {
     callback(undefined, imageData);
 };
 
+
+var updateModel = function(model, callback, results) {
+
+    var values = results.getImagesDataToBeDelete;
+    var imagesDoc = results.getImagesDataFromRequest;
+
+    //Add new images
+    if(imagesDoc !== null) {
+        for(var i = 0; i < imagesDoc.length; i++){
+            model.images.push(imagesDoc[i]);
+        }
+    }
+    //Delete some images
+    if(values !== null) {
+        for (var j = 0; j < values.length; j++) {
+            model.images[j].remove();
+        }
+    }
+
+    callback(undefined);
+};
+
 /** ------------------------------ Update Model Flow ------------------------------------------ **/
 
 /**
@@ -443,7 +464,6 @@ var processImageUpdate = function(request, model, oldFolderName, callback) {
     //obtain resourcesIds in order to check if some picture needs to be updated
     var resourcesIds = JSON.parse(request.body.resourcesIds);
 
-    var imagesDoc = null;
     var folderName = model.name;
 
     var flow = {
@@ -460,20 +480,21 @@ var processImageUpdate = function(request, model, oldFolderName, callback) {
                     if (err) return callback(err);
                 });
             }
+            callback(undefined);
         },
 
         // Get images data from request in order to update images data from Model
         getImagesDataFromRequest: ['updateImageFolderName', function (callback) {
+
             getImageData(model.name, request.files, request.body.mainImage, function(err, data){
                 if(err)
                     return callback(err);
-                imagesDoc = data;
-                callback(undefined);
+                callback(undefined, data);
             });
         }],
 
         // Persist each new image file
-        persistImagesFiles: ['getImagesDataFromRequest', async.apply(persistImages, folderName, request.files)],
+        persistImagesFiles: ['getImagesDataFromRequest', async.apply(persistImageFiles, folderName, request.files)],
 
         // Check resources ids in order to decide if one of them should be deleted
         getImagesDataToBeDelete: async.apply(verifyIfImagesShouldBeDeleted, imagesFromDB, resourcesIds),
@@ -483,10 +504,7 @@ var processImageUpdate = function(request, model, oldFolderName, callback) {
         deleteImagesFiles: ['getImagesDataToBeDelete', async.apply(deleteImageFilesProcess, folderName)],
 
         // Update images data from the model
-        updateImagesDataFromModel: ['getImagesToBeDelete', function(callback) {
-            model.images = imagesDoc;
-            callback(undefined);
-        }],
+        updateImagesDataFromModel: ['getImagesDataFromRequest', 'getImagesDataToBeDelete', async.apply(updateModel, model)],
 
         // Save the model once it has been updated
         save: ['persistImagesFiles', 'deleteImagesFiles', function (callback) {

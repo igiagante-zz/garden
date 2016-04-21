@@ -1,9 +1,9 @@
 var express = require('express'),
-    router = express.Router(),
     Plant = require('../models/plant'),
     Garden = require('../models/garden'),
     logger = require('../utils/logger'),
     imageService = require('../services/images_service'),
+    plantService = require('../services/plant_service'),
     util = require('util'),
     _ = require('lodash');
 
@@ -14,8 +14,6 @@ var express = require('express'),
  * @param res response
  */
 var createPlant = function (req, res) {
-
-    logger.debug(' -------------------- Create a new plant  -------------------- ');
 
     //req.assert('gardenId', 'Invalid gardenId').notEmpty();
     req.assert('gardenId', 'gardenId should not be empty', req.body.gardenId).notEmpty();
@@ -29,36 +27,48 @@ var createPlant = function (req, res) {
     var imagesData;
     var plantName = req.body.name;
 
-    if (req.files !== null) {
-        imageService.getImageData(plantName, req.files, req.body.mainImage, function (err, data) {
-            imagesData = data;
-        });
-    }
 
-    Garden.findById(req.body.gardenId, function (err) {
+    plantService.getPlantInfoByName(req.body.name, function(err, plant) {
 
-        if (err)
-            res.send(err);
+        // Verifiy that any plant exits with this name
+        if (plant !== null && plant.length > 0) {
+            logger.debug('  The name of the plant already exists. Try other please!  ');
+            return res.status(400).send(' The name of the plant already exists. Try other please! ');
+        }
 
-        Plant.create({
-            name: req.body.name,
-            size: req.body.size,
-            phSoil: req.body.phSoil,
-            ecSoil: req.body.ecSoil,
-            harvest: req.body.harvest,
-            gardenId: req.body.gardenId,
-            images: imagesData
-        }, function (err, plant) {
+        logger.debug(' -------------------- Creating a new plant  -------------------- ');
+
+        if (req.files !== null) {
+            imageService.getImageData(plantName, req.files, req.body.mainImage, function (err, data) {
+                imagesData = data;
+            });
+        }
+
+        Garden.findById(req.body.gardenId, function (err) {
+
             if (err)
                 res.send(err);
 
-            //persist images for one plant
-            imageService.createProcessImageFiles(plantName, req.files, function (err, result) {
+            Plant.create({
+                name: req.body.name,
+                size: req.body.size,
+                phSoil: req.body.phSoil,
+                ecSoil: req.body.ecSoil,
+                harvest: req.body.harvest,
+                gardenId: req.body.gardenId,
+                images: imagesData
+            }, function (err, plant) {
                 if (err)
-                    return res.send(' One image could not be saved ' + err);
-                logger.debug(' the image was persisted successfully ');
-                logger.debug(JSON.stringify(result));
-                return res.json(plant);
+                    res.send(err);
+
+                //persist images for one plant
+                imageService.createProcessImageFiles(plantName, req.files, function (err, result) {
+                    if (err)
+                        return res.send(' One image could not be saved ' + err);
+                    logger.debug(' the image was persisted successfully ');
+                    logger.debug(JSON.stringify(result));
+                    return res.json(plant);
+                });
             });
         });
     });
@@ -78,7 +88,12 @@ var updatePlant = function (req, res) {
     Plant.findById(req.params.plant_id, function (err, plant) {
 
         if (err)
-            res.send(err);
+            return res.send(err);
+
+        if (plant === null ) {
+            logger.debug('  The plant does not exist!  ');
+            return res.status(400).send(' The plant does not exist ');
+        }
 
         var oldFolderName = false;
 
