@@ -30,7 +30,7 @@ var createPlant = function (req, res) {
     var plantName = req.body.name;
 
     if (req.files !== null) {
-        imageService.getImageData(plantName, req.files, req.body.main, function (err, data) {
+        imageService.getImageData(plantName, req.files, req.body.mainImage, function (err, data) {
             imagesData = data;
         });
     }
@@ -53,12 +53,12 @@ var createPlant = function (req, res) {
                 res.send(err);
 
             //persist images for one plant
-            imageService.persistImageFiles(plantName, req.files, function (err, result) {
+            imageService.createProcessImageFiles(plantName, req.files, function (err, result) {
                 if (err)
-                    res.send(' One image could not be saved ' + err);
+                    return res.send(' One image could not be saved ' + err);
                 logger.debug(' the image was persisted successfully ');
                 logger.debug(JSON.stringify(result));
-                res.json(plant);
+                return res.json(plant);
             });
         });
     });
@@ -80,6 +80,13 @@ var updatePlant = function (req, res) {
         if (err)
             res.send(err);
 
+        var oldFolderName = false;
+
+        //If the name of the plant(Model) changes, the folder's image path should be updated.
+        if(plant.name !== req.body.name) {
+            oldFolderName = plant.name;
+        }
+
         plant.name = req.body.name;
         plant.size = req.body.size;
         plant.phSoil = req.body.phSoil;
@@ -89,14 +96,13 @@ var updatePlant = function (req, res) {
         plant.gardenId = req.body.gardenId;
 
         //Update images for one plant
-        imageService.processImageUpdate(req, plant, function (err, result) {
+        imageService.processImageUpdate(req, plant, oldFolderName, function (err, result) {
             if (err) {
                 return res.send(err);
             }
             res.send(result);
         });
     });
-
 };
 
 /**
