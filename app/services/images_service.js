@@ -316,13 +316,13 @@ var deleteImageDirectories = function (folderName, deleteDirectoriesCallback) {
             return deleteDirectoriesCallback(error);
         }
         if(results.createFullsizeImageFolder) {
-            logger.debug('directory deleted: ' + results.createFullsizeImageFolder);
+            logger.debug('full size directory directory deleted: ' + results.createFullsizeImageFolder);
         }
         if(results.createThumbImageFolder) {
-            logger.debug('directory deleted: ' + results.createThumbImageFolder);
+            logger.debug('thumbnail directory deleted: ' + results.createThumbImageFolder);
         }
         if(results.deleteImageFolder) {
-            logger.debug('directory deleted: ' + results.deleteImageFolder);
+            logger.debug('main directory deleted: ' + results.deleteImageFolder);
         }
         deleteDirectoriesCallback(undefined);
     });
