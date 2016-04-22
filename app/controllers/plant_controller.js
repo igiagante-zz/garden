@@ -129,7 +129,7 @@ var updatePlant = function (req, res) {
         if(req.body.name) {
             plant.irrigations = req.body.irrigations;
         }
-        
+
         plant.gardenId = req.body.gardenId;
 
         //Update images for one plant
