@@ -10,19 +10,22 @@ var fs = require('extfs'),
     im = require('imagemagick'),
     mongoose = require('mongoose'),
     _ = require('lodash'),
-    logger = require('../utils/logger'),
     path = require('path'),
     mkdir = require('mkdir-p');
 
 var parentDir = path.resolve(process.cwd(), '..');
 var pathImagesUploaded = parentDir + '/public/images/uploads/';
 
+var getFolderImagePath = function (folderName) {
+    return pathImagesUploaded + folderName;
+};
+
 var getMainImagePath = function (folderName, imageFileName) {
-    return pathImagesUploaded + folderName + '/fullsize/' + imageFileName;
+    return getFolderImagePath() + '/fullsize/' + imageFileName;
 };
 
 var getThumbImagePath = function (folderName, imageFileName) {
-    return pathImagesUploaded + folderName + '/thumb/' + imageFileName;
+    return getFolderImagePath() + '/thumb/' + imageFileName;
 };
 
 /** ------------------------------ Create Model Flow ------------------------------------------ **/
@@ -126,6 +129,8 @@ var persistImageFile = function (folderName, image, mainCallback) {
  */
 var persistImageFiles = function (folderName, files, persistImageFilesCallback) {
 
+    logger.debug( ' Persisting image files ');
+
     //parallel implementation
     /*
      async.forEach(files, function (file, innerCallback) {
@@ -137,12 +142,16 @@ var persistImageFiles = function (folderName, files, persistImageFilesCallback) 
      }, persistImageFilesCallback(undefined));*/
 
     // Object.keys
-    var keys = Object.keys(files);
+    if(!_.isEmpty(files)) {
+        var keys = Object.keys(files);
 
-    for (var i = 0; i < keys.length; ++i) {
-        var file = files[keys[i]];
-        persistImageFile(folderName, file, persistImageFilesCallback);
+        for (var i = 0; i < keys.length; ++i) {
+            var file = files[keys[i]];
+            persistImageFile(folderName, file, persistImageFilesCallback);
+        }
     }
+
+    persistImageFilesCallback(undefined);
 };
 
 /**
@@ -253,41 +262,69 @@ var removeFile = function (path, removeFileCallback) {
  */
 var deleteImageDirectories = function (folderName, deleteDirectoriesCallback) {
 
-    var fullsizePath = getMainImagePath(folderName, "");
-    var thumbsPath = getThumbImagePath(folderName, "");
+    logger.debug('Check if directories should be deleted');
 
-    logger.debug('Delete directories');
+    var imageFolderPath = getFolderImagePath();
+    var fullsizeImagePath = getMainImagePath(folderName, "");
+    var thumbImagePath = getThumbImagePath(folderName, "");
 
-    var ifExistDirDelete = function (path, callback) {
-        fs.exists(path, function (exists) {
-            if (exists) {
-                fs.rmdir(path, function (err) {
-                    if (err) {
-                        logger.debug('Fail delete directory');
-                        logger.debug(err);
-                    }
-                    callback(undefined);
-                });
-            } else {
-                callback(undefined);
-            }
-        });
+    var flow = {
+        deleteFullsizeImageFolder: function (callback) {
+            fs.exists(fullsizeImagePath, function (exist) {
+                if (!exist) {
+                    fs.rmdir(fullsizeImagePath, function (err) {
+                        if (err) {
+                            return deleteDirectoriesCallback(err);
+                        }
+                        callback(undefined);
+                    });
+                }
+            });
+            callback(undefined, fullsizeImagePath);
+        },
+        deleteThumbImageFolder: ['deleteFullsizeImageFolder', function (callback) {
+            fs.exists(thumbImagePath, function (exist) {
+                if (!exist) {
+                    fs.rmdir(thumbImagePath, function (err) {
+                        if (err) {
+                            return deleteDirectoriesCallback(err);
+                        }
+                        callback(undefined);
+                    });
+                }
+            });
+            callback(undefined, thumbImagePath);
+        }],
+
+        deleteImageFolder: ['deleteFullsizeImageFolder', 'deleteThumbImageFolder', function (callback) {
+            fs.exists(imageFolderPath, function (exist) {
+                if (!exist) {
+                    fs.rmdir(imageFolderPath, function (err) {
+                        if (err) {
+                            return deleteDirectoriesCallback(err);
+                        }
+                        callback(undefined);
+                    });
+                }
+            });
+            callback(undefined, imageFolderPath);
+        }]
     };
 
-    fs.isEmpty(fullsizePath, function (empty) {
-        if (empty) {
-            //the order of the directories are important!
-            var directories = [fullsizePath, thumbsPath, pathImagesUploaded];
-
-            async.each(directories, ifExistDirDelete, function (err) {
-                if (err) {
-                    return deleteDirectoriesCallback(err);
-                }
-                deleteDirectoriesCallback(undefined);
-            });
-        } else {
-            deleteDirectoriesCallback(undefined);
+    async.auto(flow, function (error, results) {
+        if (error) {
+            return deleteDirectoriesCallback(error);
         }
+        if(results.createFullsizeImageFolder) {
+            logger.debug('directory deleted: ' + results.createFullsizeImageFolder);
+        }
+        if(results.createThumbImageFolder) {
+            logger.debug('directory deleted: ' + results.createThumbImageFolder);
+        }
+        if(results.deleteImageFolder) {
+            logger.debug('directory deleted: ' + results.deleteImageFolder);
+        }
+        deleteDirectoriesCallback(undefined);
     });
 };
 
@@ -370,6 +407,8 @@ var deleteImageFilesProcess = function (folderName, callback, results) {
  */
 var verifyIfImagesShouldBeDeleted = function (imagesFromDB, resourcesIds, callback) {
 
+    logger.debug(' Getting image to be deleted ');
+
     //Represent an array of resources ids which are found in imagesFromDB Array
     var result = imagesFromDB.filter(function (item) {
         return resourcesIds.filter(function (id) {
@@ -387,7 +426,7 @@ var verifyIfImagesShouldBeDeleted = function (imagesFromDB, resourcesIds, callba
  * Convert files data into image documents
  * @param folderName the folder name
  * @param files
- * @param imageMain Image's name
+ * @param imageMain Main Image's Name
  * @param callback
  * @returns {Array} Represent image documents
  */
@@ -428,26 +467,48 @@ var getImageData = function (folderName, files, imageMain, callback) {
     callback(undefined, imageData);
 };
 
-
+/**
+ * Update model with image documents
+ * @param model Model to be updated
+ * @param callback
+ * @param results
+ */
 var updateModel = function (model, callback, results) {
+
+    logger.debug(' Update model with image\'s documents ');
 
     var imagesDataToBeDeleted = results.getImagesDataToBeDelete;
     var imagesDoc = results.getImagesDataFromRequest;
 
     //Add new images
-    if (imagesDoc !== null) {
+    if (imagesDoc) {
         for (var i = 0; i < imagesDoc.length; i++) {
             model.images.push(imagesDoc[i]);
         }
     }
     //Delete some images
-    if (imagesDataToBeDeleted !== null) {
+    if (imagesDataToBeDeleted) {
         for (var j = 0; j < imagesDataToBeDeleted.length; j++) {
             model.images[j].remove();
         }
     }
 
     callback(undefined, model);
+};
+
+var updateImageFolderName = function (oldName, newName, callback) {
+    if (!_.isEmpty(oldName)) {
+
+        var oldPath = pathImagesUploaded + oldName;
+        var newPath = pathImagesUploaded + newName;
+
+        fs.rename(oldPath, newPath, function (err) {
+            if (err) {
+                return callback(err);
+            }
+        });
+    }
+    callback(undefined);
 };
 
 /** ------------------------------ Update Model Flow ------------------------------------------ **/
@@ -457,9 +518,9 @@ var updateModel = function (model, callback, results) {
  * @param request
  * @param model The model that should be updated
  * @param oldFolderName If the value is not empty, the folder's image name should be updated
- * @param callback
+ * @param mainCallback
  */
-var processImageUpdate = function (request, model, oldFolderName, callback) {
+var processImageUpdate = function (request, model, oldFolderName, mainCallback) {
 
     //convert model to json and then to Array
     var imagesFromDB = JSON.parse(JSON.stringify(model.images));
@@ -472,24 +533,12 @@ var processImageUpdate = function (request, model, oldFolderName, callback) {
     var flow = {
 
         //If the name of the plant (Model) changes, the folder's image path should be updated.
-        updateImageFolderName: function (callback) {
-
-            if (!_.isEmpty(oldFolderName)) {
-
-                var oldPath = pathImagesUploaded + oldFolderName;
-                var newPath = pathImagesUploaded + request.body.name;
-
-                fs.rename(oldPath, newPath, function (err) {
-                    if (err) {
-                        return callback(err);
-                    }
-                });
-            }
-            callback(undefined);
-        },
+        updateImageFolderName: async.apply(updateImageFolderName, oldFolderName, request.body.name),
 
         // Get images data from request in order to update images data from Model
         getImagesDataFromRequest: ['updateImageFolderName', function (callback) {
+
+            logger.debug( ' Getting image data from files ');
 
             getImageData(model.name, request.files, request.body.mainImage, function (err, data) {
                 if (err) {
@@ -510,10 +559,10 @@ var processImageUpdate = function (request, model, oldFolderName, callback) {
         deleteImagesFiles: ['getImagesDataToBeDelete', async.apply(deleteImageFilesProcess, folderName)],
 
         // Update images data from the model
-        updateImagesDataFromModel: ['getImagesDataFromRequest', 'getImagesDataToBeDelete', async.apply(updateModel, model)],
+        updateImagesDataFromModel: ['getImagesDataFromRequest', 'getImagesDataToBeDelete', 'deleteImagesFiles', async.apply(updateModel, model)],
 
         // Save the model once it has been updated
-        save: ['persistImagesFiles', 'deleteImagesFiles', 'updateImagesDataFromModel', function (callback, results) {
+        save: ['updateImagesDataFromModel', function (callback, results) {
 
             //obtain the model updated
             var model = results.updateImagesDataFromModel;
@@ -522,6 +571,8 @@ var processImageUpdate = function (request, model, oldFolderName, callback) {
                 if (err) {
                     return callback(err);
                 }
+
+                logger.debug(' The model was updated successfully! ');
                 callback(undefined, model);
             });
         }]
@@ -529,9 +580,9 @@ var processImageUpdate = function (request, model, oldFolderName, callback) {
 
     async.auto(flow, function (error, results) {
         if (error) {
-            return callback(error);
+            return mainCallback(error);
         }
-        callback(undefined, results);
+        mainCallback(undefined, results);
     });
 };
 /** ------------------------------ Update Flow Finish ------------------------------------------ **/
