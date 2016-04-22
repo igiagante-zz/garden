@@ -2,6 +2,7 @@
  * Created by igiagante on 6/4/16.
  */
 
+"use strict";
 
 module.exports = {
     db: {
