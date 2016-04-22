@@ -106,12 +106,30 @@ var updatePlant = function (req, res) {
             oldFolderName = plant.name;
         }
 
-        plant.name = req.body.name;
-        plant.size = req.body.size;
-        plant.phSoil = req.body.phSoil;
-        plant.ecSoil = req.body.ecSoil;
-        plant.harvest = req.body.harvest;
-        plant.irrigations = req.body.irrigations;
+        if(req.body.name) {
+            plant.name = req.body.name;
+        }
+
+        if(req.body.name) {
+            plant.size = req.body.size;
+        }
+
+        if(req.body.name) {
+            plant.phSoil = req.body.phSoil;
+        }
+
+        if(req.body.name) {
+            plant.ecSoil = req.body.ecSoil;
+        }
+
+        if(req.body.name) {
+            plant.harvest = req.body.harvest;
+        }
+
+        if(req.body.name) {
+            plant.irrigations = req.body.irrigations;
+        }
+        
         plant.gardenId = req.body.gardenId;
 
         //Update images for one plant
@@ -119,7 +137,8 @@ var updatePlant = function (req, res) {
             if (err) {
                 return res.send(err);
             }
-            res.send(result);
+            logger.debug( ' Response : ' + plant);
+            return res.send(plant);
         });
     });
 };
@@ -155,6 +174,9 @@ var deletePlant = function (req, res) {
  * @param res
  */
 var getPlant = function (req, res) {
+
+    logger.debug( ' Get plant with id: ' + req.params.plant_id);
+
     Plant.findById(req.params.plant_id, function (err, plant) {
         if (err) {
             res.send(err);

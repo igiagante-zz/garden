@@ -21,11 +21,11 @@ var getFolderImagePath = function (folderName) {
 };
 
 var getMainImagePath = function (folderName, imageFileName) {
-    return getFolderImagePath() + '/fullsize/' + imageFileName;
+    return getFolderImagePath(folderName) + '/fullsize/' + imageFileName;
 };
 
 var getThumbImagePath = function (folderName, imageFileName) {
-    return getFolderImagePath() + '/thumb/' + imageFileName;
+    return getFolderImagePath(folderName) + '/thumb/' + imageFileName;
 };
 
 /** ------------------------------ Create Model Flow ------------------------------------------ **/
