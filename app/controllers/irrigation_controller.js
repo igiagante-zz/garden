@@ -1,7 +1,7 @@
-var express = require('express');
-var router = express.Router(); 
-var Irrigation = require('../models/irrigation')
-var irrigationService = require('../services/irrigation_service')
+"use strict";
+
+var Irrigation = require('../models/irrigation'),
+    irrigationService = require('../services/irrigation_service');
 
 var nutrientsUsed = function(req, res) {
     
@@ -24,14 +24,16 @@ var createIrrigation = function(req, res) {
             quantity: req.body.quantity,
             gardenId: req.body.gardenId,
             doseId: req.body.doseId
-        }, function(err, irrigation) {
-            if (err)
+        }, function(err) {
+            if (err) {
                 res.send(err);
+            }
             
             // get and return all the irrigations after you create another
             Irrigation.find(function(err, irrigations) {
-                if (err)
-                    res.send(err)
+                if (err) {
+                    res.send(err);
+                }
                 res.json(irrigations);
             });
         });       
@@ -44,14 +46,11 @@ var createIrrigation = function(req, res) {
  */
 var updateIrrigation = function(req, res) {
 
-    console.log(req.params);
-
     Irrigation.findById(req.params.irrigation_id, function(err, irrigation) {
 
-        if (err)
-                res.send(err);
-
-        console.log(irrigation);
+        if (err) {
+            res.send(err);
+        }
 
         irrigation.irrigationDate = req.body.irrigationDate;  
         irrigation.quantity = req.body.quantity;
@@ -60,8 +59,9 @@ var updateIrrigation = function(req, res) {
 
         // save the irrigation
         irrigation.save(function(err) {
-            if (err)
+            if (err) {
                 res.send(err);
+            }
             res.json(irrigation);
         });
     });
@@ -74,8 +74,9 @@ var updateIrrigation = function(req, res) {
  */
 var getIrrigation = function(req, res) {
         Irrigation.findById(req.params.irrigation_id, function(err, irrigation) {
-            if (err)
+            if (err) {
                 res.send(err);
+            }
             res.json(irrigation);
         });
     };
@@ -88,14 +89,16 @@ var getIrrigation = function(req, res) {
 var deleteIrrigation = function(req, res) {
         Irrigation.remove({ 
             _id : req.params.irrigation_id 
-        }, function(err, irrigation) {
-            if (err)
+        }, function(err) {
+            if (err) {
                 res.send(err);
+            }
             
             // get and return all the todos after you create another
             Irrigation.find(function(err, irrigations) {
-                if (err)
-                    res.send(err)
+                if (err) {
+                    res.send(err);
+                }
                 res.json(irrigations);
             });
         });
@@ -108,8 +111,9 @@ var deleteIrrigation = function(req, res) {
  */
 var getAll = function(req, res) {       
             Irrigation.find(function(err, irrigations) {
-                if (err)
-                    res.send(err)
+                if (err) {
+                    res.send(err);
+                }
                 res.json(irrigations);
             });
 };
@@ -119,5 +123,6 @@ module.exports = {
     updateIrrigation: updateIrrigation,
     deleteIrrigation: deleteIrrigation,
     getIrrigation: getIrrigation,
-    getAll: getAll
+    getAll: getAll,
+    nutrientsUsed : nutrientsUsed
 };

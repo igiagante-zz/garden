@@ -2,6 +2,8 @@
  * Created by igiagante on 1/4/16.
  */
 
+"use strict";
+
 // Load required packages
 var mongoose = require('mongoose'),
     Schema = mongoose.Schema;

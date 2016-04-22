@@ -1,6 +1,8 @@
-var express = require('express');
-var router = express.Router(); 
-var nutrientController = require('../controllers/nutrient_controller')
+"use strict";
+
+var express = require('express'),
+    router = express.Router(),
+    nutrientController = require('../controllers/nutrient_controller');
 
 //create a nutrient
 router.post('/', nutrientController.createNutrient);

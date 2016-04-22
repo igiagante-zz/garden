@@ -2,6 +2,8 @@
  * Created by igiagante on 28/9/15.
  */
 
+"use strict";
+
 var express = require('express'),
     router = express.Router(),
     sensorController = require('../controllers/sensor_controller');

@@ -2,6 +2,8 @@
  * Created by igiagante on 29/3/16.
  */
 
+"use strict";
+
 var mongoose = require('mongoose');
 var Types = mongoose.Types;
 

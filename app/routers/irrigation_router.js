@@ -1,6 +1,6 @@
-var express = require('express');
-var router = express.Router(); 
-var irrigationController = require('../controllers/irrigation_controller')
+var express = require('express'),
+    router = express.Router(),
+    irrigationController = require('../controllers/irrigation_controller');
 
 //create a irrigation
 router.post('/', irrigationController.createIrrigation);

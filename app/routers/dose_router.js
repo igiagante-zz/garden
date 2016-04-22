@@ -1,6 +1,8 @@
-var express = require('express');
-var router = express.Router(); 
-var doseController = require('../controllers/dose_controller');
+"use strict";
+
+var express = require('express'),
+    router = express.Router(),
+    doseController = require('../controllers/dose_controller');
 
 //create a dose
 router.post('/', doseController.createDose);

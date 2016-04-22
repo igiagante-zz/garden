@@ -1,6 +1,8 @@
-var express = require('express');
-var router = express.Router(); 
-var gardenController = require('../controllers/garden_controller')
+"use strict";
+
+var express = require('express'),
+    router = express.Router(),
+    gardenController = require('../controllers/garden_controller');
 
 //create a garden
 router.post('/', gardenController.createGarden);

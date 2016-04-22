@@ -1,11 +1,11 @@
-var express = require('express'),
-    Plant = require('../models/plant'),
+"use strict";
+
+var Plant = require('../models/plant'),
     Garden = require('../models/garden'),
     logger = require('../utils/logger'),
     imageService = require('../services/images_service'),
     plantService = require('../services/plant_service'),
-    util = require('util'),
-    _ = require('lodash');
+    util = require('util');
 
 
 /**
@@ -28,7 +28,7 @@ var createPlant = function (req, res) {
     var plantName = req.body.name;
 
 
-    plantService.getPlantInfoByName(req.body.name, function(err, plant) {
+    plantService.getPlantInfoByName(req.body.name, function (err, plant) {
 
         // Verifiy that any plant exits with this name
         if (plant !== null && plant.length > 0) {
@@ -46,8 +46,9 @@ var createPlant = function (req, res) {
 
         Garden.findById(req.body.gardenId, function (err) {
 
-            if (err)
+            if (err) {
                 res.send(err);
+            }
 
             Plant.create({
                 name: req.body.name,
@@ -58,13 +59,15 @@ var createPlant = function (req, res) {
                 gardenId: req.body.gardenId,
                 images: imagesData
             }, function (err, plant) {
-                if (err)
+                if (err) {
                     res.send(err);
+                }
 
                 //persist images for one plant
                 imageService.createProcessImageFiles(plantName, req.files, function (err, result) {
-                    if (err)
+                    if (err) {
                         return res.send(' One image could not be saved ' + err);
+                    }
                     logger.debug(' the image was persisted successfully ');
                     logger.debug(JSON.stringify(result));
                     return res.json(plant);
@@ -87,10 +90,11 @@ var updatePlant = function (req, res) {
 
     Plant.findById(req.params.plant_id, function (err, plant) {
 
-        if (err)
+        if (err) {
             return res.send(err);
+        }
 
-        if (plant === null ) {
+        if (plant === null) {
             logger.debug('  The plant does not exist!  ');
             return res.status(400).send(' The plant does not exist ');
         }
@@ -98,7 +102,7 @@ var updatePlant = function (req, res) {
         var oldFolderName = false;
 
         //If the name of the plant(Model) changes, the folder's image path should be updated.
-        if(plant.name !== req.body.name) {
+        if (plant.name !== req.body.name) {
             oldFolderName = plant.name;
         }
 
@@ -129,15 +133,17 @@ var deletePlant = function (req, res) {
     Plant.remove({
         _id: req.params.plant_id
     }, function (err, plant) {
-        if (err)
+        if (err) {
             res.send(err);
+        }
 
         logger.debug(' the plant with id: ' + req.params.plant_id + ' was deleted. ');
 
         // get and return all the todos after you create another
         plant.find(function (err, plants) {
-            if (err)
+            if (err) {
                 res.send(err);
+            }
             res.json(plants);
         });
     });
@@ -150,8 +156,9 @@ var deletePlant = function (req, res) {
  */
 var getPlant = function (req, res) {
     Plant.findById(req.params.plant_id, function (err, plant) {
-        if (err)
+        if (err) {
             res.send(err);
+        }
         res.json(plant);
     });
 };
@@ -163,8 +170,9 @@ var getPlant = function (req, res) {
  */
 var getAll = function (req, res) {
     Plant.find(function (err, plants) {
-        if (err)
+        if (err) {
             res.send(err);
+        }
         res.json(plants);
     });
 };
@@ -177,8 +185,9 @@ var getAll = function (req, res) {
 var getAllThePlantsForOneGarden = function (req, res) {
 
     Plant.find({gardenId: req.body.gardenId}, function (err, plants) {
-        if (err)
+        if (err) {
             res.send(err);
+        }
         res.json(plants);
     });
 };

@@ -1,25 +1,27 @@
+"use strict";
+
 // Load required packages
 var mongoose = require('mongoose'),
     Schema = mongoose.Schema;
 
 // Define the plant schema
 var plantSchema = new mongoose.Schema({
-    name: { type: String, required: true },
+    name: {type: String, required: true},
     size: Number,
     phSoil: Number,
     ecSoil: Number,
     harvest: Number,
-    irrigations: [ Schema.Types.ObjectId ],
-    gardenId: { type: Schema.Types.ObjectId, required: true },
+    irrigations: [Schema.Types.ObjectId],
+    gardenId: {type: Schema.Types.ObjectId, required: true},
     images: [
         {
-          _id: Schema.Types.ObjectId,
-          url: { type: String, required: true },
-          thumbnailUrl: { type: String, required: true },
-          name: { type: String, required: true },
-          type: { type: String, required: true },
-          size: Number,
-          main: { type: Boolean, default: 0 }
+            _id: Schema.Types.ObjectId,
+            url: {type: String, required: true},
+            thumbnailUrl: {type: String, required: true},
+            name: {type: String, required: true},
+            type: {type: String, required: true},
+            size: Number,
+            main: {type: Boolean, default: 0}
         }
     ],
     flavors: [

@@ -2,8 +2,9 @@
  * Created by igiagante on 1/4/16.
  */
 
-var Garden = require('../models/garden'),
-    Irrigation = require('../models/irrigation'),
+"use strict";
+
+var Irrigation = require('../models/irrigation'),
     Dose = require('../models/dose'),
     async = require('async'),
     logger = require('../utils/logger'),
@@ -19,11 +20,14 @@ var Garden = require('../models/garden'),
  */
 var getIrrigations = function(garden_id, fromDate, toDate, callback) {
 
+    logger.debug('Get all the irrigations for one garden');
+
     var irrigationsOut = [];
 
     Irrigation.find({ "gardenId" : garden_id}, function(err, irrigations){
-        if(err)
+        if(err) {
             callback(err);
+        }
 
         for (var i = 0; i < irrigations.length; i++) {
             irrigationsOut.push({
@@ -49,8 +53,9 @@ var readDose = function(doses_Id, callback){
     var doseOut = {};
 
     Dose.find({ "doseId" : doses_Id}, function(err, dose){
-        if(err)
+        if(err) {
             callback(err);
+        }
 
         doseOut.water = dose.water;
         doseOut.phDose = dose.phDose;
@@ -69,15 +74,18 @@ var readDose = function(doses_Id, callback){
  */
 var getDoses = function(irrigations, callback) {
 
+    logger.debug('Get all the doses from irrigations');
+
     var dosesIds = [];
 
     for (var i = 0; i < irrigations.length; i++) {
         dosesIds.push(irrigations[i].doseId);
-    };
+    }
 
     async.concat(dosesIds, readDose, function(err, doses){
-        if(err)
+        if(err) {
             return callback(err);
+        }
         callback(undefined, doses);
     });
 };
@@ -89,11 +97,13 @@ var getDoses = function(irrigations, callback) {
  */
 var getNutrientsFromDoses = function(doses, callback) {
 
+    logger.debug('Get the nutrients from each dose');
+
     var nutrients = [];
 
     for (var i = 0; i < doses.length; i++) {
         nutrients.push(doses[i].nutrients);
-    };
+    }
 
     callback(undefined, nutrients);
 };
@@ -105,24 +115,27 @@ var getNutrientsFromDoses = function(doses, callback) {
  */
 var getNutrientsTotal = function(nutrients, callback) {
 
+    logger.debug('Get nutrients info');
+
     //only nutrient info
     var nutrientsOut = [];
 
     Nutrient.find(function(err, nutrients) {
-        if (err)
+        if (err) {
             return callback(err);
+        }
         nutrientsOut = nutrients;
     });
 
     var mapOfNutrients = []; // create an empty array
 
     //init nutrients map
-    for (var i = 0; i < nutrientsOut.length; i++) {
+    for (var a = 0; a < nutrientsOut.length; i++) {
         mapOfNutrients.push({
-            key: nutrientsOut[i].name,
+            key: nutrientsOut[a].name,
             value: 0
         });
-    };
+    }
 
     //accumulate use of each nutrient
     for (var i = 0; i < nutrients.length; i++) {
@@ -130,8 +143,8 @@ var getNutrientsTotal = function(nutrients, callback) {
             if(nutrients[i].name === nutrients[j].name) {
                 mapOfNutrients[nutrients[i].name] += nutrients[i].quantityUsed;
             }
-        };
-    };
+        }
+    }
 
     callback(undefined, mapOfNutrients);
 };
@@ -142,34 +155,27 @@ var getNutrientsTotal = function(nutrients, callback) {
  * @param gardenId The garden Id
  * @param fromDate
  * @param toDate
+ * @param mainCallback
  */
 var calculateUseOfNutrients = function(gardenId, fromDate, toDate, mainCallback) {
 
-    async.waterfall([
+    var flow = {
 
-        function(callback) {
-            logger.debug('Get all the irrigations for one garden');
-            getIrrigations(gardenId, fromDate, toDate, callback);
-        },
-        function(directories, created, callback) {
-            logger.debug('Get all the doses from irrigations');
-            getDoses(irrigations, callback);
-        },
-        function(callback) {
-            logger.debug('Get the nutrients from each dose');
-            getNutrientsFromDoses(doses, callback);
-        },
-        function(data, callback) {
-            logger.debug('Get nutrients info');
-            getNutrientsTotal(nutrients, callback);
-        },
-        function(callback) {
-            mainCallback(null, mapOfNutrients);
+        getIrrigations: async.apply(getIrrigations, gardenId, fromDate, toDate),
+
+        getDoses: ['getIrrigations', async.apply(getDoses)],
+
+        getNutrientsFromDoses: ['getDoses', async.apply(getNutrientsFromDoses)],
+
+        getNutrientsTotal: ['getNutrientsFromDoses', async.apply(getNutrientsTotal)]
+
+    };
+
+    async.auto(flow, function (error, results) {
+        if (error) {
+            return mainCallback(error);
         }
-    ], function (err, result) {
-        logger.error('err = ', err);
-        if(err)
-            mainCallback(err);
+        mainCallback(undefined, results);
     });
 };
 

@@ -2,6 +2,8 @@
  * Created by igiagante on 28/9/15.
  */
 
+"use strict";
+
 var Measure = require('../models/measure'),
     async = require('async');
 
@@ -23,8 +25,10 @@ var processSensor = function(measure, callback){
 var processData = function(measures, callback){
 
     async.each(measures, processSensor, function(err){
-        if (err) return callback(err);
-        callback(null, "all measures were successfully persisted!");
+        if (err) {
+            callback(err);
+        }
+        callback(undefined, "all measures were successfully persisted!");
     });
 };
 
@@ -32,8 +36,10 @@ var processData = function(measures, callback){
 var getSensorMeasures = function(sensorId, callback) {
 
     Measure.find({ "sensorId" : sensorId }, function(error, measures){
-        if(error) callback(error);
-        callback(null, measures);
+        if(error) {
+            callback(error);
+        }
+        callback(undefined, measures);
     });
 };
 
