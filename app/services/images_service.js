@@ -367,13 +367,12 @@ var verifyIfImagesShouldBeDeleted = function(imagesFromDB, resourcesIds, callbac
 
     var result = [];
 
-    for (var key in imagesFromDB) {
-        for(var j = 0; j < resourcesIds.length; j++){
-            if (imagesFromDB[key]._id == resourcesIds[j]) {
-                result.push(imagesFromDB[key]);
-            }
-        }
-    }
+    //Represent an array of resources ids which are found in imagesFromDB Array
+    result = imagesFromDB.filter(function(item){
+        return resourcesIds.filter(function(id){
+                return item._id == id;
+            }).length == 0;
+    });
 
     logger.debug('The following images should be deleted. ');
     logger.debug(JSON.stringify(result));
@@ -428,7 +427,7 @@ var getImageData = function(folderName, files, imageMain, callback) {
 
 var updateModel = function(model, callback, results) {
 
-    var values = results.getImagesDataToBeDelete;
+    var imagesDataToBeDeleted = results.getImagesDataToBeDelete;
     var imagesDoc = results.getImagesDataFromRequest;
 
     //Add new images
@@ -438,13 +437,13 @@ var updateModel = function(model, callback, results) {
         }
     }
     //Delete some images
-    if(values !== null) {
-        for (var j = 0; j < values.length; j++) {
+    if(imagesDataToBeDeleted !== null) {
+        for (var j = 0; j < imagesDataToBeDeleted.length; j++) {
             model.images[j].remove();
         }
     }
 
-    callback(undefined);
+    callback(undefined, model);
 };
 
 /** ------------------------------ Update Model Flow ------------------------------------------ **/
@@ -507,7 +506,10 @@ var processImageUpdate = function(request, model, oldFolderName, callback) {
         updateImagesDataFromModel: ['getImagesDataFromRequest', 'getImagesDataToBeDelete', async.apply(updateModel, model)],
 
         // Save the model once it has been updated
-        save: ['persistImagesFiles', 'deleteImagesFiles', function (callback) {
+        save: ['persistImagesFiles', 'deleteImagesFiles', 'updateImagesDataFromModel', function (callback, results) {
+
+            //obtain the model updated
+            var model = results.updateImagesDataFromModel;
 
             model.save(function (err) {
                 if(err)
