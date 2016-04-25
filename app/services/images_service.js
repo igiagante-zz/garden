@@ -71,6 +71,7 @@ var renameImageFilePath = function (image, newPath, renameImageFilePathCallback)
 
 /**
  * Write the Image data into a file.
+ * @param data Data to be written
  * @param newPath
  * @param writeImageCallback
  */
@@ -78,9 +79,10 @@ var writeImageFile = function (data, newPath, writeImageCallback) {
 
     fs.writeFile(newPath, data, function (err) {
         if (err) {
-            logger.error(' The data could not be persisted ' + err);
+            logger.debug(' The data could not be persisted ' + err);
             return writeImageCallback(err);
         }
+        logger.debug(' File created: ' + newPath);
         writeImageCallback(undefined);
     });
 };
@@ -99,15 +101,15 @@ var persistImageFile = function (folderName, image, mainCallback) {
     async.waterfall([
 
         function (callback) {
-            logger.debug('Reading image file');
+            logger.debug('Reading image file: ' + newPath);
             renameImageFilePath(image, newPath, callback);
         },
         function (data, callback) {
-            logger.debug('Writing image file');
+            logger.debug('Writing image file: ' + newPath);
             writeImageFile(data, newPath, callback);
         },
         function (callback) {
-            logger.debug('Resize image to create a thumbnail');
+            logger.debug('Resize image to create a thumbnail: ' + image.originalname);
             resizeImage(folderName, image.originalname, callback);
         },
         function (callback) {
@@ -129,29 +131,42 @@ var persistImageFile = function (folderName, image, mainCallback) {
  */
 var persistImageFiles = function (folderName, files, persistImageFilesCallback) {
 
-    logger.debug( ' Persisting image files ');
-
-    //parallel implementation
     /*
-     async.forEach(files, function (file, innerCallback) {
+     // Object.keys
+     if (!_.isEmpty(files)) {
+     var keys = Object.keys(files);
 
-     // Perform operation on file here.
-     logger.debug('Processing file ' + file);
+     for (var i = 0; i < keys.length; ++i) {
+     var file = files[keys[i]];
+     logger.debug(' Persisting image file: ' + file.originalname);
+     persistImageFile(folderName, file, persistImageFilesCallback);
+     }
+     }*/
 
-     persistImageFile(folderName, file, innerCallback);
-     }, persistImageFilesCallback(undefined));*/
+    var images = [];
 
-    // Object.keys
-    if(!_.isEmpty(files)) {
-        var keys = Object.keys(files);
+    _.forEach(files, function (value, key) {
+        console.log(key);
+        images.push(value);
+    });
 
-        for (var i = 0; i < keys.length; ++i) {
-            var file = files[keys[i]];
-            persistImageFile(folderName, file, persistImageFilesCallback);
+    async.each(images, function (file, callback) {
+        // Perform operation on file here.
+
+        console.log('Processing file ----> ' + file.name);
+
+        persistImageFile(folderName, file, callback);
+
+    }, function (err) {
+        if (err) {
+            // One of the iterations produced an error.
+            // All processing will now stop.
+            console.log('A file failed to process');
+            return persistImageFilesCallback(err);
         }
-    }
-
-    persistImageFilesCallback(undefined);
+        console.log('All files have been processed successfully');
+        persistImageFilesCallback(undefined);
+    });
 };
 
 /**
@@ -165,6 +180,7 @@ var createImageDirectory = function (folderName, createImageDirectoryCallback) {
     var thumbImagePath = getThumbImagePath(folderName, "");
 
     var flow = {
+
         createFullsizeImageFolder: function (callback) {
             fs.exists(fullsizeImagePath, function (exist) {
                 if (!exist) {
@@ -175,9 +191,10 @@ var createImageDirectory = function (folderName, createImageDirectoryCallback) {
                         logger.debug('directory created : ' + fullsizeImagePath);
                     });
                 }
+                callback(undefined, fullsizeImagePath);
             });
-            callback(undefined, fullsizeImagePath);
         },
+
         createThumbImageFolder: ['createFullsizeImageFolder', function (callback) {
             fs.exists(thumbImagePath, function (exist) {
                 if (!exist) {
@@ -188,8 +205,8 @@ var createImageDirectory = function (folderName, createImageDirectoryCallback) {
                         logger.debug('directory created : ' + thumbImagePath);
                     });
                 }
+                callback(undefined, thumbImagePath);
             });
-            callback(undefined, thumbImagePath);
         }]
     };
 
@@ -245,7 +262,7 @@ var removeFile = function (path, removeFileCallback) {
                     logger.debug(error);
                     return removeFileCallback(error);
                 }
-                logger.debug('Image successfully deleted');
+                logger.debug('Image successfully deleted: ' + path);
                 removeFileCallback(undefined);
             });
         } else {
@@ -264,64 +281,64 @@ var deleteImageDirectories = function (folderName, deleteDirectoriesCallback) {
 
     logger.debug('Check if directories should be deleted');
 
-    var imageFolderPath = getFolderImagePath();
+    var imageFolderPath = getFolderImagePath(folderName);
     var fullsizeImagePath = getMainImagePath(folderName, "");
     var thumbImagePath = getThumbImagePath(folderName, "");
 
     var flow = {
         deleteFullsizeImageFolder: function (callback) {
             fs.exists(fullsizeImagePath, function (exist) {
-                if (!exist) {
+                if (exist) {
                     fs.rmdir(fullsizeImagePath, function (err) {
                         if (err) {
-                            return deleteDirectoriesCallback(err);
+                            logger.debug('The directory couldn\'t be deleted');
                         }
-                        callback(undefined);
+                        callback(undefined, fullsizeImagePath);
                     });
                 }
+                callback(undefined);
             });
-            callback(undefined, fullsizeImagePath);
         },
         deleteThumbImageFolder: ['deleteFullsizeImageFolder', function (callback) {
             fs.exists(thumbImagePath, function (exist) {
-                if (!exist) {
+                if (exist) {
                     fs.rmdir(thumbImagePath, function (err) {
                         if (err) {
-                            return deleteDirectoriesCallback(err);
+                            logger.debug('The directory couldn\'t be deleted');
                         }
-                        callback(undefined);
+                        callback(undefined, thumbImagePath);
                     });
                 }
+                callback(undefined);
             });
-            callback(undefined, thumbImagePath);
         }],
 
         deleteImageFolder: ['deleteFullsizeImageFolder', 'deleteThumbImageFolder', function (callback) {
             fs.exists(imageFolderPath, function (exist) {
-                if (!exist) {
+                if (exist) {
                     fs.rmdir(imageFolderPath, function (err) {
                         if (err) {
-                            return deleteDirectoriesCallback(err);
+                            logger.debug('The directory couldn\'t be deleted');
                         }
-                        callback(undefined);
+                        callback(undefined, imageFolderPath);
                     });
                 }
+                callback(undefined);
             });
-            callback(undefined, imageFolderPath);
         }]
     };
 
-    async.auto(flow, function (error, results) {
-        if (error) {
-            return deleteDirectoriesCallback(error);
+    async.auto(flow, function (err, results) {
+        if (err) {
+            return deleteDirectoriesCallback(err);
         }
-        if(results.createFullsizeImageFolder) {
+        if (results.createFullsizeImageFolder) {
             logger.debug('full size directory directory deleted: ' + results.createFullsizeImageFolder);
         }
-        if(results.createThumbImageFolder) {
+        if (results.createThumbImageFolder) {
             logger.debug('thumbnail directory deleted: ' + results.createThumbImageFolder);
         }
-        if(results.deleteImageFolder) {
+        if (results.deleteImageFolder) {
             logger.debug('main directory deleted: ' + results.deleteImageFolder);
         }
         deleteDirectoriesCallback(undefined);
@@ -332,50 +349,71 @@ var deleteImageDirectories = function (folderName, deleteDirectoriesCallback) {
  * Delete image file.
  * @param folderName the folder name
  * @param imageName the image name
- * @param deleteProcessCallback
+ * @param deleteImageFileCallback
  */
-var deleteImageFile = function (folderName, imageName, deleteProcessCallback) {
+var deleteImageFile = function (folderName, imageName, deleteImageFileCallback) {
 
     async.series([
-        function (callback) {
-            logger.debug('Remove thumbnail file');
-            var thumbsPath = getThumbImagePath(folderName, imageName);
-            removeFile(thumbsPath, callback);
-        },
-        function (callback) {
-            logger.debug('Remove full size file');
-            var fullsizePath = getMainImagePath(folderName, imageName);
-            removeFile(fullsizePath, callback);
-        },
-        function (callback) {
-            logger.debug('Remove directories in case they don\'t contain more images');
-            deleteImageDirectories(folderName, callback);
-        },
-        function () {
-            deleteProcessCallback(null, imageName);
-        }
-    ]);
+            function (callback) {
+                logger.debug('Remove thumbnail file');
+                var thumbsPath = getThumbImagePath(folderName, imageName);
+                removeFile(thumbsPath, callback);
+            },
+            function (callback) {
+                logger.debug('Remove full size file');
+                var fullsizePath = getMainImagePath(folderName, imageName);
+                removeFile(fullsizePath, callback);
+            },
+            function (callback) {
+                logger.debug('Remove directories in case they don\'t contain more images');
+                deleteImageDirectories(folderName, callback);
+            }
+        ],
+        function (err) {
+            if (err) {
+                return deleteImageFileCallback(err);
+            }
+            return deleteImageFileCallback(undefined);
+        });
 };
 
 /**
  * Delete one or more image (file) in the folder's entity
  * @param folderName
  * @param files
- * @param callback
+ * @param deleteImageFilesCallback
  */
-var deleteImageFiles = function (folderName, files, callback) {
+var deleteImageFiles = function (folderName, files, deleteImageFilesCallback) {
 
     if (_.isEmpty(files)) {
         return callback(undefined);
     }
 
-    // Object.keys
-    var keys = Object.keys(files);
+    /*
+     // Object.keys
+     var keys = Object.keys(files);
 
-    for (var i = 0; i < keys.length; ++i) {
-        var image = files[keys[i]];
-        deleteImageFile(folderName, image.name, callback);
-    }
+     for (var i = 0; i < keys.length; ++i) {
+     var image = files[keys[i]];
+     deleteImageFile(folderName, image.name, callback);
+     }*/
+
+    async.each(files, function (file, callback) {
+        // Perform operation on file here.
+
+        logger.info('Processing file ----> ' + file.name);
+
+        deleteImageFile(folderName, file.name, callback);
+    }, function (err) {
+        if (err) {
+            // One of the iterations produced an error.
+            // All processing will now stop.
+            console.log('A file failed to process');
+            return deleteImageFilesCallback(err);
+        }
+        logger.info('All files have been processed successfully');
+        deleteImageFilesCallback(undefined);
+    });
 };
 
 /**
@@ -486,10 +524,15 @@ var updateModel = function (model, callback, results) {
             model.images.push(imagesDoc[i]);
         }
     }
+    
     //Delete some images
     if (imagesDataToBeDeleted) {
-        for (var j = 0; j < imagesDataToBeDeleted.length; j++) {
-            model.images[j].remove();
+        for (var k = 0; k < imagesDataToBeDeleted.length; k++) {
+            for (var j = 0; j < model.images.length; j++) {
+                if(model.images[j]._id == imagesDataToBeDeleted[k]._id) {
+                    model.images[j].remove();
+                }
+            }
         }
     }
 
@@ -509,6 +552,18 @@ var updateImageFolderName = function (oldName, newName, callback) {
         });
     }
     callback(undefined);
+};
+
+var getImagesDataFromRequest = function (model, request, callback) {
+
+    logger.debug(' Getting image data from files ');
+
+    getImageData(model.name, request.files, request.body.mainImage, function (err, data) {
+        if (err) {
+            return callback(err);
+        }
+        callback(undefined, data);
+    });
 };
 
 /** ------------------------------ Update Model Flow ------------------------------------------ **/
@@ -536,17 +591,7 @@ var processImageUpdate = function (request, model, oldFolderName, mainCallback) 
         updateImageFolderName: async.apply(updateImageFolderName, oldFolderName, request.body.name),
 
         // Get images data from request in order to update images data from Model
-        getImagesDataFromRequest: ['updateImageFolderName', function (callback) {
-
-            logger.debug( ' Getting image data from files ');
-
-            getImageData(model.name, request.files, request.body.mainImage, function (err, data) {
-                if (err) {
-                    return callback(err);
-                }
-                callback(undefined, data);
-            });
-        }],
+        getImagesDataFromRequest: ['updateImageFolderName', async.apply(getImagesDataFromRequest, model, request)],
 
         // Persist each new image file
         persistImagesFiles: ['getImagesDataFromRequest', async.apply(persistImageFiles, folderName, request.files)],
@@ -559,9 +604,10 @@ var processImageUpdate = function (request, model, oldFolderName, mainCallback) 
         deleteImagesFiles: ['getImagesDataToBeDelete', async.apply(deleteImageFilesProcess, folderName)],
 
         // Update images data from the model
-        updateImagesDataFromModel: ['getImagesDataFromRequest', 'getImagesDataToBeDelete', 'deleteImagesFiles', async.apply(updateModel, model)],
+        updateImagesDataFromModel: ['persistImagesFiles', 'deleteImagesFiles', 'getImagesDataToBeDelete', async.apply(updateModel, model)],
 
         // Save the model once it has been updated
+
         save: ['updateImagesDataFromModel', function (callback, results) {
 
             //obtain the model updated

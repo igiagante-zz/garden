@@ -30,7 +30,7 @@ var createPlant = function (req, res) {
 
     plantService.getPlantInfoByName(req.body.name, function (err, plant) {
 
-        // Verifiy that any plant exits with this name
+        // Verify that any plant exits with this name
         if (plant !== null && plant.length > 0) {
             logger.debug('  The name of the plant already exists. Try other please!  ');
             return res.status(400).send(' The name of the plant already exists. Try other please! ');
@@ -69,7 +69,6 @@ var createPlant = function (req, res) {
                         return res.send(' One image could not be saved ' + err);
                     }
                     logger.debug(' the image was persisted successfully ');
-                    logger.debug(JSON.stringify(result));
                     return res.json(plant);
                 });
             });
