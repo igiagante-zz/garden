@@ -148,21 +148,28 @@ var updatePlant = function (req, res) {
  * @param res
  */
 var deletePlant = function (req, res) {
-    Plant.remove({
-        _id: req.params.plant_id
-    }, function (err, plant) {
+
+    Plant.findById(req.params.plant_id, function (err, plant) {
+
         if (err) {
-            res.send(err);
+            return res.status(500).send(err);
         }
 
-        logger.debug(' the plant with id: ' + req.params.plant_id + ' was deleted. ');
+        if (plant === null) {
+            logger.debug('  The plant does not exist!  ');
+            return res.status(400).send(' The plant does not exist ');
+        }
 
-        // get and return all the todos after you create another
-        plant.find(function (err, plants) {
+        Plant.remove({
+            _id: req.params.plant_id
+        }, function (err, plant) {
+
             if (err) {
-                res.send(err);
+                return res.status(404).send(err);
             }
-            res.json(plants);
+
+            logger.debug(' the plant with id: ' + req.params.plant_id + ' was deleted. ');
+            return res.status(202).send(' Plant with name: ' + plant.name + ' was deleted. ');
         });
     });
 };
