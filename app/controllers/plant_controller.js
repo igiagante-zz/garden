@@ -64,7 +64,7 @@ var createPlant = function (req, res) {
                 }
 
                 //persist images for one plant
-                imageService.createProcessImageFiles(plantName, req.files, function (err, result) {
+                imageService.createProcessImageFiles(plantName, req.files, function (err) {
                     if (err) {
                         return res.send(' One image could not be saved ' + err);
                     }
@@ -132,7 +132,7 @@ var updatePlant = function (req, res) {
         plant.gardenId = req.body.gardenId;
 
         //Update images for one plant
-        imageService.processImageUpdate(req, plant, oldFolderName, function (err, result) {
+        imageService.processImageUpdate(req, plant, oldFolderName, function (err) {
             if (err) {
                 return res.send(err);
             }

@@ -386,21 +386,12 @@ var deleteImageFile = function (folderName, imageName, deleteImageFileCallback) 
 var deleteImageFiles = function (folderName, files, deleteImageFilesCallback) {
 
     if (_.isEmpty(files)) {
-        return callback(undefined);
+        return deleteImageFilesCallback(undefined);
     }
 
-    /*
-     // Object.keys
-     var keys = Object.keys(files);
-
-     for (var i = 0; i < keys.length; ++i) {
-     var image = files[keys[i]];
-     deleteImageFile(folderName, image.name, callback);
-     }*/
-
     async.each(files, function (file, callback) {
-        // Perform operation on file here.
 
+        // Perform operation on file here.
         logger.info('Processing file ----> ' + file.name);
 
         deleteImageFile(folderName, file.name, callback);
@@ -412,6 +403,7 @@ var deleteImageFiles = function (folderName, files, deleteImageFilesCallback) {
             return deleteImageFilesCallback(err);
         }
         logger.info('All files have been processed successfully');
+
         deleteImageFilesCallback(undefined);
     });
 };
@@ -524,7 +516,7 @@ var updateModel = function (model, callback, results) {
             model.images.push(imagesDoc[i]);
         }
     }
-    
+
     //Delete some images
     if (imagesDataToBeDeleted) {
         for (var k = 0; k < imagesDataToBeDeleted.length; k++) {
