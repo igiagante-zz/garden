@@ -9,9 +9,9 @@ var chai = require('chai');
 var chaiHttp = require('chai-http');
 var mongoose = require("mongoose");
 
-var server = require('../app/server');
-var Nutrient = require("../app/models/nutrient"),
-    nutrientProvider = require('./providers/nutrient'),
+var server = require('../../app/server');
+var Nutrient = require("../../app/models/nutrient"),
+    nutrientProvider = require('./../providers/nutrient'),
     sinon = require('sinon'),
     rewire = require('rewire');
 
