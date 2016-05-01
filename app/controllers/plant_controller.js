@@ -152,7 +152,7 @@ var deletePlant = function (req, res) {
     Plant.findById(req.params.plant_id, function (err, plant) {
 
         if (err) {
-            return res.status(500).send(err);
+            return res.status(500).send(err.name + ': ' + err.message);
         }
 
         if (plant === null) {
