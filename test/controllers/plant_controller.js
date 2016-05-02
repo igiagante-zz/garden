@@ -2,7 +2,6 @@
  * Created by igiagante on 28/4/16.
  */
 
-
 process.env.NODE_ENV = 'test';
 
 var chai = require('chai');
@@ -13,13 +12,10 @@ var server = require('../../app/server');
 var Plant = require("../../app/models/plant"),
     plantProvider = require('./../providers/plant'),
     sinon = require('sinon'),
-    rewire = require('rewire');
+    rewire = require('rewire'),
+    Should = require('chai').Should(),
+    fs = require('fs');
 
-
-var Should = require('chai').Should();
-var fs = require('fs');
-
-//var should = chai.should();
 chai.use(chaiHttp);
 
 describe('Plant Controller', function() {
@@ -27,11 +23,13 @@ describe('Plant Controller', function() {
     Plant.collection.drop();
 
     var plantId;
+    var plantName;
 
     beforeEach(function(done){
 
         Plant.create(plantProvider.plant, function (err, createdPlant) {
             plantId = createdPlant.id;
+            plantName = createdPlant.name;
             done();
         });
     });
@@ -85,6 +83,18 @@ describe('Plant Controller', function() {
             });
     });
 
+    it('should delete one plant on /api/plant/id DELETE', function(done) {
+        chai.request(server)
+            .delete('/api/plant/' + plantId)
+            .end(function(err, res){
+
+                res.should.have.status(202);
+                res.text.should.be.equals(' The plant with name ' + plantName + ' was deleted. ');
+
+                done();
+            });
+    });
+
     it('should create one plant on /api/plant POST', function(done) {
 
         chai.request(server)
@@ -120,6 +130,45 @@ describe('Plant Controller', function() {
                 res.body.images.length.should.equals(2);
 
                 done();
+            });
+    });
+
+    it('should try to create a plant that already exit.', function(done) {
+
+        chai.request(server)
+            .post('/api/plant')
+            .field('_id', '1234')
+            .field('name', 'mango3')
+            .field('phSoil', '123')
+            .field('ecSoil', '123')
+            .field('harvest', '123')
+            .field('gardenId', '57164dd6962d5cca28000002')
+
+            .end(function(err, res){
+
+                if(err) {
+                    console.log('error : ' + err);
+                }
+
+                chai.request(server)
+                    .post('/api/plant')
+                    .field('_id', '1234')
+                    .field('name', 'mango3')
+                    .field('phSoil', '123')
+                    .field('ecSoil', '123')
+                    .field('harvest', '123')
+                    .field('gardenId', '57164dd6962d5cca28000002')
+
+                    .end(function(err, res){
+
+                        if(err) {
+                            console.log('error : ' + err);
+                        }
+
+                        res.should.have.status(409);
+
+                        done();
+                    });
             });
     });
 });

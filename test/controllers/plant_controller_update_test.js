@@ -4,18 +4,15 @@
 
 process.env.NODE_ENV = 'test';
 
-var chai = require('chai');
-var chaiHttp = require('chai-http');
-var mongoose = require("mongoose");
-
-var server = require('../../app/server');
-var Plant = require("../../app/models/plant"),
+var chai = require('chai').
+    chaiHttp = require('chai-http'),
+    mongoose = require("mongoose"),
+    server = require('../../app/server'),
+    Plant = require("../../app/models/plant"),
     sinon = require('sinon'),
-    rewire = require('rewire');
-
-
-var Should = require('chai').Should();
-var fs = require('fs');
+    rewire = require('rewire'),
+    Should = require('chai').Should(),
+    fs = require('fs');
 
 //var should = chai.should();
 chai.use(chaiHttp);
@@ -24,11 +21,6 @@ describe('Plant Controller', function () {
 
     var plantId;
     var imageOneId;
-
-    afterEach(function(done){
-        Plant.collection.drop();
-        done();
-    });
 
     /**
      * It creates a plant with two images. Then, it updates the plant with new data. One new image (mango3) is added, while
@@ -74,7 +66,7 @@ describe('Plant Controller', function () {
             });
     });
 
-    it('should update one plant on /api/plant POST', function (done) {
+    it('should update one plant on /api/plant PUT', function (done) {
 
         var resourcesIds = [];
         resourcesIds.push(imageOneId);

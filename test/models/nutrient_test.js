@@ -4,13 +4,10 @@
 
 'use strict';
 
-// import the moongoose helper utilities
-var utils = require('../utils');
-var should = require('should');
-// import our User mongoose model
-var Nutrient = require('../../app/models/nutrient'),
+var utils = require('../utils'),
+    should = require('should'),
+    Nutrient = require('../../app/models/nutrient'),
     nutrientProvider = require('../providers/nutrient');
-
 
 describe('Test nutrient model', function () {
 
@@ -28,9 +25,9 @@ describe('Test nutrient model', function () {
                 createdNutrient.npk.should.equal('3-4-5');
                 createdNutrient.description.should.equal('The best in the world');
 
-                createdNutrient.images[0].url.should.be.equal('/images/fullsize/nutrient');
+                createdNutrient.images[0].url.should.be.equal('/images/fullsize/flora');
                 createdNutrient.images[0].main.should.be.true
-                createdNutrient.images[1].url.should.be.equal('/images/fullsize/nutrient_2');
+                createdNutrient.images[1].url.should.be.equal('/images/fullsize/flora_2');
                 createdNutrient.images[1].main.should.be.false
 
                 createdNutrient.images.should.have.length(2);

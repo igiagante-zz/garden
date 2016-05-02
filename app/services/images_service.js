@@ -10,11 +10,9 @@ var fs = require('extfs'),
     im = require('imagemagick'),
     mongoose = require('mongoose'),
     _ = require('lodash'),
-    path = require('path'),
     mkdir = require('mkdir-p');
 
-var parentDir = path.resolve(process.cwd(), '..');
-var pathImagesUploaded = parentDir + '/public/images/uploads/';
+var pathImagesUploaded = process.cwd() + '/public/images/uploads/';
 
 var getFolderImagePath = function (folderName) {
     return pathImagesUploaded + folderName;
@@ -131,17 +129,9 @@ var persistImageFile = function (folderName, image, mainCallback) {
  */
 var persistImageFiles = function (folderName, files, persistImageFilesCallback) {
 
-    /*
-     // Object.keys
-     if (!_.isEmpty(files)) {
-     var keys = Object.keys(files);
-
-     for (var i = 0; i < keys.length; ++i) {
-     var file = files[keys[i]];
-     logger.debug(' Persisting image file: ' + file.originalname);
-     persistImageFile(folderName, file, persistImageFilesCallback);
-     }
-     }*/
+    if(_.isEmpty(files)) {
+        return persistImageFilesCallback(undefined);
+    }
 
     var images = [];
 
@@ -174,7 +164,11 @@ var persistImageFiles = function (folderName, files, persistImageFilesCallback) 
  * @param folderName - Folder's name
  * @param createImageDirectoryCallback
  */
-var createImageDirectory = function (folderName, createImageDirectoryCallback) {
+var createImageDirectory = function (folderName, files, createImageDirectoryCallback) {
+
+    if(_.isEmpty(files)) {
+        return createImageDirectoryCallback(undefined);
+    }
 
     var fullsizeImagePath = getMainImagePath(folderName, "");
     var thumbImagePath = getThumbImagePath(folderName, "");
@@ -229,7 +223,7 @@ var createProcessImageFiles = function (folderName, files, createProcessImageFil
 
     var flow = {
         // Persist each new image file
-        createImageDirectory: async.apply(createImageDirectory, folderName),
+        createImageDirectory: async.apply(createImageDirectory, folderName, files),
 
         // Update images data from the model
         persistImageFiles: ['createImageDirectory', async.apply(persistImageFiles, folderName, files)]

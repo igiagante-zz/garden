@@ -20,20 +20,18 @@ var createPlant = function (req, res) {
 
     var errors = req.validationErrors();
     if (errors) {
-        res.status(400).send('There have been validation errors: ' + util.inspect(errors));
-        return;
+        return res.status(400).send('There have been validation errors: ' + util.inspect(errors));
     }
 
     var imagesData;
     var plantName = req.body.name;
-
 
     plantService.getPlantInfoByName(req.body.name, function (err, plant) {
 
         // Verify that any plant exits with this name
         if (plant !== null && plant.length > 0) {
             logger.debug('  The name of the plant already exists. Try other please!  ');
-            return res.status(400).send(' The name of the plant already exists. Try other please! ');
+            return res.status(409).send(' The name of the plant already exists. Try other please! ');
         }
 
         logger.debug(' -------------------- Creating a new plant  -------------------- ');
@@ -66,9 +64,9 @@ var createPlant = function (req, res) {
                 //persist images for one plant
                 imageService.createProcessImageFiles(plantName, req.files, function (err) {
                     if (err) {
-                        return res.send(' One image could not be saved ' + err);
+                        return res.send(' There was an error trying to persist a plant ' + err);
                     }
-                    logger.debug(' the image was persisted successfully ');
+                    logger.debug(' the plant was persisted successfully ');
                     return res.json(plant);
                 });
             });
@@ -162,14 +160,14 @@ var deletePlant = function (req, res) {
 
         Plant.remove({
             _id: req.params.plant_id
-        }, function (err, plant) {
+        }, function (err) {
 
             if (err) {
                 return res.status(404).send(err);
             }
 
-            logger.debug(' the plant with id: ' + req.params.plant_id + ' was deleted. ');
-            return res.status(202).send(' Plant with name: ' + plant.name + ' was deleted. ');
+            logger.debug(' The plant with id: ' + req.params.plant_id + ' was deleted. ');
+            return res.status(202).send(' The plant with name ' + plant.name + ' was deleted. ');
         });
     });
 };
