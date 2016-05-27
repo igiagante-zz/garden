@@ -10,6 +10,8 @@ var plantSchema = new mongoose.Schema({
     size: Number,
     phSoil: Number,
     ecSoil: Number,
+    floweringTime: String,
+    genotype: String,
     harvest: Number,
     irrigations: [Schema.Types.ObjectId],
     gardenId: {type: Schema.Types.ObjectId, required: true},
@@ -29,6 +31,17 @@ var plantSchema = new mongoose.Schema({
             _id: Schema.Types.ObjectId,
             name: {type: String, required: true},
             imageUrl: {type: String, required: true}
+        }
+    ],
+    attributes: [
+        {
+            _id: Schema.Types.ObjectId,
+            /*
+             Type of attribute: Effect, Medicinal, Symptom
+             */
+            type: {type: String, required: true},
+            name: {type: String, required: true},
+            percentage: {type: String, required: true}
         }
     ]
 });
