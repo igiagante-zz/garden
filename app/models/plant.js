@@ -7,6 +7,7 @@ var mongoose = require('mongoose'),
 // Define the plant schema
 var plantSchema = new mongoose.Schema({
     name: {type: String, required: true},
+    seedDate: {type: Date, default: new Date()},
     size: Number,
     phSoil: Number,
     ecSoil: Number,
@@ -30,7 +31,8 @@ var plantSchema = new mongoose.Schema({
         {
             _id: Schema.Types.ObjectId,
             name: {type: String, required: true},
-            imageUrl: {type: String, required: true}
+            imageUrl: {type: String, required: true},
+            selected: {type: Boolean, default: false}
         }
     ],
     attributes: [
@@ -41,7 +43,7 @@ var plantSchema = new mongoose.Schema({
              */
             type: {type: String, required: true},
             name: {type: String, required: true},
-            percentage: {type: String, required: true}
+            percentage: {type: Number, required: true}
         }
     ]
 });

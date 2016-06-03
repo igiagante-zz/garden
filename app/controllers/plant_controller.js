@@ -7,7 +7,6 @@ var Plant = require('../models/plant'),
     plantService = require('../services/plant_service'),
     util = require('util');
 
-
 /**
  * Create a plant
  * @param req request parameters
@@ -55,6 +54,8 @@ var createPlant = function (req, res) {
                 ecSoil: req.body.ecSoil,
                 harvest: req.body.harvest,
                 gardenId: req.body.gardenId,
+                genotype: req.body.genotype,
+                floweringTime: req.body.floweringTime,
                 images: imagesData
             }, function (err, plant) {
                 if (err) {
@@ -199,8 +200,24 @@ var getAll = function (req, res) {
         if (err) {
             res.send(err);
         }
-        res.json(plants);
+        exposeImagesPath(plants, res);
     });
+};
+
+var exposeImagesPath = function(plants, res) {
+
+    for(var i = 0; i < plants.length; i++) {
+
+        var plant = plants[i];
+        var images = plant.images;
+
+        for(var j = 0; j < images.length; j++) {
+            var image = images[j];
+            image.url = "http://10.18.32.137:3000" + image.url;
+            image.thumbnailUrl = "http://10.18.32.137:3000" + image.thumbnailUrl;
+        }
+    }
+    return res.json(plants);
 };
 
 /**

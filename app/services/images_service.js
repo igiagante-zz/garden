@@ -12,6 +12,7 @@ var fs = require('extfs'),
     _ = require('lodash'),
     mkdir = require('mkdir-p');
 
+
 var pathImagesUploaded = process.cwd() + '/public/images/uploads/';
 
 var getFolderImagePath = function (folderName) {
@@ -25,6 +26,15 @@ var getMainImagePath = function (folderName, imageFileName) {
 var getThumbImagePath = function (folderName, imageFileName) {
     return getFolderImagePath(folderName) + '/thumb/' + imageFileName;
 };
+
+var getUrlImagePath = function (folderName, imageFileName) {
+    return '/images/uploads/' + folderName + '/fullsize/' + imageFileName;
+};
+
+var getThumbUrlImagePath = function (folderName, imageFileName) {
+    return '/images/uploads/' + folderName + '/thumb/' + imageFileName;
+};
+
 
 /** ------------------------------ Create Model Flow ------------------------------------------ **/
 
@@ -470,8 +480,8 @@ var getImageData = function (folderName, files, imageMain, callback) {
         var file = files[keys[i]];
 
         //paths to urls
-        var urlPath = getMainImagePath(folderName, file.originalname);
-        var thumbnailUrlPath = getThumbImagePath(folderName, file.originalname);
+        var urlPath = getUrlImagePath(folderName, file.originalname);
+        var thumbnailUrlPath = getThumbUrlImagePath(folderName, file.originalname);
 
         var data = {};
         data._id = mongoose.Types.ObjectId();
