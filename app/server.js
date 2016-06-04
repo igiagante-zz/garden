@@ -44,6 +44,7 @@ var router = express.Router(),
     nutrientRouter = require('./routers/nutrient_router.js'),
     flavorRouter = require('./routers/flavor_router.js'),
     attributeRouter = require('./routers/attribute_router.js'),
+    plagueRouter = require('./routers/plague_router.js'),
     sensorRouter = require('./routers/sensor_router.js');
 
 router.use('/doses', doseRouter);
@@ -53,6 +54,7 @@ router.use('/plant', plantRouter);
 router.use('/nutrient', nutrientRouter);
 router.use('/flavor', flavorRouter);
 router.use('/attribute', attributeRouter);
+router.use('/plague', plagueRouter);
 router.use('/sensor', sensorRouter);
 
 // middleware to use for all requests

@@ -1,5 +1,5 @@
 /**
- * @author Ignacio Giagante, on 3/6/16.
+ * @author Ignacio Giagante, on 6/4/16.
  */
 
 "use strict";
@@ -8,8 +8,8 @@
 var mongoose = require('mongoose'),
     Schema = mongoose.Schema;
 
-// Define the attribute schema
-var attributeSchema = new mongoose.Schema({
+// Define the plague schema
+var plagueSchema = new mongoose.Schema({
 
     _id: Schema.Types.ObjectId,
     /*
@@ -20,4 +20,4 @@ var attributeSchema = new mongoose.Schema({
 });
 
 // Export the Mongoose model
-module.exports = mongoose.model('Attribute', attributeSchema);
+module.exports = mongoose.model('Plague', plagueSchema);

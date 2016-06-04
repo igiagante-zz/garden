@@ -45,6 +45,12 @@ var plantSchema = new mongoose.Schema({
             name: {type: String, required: true},
             percentage: {type: Number, required: true}
         }
+    ],
+    plagues: [
+        {
+            _id: Schema.Types.ObjectId,
+            name: {type: String, required: true}
+        }
     ]
 });
 
