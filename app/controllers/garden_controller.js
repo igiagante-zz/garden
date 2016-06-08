@@ -1,6 +1,7 @@
 "use strict";
 
-var Garden = require('../models/garden');
+var Garden = require('../models/garden'),
+    utilObject = require('../commons/util_object');
 
 /**
  * Create a garden
@@ -15,8 +16,9 @@ var createGarden = function (req, res) {
         if (err) {
             res.send(err);
         }
-
-        res.json(garden);
+        utilObject.convertItemId(garden, function() {
+            return res.json(garden);
+        });
     });
 };
 
@@ -43,7 +45,9 @@ var updateGarden = function (req, res) {
             if (err) {
                 res.send(err);
             }
-            res.json(garden);
+            utilObject.convertItemId(garden, function() {
+                return res.json(garden);
+            });
         });
     });
 };
@@ -58,7 +62,9 @@ var getGarden = function (req, res) {
         if (err) {
             res.send(err);
         }
-        res.json(garden);
+        utilObject.convertItemId(garden, function() {
+            return res.json(garden);
+        });
     });
 };
 
@@ -80,7 +86,9 @@ var deleteGarden = function (req, res) {
             if (err) {
                 res.send(err);
             }
-            res.json(gardens);
+            utilObject.convertItemsId(gardens, function() {
+                return res.json(gardens);
+            });
         });
     });
 };
@@ -95,7 +103,9 @@ var getAll = function (req, res) {
         if (err) {
             res.send(err);
         }
-        res.json(gardens);
+        utilObject.convertItemsId(gardens, function() {
+            return res.json(gardens);
+        });
     });
 };
 

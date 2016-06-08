@@ -2,7 +2,8 @@
  * @author Ignacio Giagante, on 6/4/16.
  */
 
-var Plague = require('../models/plague');
+var Plague = require('../models/plague'),
+    utilObject = require('../commons/util_object');
 
 /**
  * Get all the plagues
@@ -14,7 +15,9 @@ var getAll = function (req, res) {
         if (err) {
             res.send(err);
         }
-        return res.json(plagues);
+        utilObject.convertItemsId(plagues, function() {
+            return res.json(plagues);
+        });
     });
 };
 

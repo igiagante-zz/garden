@@ -2,7 +2,8 @@
  * @author Ignacio Giagante, on 27/5/16.
  */
 
-var Flavor = require('../models/flavor');
+var Flavor = require('../models/flavor'),
+    utilObject = require('../commons/util_object');
 
 /**
  * Get all the flavors
@@ -14,21 +15,12 @@ var getAll = function (req, res) {
         if (err) {
             res.send(err);
         }
-        return res.json(flavors);
+        utilObject.convertItemsId(flavors, function() {
+            return res.json(flavors);
+        });
         //return exposeImagesPath(flavors, res);
     });
 };
-
-var exposeImagesPath = function(flavors, res) {
-
-    for(var i = 0; i < flavors.length; i++) {
-
-        var flavor = flavors[i];
-        flavor.imageUrl = "http://10.18.32.137:3000" + flavor.imageUrl;
-    }
-    return res.json(flavors);
-};
-
 
 module.exports = {
     getAll: getAll

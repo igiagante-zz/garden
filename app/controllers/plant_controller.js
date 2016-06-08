@@ -5,7 +5,8 @@ var Plant = require('../models/plant'),
     logger = require('../utils/logger'),
     imageService = require('../services/images_service'),
     plantService = require('../services/plant_service'),
-    util = require('util');
+    util = require('util'),
+    utilObject = require('../commons/util_object');
 
 /**
  * Create a plant
@@ -68,7 +69,9 @@ var createPlant = function (req, res) {
                         return res.send(' There was an error trying to persist a plant ' + err);
                     }
                     logger.debug(' the plant was persisted successfully ');
-                    return res.json(plant);
+                    utilObject.convertItemId(plant, function() {
+                        return res.json(plant);
+                    });
                 });
             });
         });
@@ -136,7 +139,9 @@ var updatePlant = function (req, res) {
                 return res.send(err);
             }
             logger.debug( ' Response : ' + plant);
-            return res.send(plant);
+            utilObject.convertItemId(plant, function() {
+                return res.json(plant);
+            });
         });
     });
 };
@@ -186,7 +191,10 @@ var getPlant = function (req, res) {
         if (err) {
             res.send(err);
         }
-        res.json(plant);
+
+        utilObject.convertItemId(plant, function() {
+            res.json(plant);
+        });
     });
 };
 
@@ -200,7 +208,9 @@ var getAll = function (req, res) {
         if (err) {
             res.send(err);
         }
-        exposeImagesPath(plants, res);
+        utilObject.convertItemsId(plants, function() {
+            exposeImagesPath(plants, res);
+        });
     });
 };
 
@@ -213,8 +223,8 @@ var exposeImagesPath = function(plants, res) {
 
         for(var j = 0; j < images.length; j++) {
             var image = images[j];
-            image.url = "http://192.168.0.101:3000" + image.url;
-            image.thumbnailUrl = "http://192.168.0.101:3000" + image.thumbnailUrl;
+            image.url = "http://10.18.32.137:3000" + image.url;
+            image.thumbnailUrl = "10.18.32.137:3000" + image.thumbnailUrl;
         }
     }
     return res.json(plants);

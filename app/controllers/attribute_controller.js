@@ -3,7 +3,8 @@
  */
 
 
-var Attribute = require('../models/attribute');
+var Attribute = require('../models/attribute'),
+    utilObject = require('../commons/util_object');
 
 /**
  * Get all the attributes
@@ -15,7 +16,9 @@ var getAll = function (req, res) {
         if (err) {
             res.send(err);
         }
-        return res.json(attributes);
+        utilObject.convertItemsId(attributes, function() {
+            return res.json(attributes);
+        });
     });
 };
 

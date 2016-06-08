@@ -8,7 +8,7 @@ var express = require('express'),
     router = express.Router(),
     plagueController = require('../controllers/plague_controller');
 
-//get all flavors
+//get all plagues
 router.get('/', plagueController.getAll);
 
 module.exports = router;
