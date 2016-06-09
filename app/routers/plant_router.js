@@ -10,6 +10,9 @@ router.post('/', plantController.createPlant);
 //update a plant
 router.put('/:plant_id', plantController.updatePlant);
 
+//update a plant
+router.put('/sections/:plant_id', plantController.updatePlantSections);
+
 //retrieve one plant
 router.get('/:plant_id', plantController.getPlant);
 
