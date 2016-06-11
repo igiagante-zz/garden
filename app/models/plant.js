@@ -31,8 +31,7 @@ var plantSchema = new mongoose.Schema({
         {
             _id: Schema.Types.ObjectId,
             name: {type: String, required: true},
-            imageUrl: {type: String, required: true},
-            selected: {type: Boolean, default: false}
+            imageUrl: {type: String, required: true}
         }
     ],
     attributes: [
@@ -49,7 +48,8 @@ var plantSchema = new mongoose.Schema({
     plagues: [
         {
             _id: Schema.Types.ObjectId,
-            name: {type: String, required: true}
+            name: {type: String, required: true},
+            imageUrl: {type: String, required: true},
         }
     ]
 });

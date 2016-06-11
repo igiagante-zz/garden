@@ -42,47 +42,45 @@ var createPlant = function (req, res) {
             });
         }
 
-        //obtain flavors
-        var flavors = JSON.parse(req.body.flavors);
+        // TODO - Refactor
+        plantService.convertIds(req, function(flavors, attributes, plagues) {
 
-        //obtain attributes
-        var attributes = JSON.parse(req.body.attributes);
+            Garden.findById(req.body.gardenId, function (err) {
 
-        //obtain plagues
-        var plagues = JSON.parse(req.body.plagues);
-
-        Garden.findById(req.body.gardenId, function (err) {
-
-            if (err) {
-                res.send(err);
-            }
-
-            Plant.create({
-                name: req.body.name,
-                size: req.body.size,
-                phSoil: req.body.phSoil,
-                ecSoil: req.body.ecSoil,
-                harvest: req.body.harvest,
-                gardenId: req.body.gardenId,
-                genotype: req.body.genotype,
-                floweringTime: req.body.floweringTime,
-                images: imagesData,
-                flavors: flavors,
-                attributes: attributes,
-                plagues: plagues
-            }, function (err, plant) {
                 if (err) {
                     res.send(err);
                 }
 
-                //persist images for one plant
-                imageService.createProcessImageFiles(plantName, req.files, function (err) {
+                Plant.create({
+                    name: req.body.name,
+                    size: req.body.size,
+                    phSoil: req.body.phSoil,
+                    ecSoil: req.body.ecSoil,
+                    harvest: req.body.harvest,
+                    gardenId: req.body.gardenId,
+                    genotype: req.body.genotype,
+                    floweringTime: req.body.floweringTime,
+                    images: imagesData,
+                    flavors: flavors,
+                    attributes: attributes,
+                    plagues: plagues
+                }, function (err, plant) {
                     if (err) {
-                        return res.send(' There was an error trying to persist a plant ' + err);
+                        res.send(err);
                     }
-                    logger.debug(' the plant was persisted successfully ');
-                    utilObject.convertItemId(plant, function() {
-                        return res.json(plant);
+
+                    //persist images for one plant
+                    imageService.createProcessImageFiles(plantName, req.files, function (err) {
+                        if (err) {
+                            return res.send(' There was an error trying to persist a plant ' + err);
+                        }
+                        logger.debug(' the plant was persisted successfully ');
+
+                        plantService.convertIdsFromMongo(plant, function() {
+                            utilObject.convertItemId(plant, function () {
+                                return res.json(plant);
+                            });
+                        });
                     });
                 });
             });
@@ -119,27 +117,27 @@ var updatePlant = function (req, res) {
             oldFolderName = plant.name;
         }
 
-        if(req.body.name) {
+        if (req.body.name) {
             plant.name = req.body.name;
         }
 
-        if(req.body.name) {
+        if (req.body.name) {
             plant.size = req.body.size;
         }
 
-        if(req.body.name) {
+        if (req.body.name) {
             plant.phSoil = req.body.phSoil;
         }
 
-        if(req.body.name) {
+        if (req.body.name) {
             plant.ecSoil = req.body.ecSoil;
         }
 
-        if(req.body.name) {
+        if (req.body.name) {
             plant.harvest = req.body.harvest;
         }
 
-        if(req.body.name) {
+        if (req.body.name) {
             plant.irrigations = req.body.irrigations;
         }
 
@@ -150,8 +148,8 @@ var updatePlant = function (req, res) {
             if (err) {
                 return res.send(err);
             }
-            logger.debug( ' Response : ' + plant);
-            utilObject.convertItemId(plant, function() {
+            logger.debug(' Response : ' + plant);
+            utilObject.convertItemId(plant, function () {
                 return res.json(plant);
             });
         });
@@ -163,7 +161,7 @@ var updatePlant = function (req, res) {
  * @param req
  * @param res
  */
-var updatePlantSections = function(req, res) {
+var updatePlantSections = function (req, res) {
 
     logger.debug(' -------------------- Update a plant  -------------------- ');
 
@@ -183,7 +181,7 @@ var updatePlantSections = function(req, res) {
         plant.plagues = req.body.plagues;
 
         // save the plant
-        plant.save(function(err) {
+        plant.save(function (err) {
             if (err) {
                 res.send(err);
             }
@@ -231,14 +229,14 @@ var deletePlant = function (req, res) {
  */
 var getPlant = function (req, res) {
 
-    logger.debug( ' Get plant with id: ' + req.params.plant_id);
+    logger.debug(' Get plant with id: ' + req.params.plant_id);
 
     Plant.findById(req.params.plant_id, function (err, plant) {
         if (err) {
             res.send(err);
         }
 
-        utilObject.convertItemId(plant, function() {
+        utilObject.convertItemId(plant, function () {
             res.json(plant);
         });
     });
@@ -254,20 +252,20 @@ var getAll = function (req, res) {
         if (err) {
             res.send(err);
         }
-        utilObject.convertItemsId(plants, function() {
+        utilObject.convertItemsId(plants, function () {
             exposeImagesPath(plants, res);
         });
     });
 };
 
-var exposeImagesPath = function(plants, res) {
+var exposeImagesPath = function (plants, res) {
 
-    for(var i = 0; i < plants.length; i++) {
+    for (var i = 0; i < plants.length; i++) {
 
         var plant = plants[i];
         var images = plant.images;
 
-        for(var j = 0; j < images.length; j++) {
+        for (var j = 0; j < images.length; j++) {
             var image = images[j];
             image.url = "http://10.18.32.137:3000" + image.url;
             image.thumbnailUrl = "10.18.32.137:3000" + image.thumbnailUrl;
