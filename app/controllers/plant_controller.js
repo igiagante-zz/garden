@@ -6,7 +6,8 @@ var Plant = require('../models/plant'),
     imageService = require('../services/images_service'),
     plantService = require('../services/plant_service'),
     util = require('util'),
-    utilObject = require('../commons/util_object');
+    utilObject = require('../commons/util_object'),
+    utilImage = require('../commons/util_image');
 
 /**
  * Create a plant
@@ -60,6 +61,7 @@ var createPlant = function (req, res) {
                     gardenId: req.body.gardenId,
                     genotype: req.body.genotype,
                     floweringTime: req.body.floweringTime,
+                    description:req.body.description,
                     images: imagesData,
                     flavors: flavors,
                     attributes: attributes,
@@ -78,6 +80,7 @@ var createPlant = function (req, res) {
 
                         plantService.convertIdsFromMongo(plant, function() {
                             utilObject.convertItemId(plant, function () {
+
                                 return res.json(plant);
                             });
                         });
@@ -152,40 +155,6 @@ var updatePlant = function (req, res) {
             utilObject.convertItemId(plant, function () {
                 return res.json(plant);
             });
-        });
-    });
-};
-
-/**
- * Update each section of the plant {FLAVORS, ATTRIBUTES, PLAGUES}
- * @param req
- * @param res
- */
-var updatePlantSections = function (req, res) {
-
-    logger.debug(' -------------------- Update a plant  -------------------- ');
-
-    Plant.findById(req.params.plant_id, function (err, plant) {
-
-        if (err) {
-            return res.send(err);
-        }
-
-        if (plant === null) {
-            logger.debug('  The plant does not exist!  ');
-            return res.status(400).send(' The plant does not exist ');
-        }
-
-        plant.attributes = req.body.attributes;
-        plant.flavors = req.body.flavors;
-        plant.plagues = req.body.plagues;
-
-        // save the plant
-        plant.save(function (err) {
-            if (err) {
-                res.send(err);
-            }
-            res.json(plant);
         });
     });
 };
@@ -267,8 +236,8 @@ var exposeImagesPath = function (plants, res) {
 
         for (var j = 0; j < images.length; j++) {
             var image = images[j];
-            image.url = "http://10.18.32.137:3000" + image.url;
-            image.thumbnailUrl = "10.18.32.137:3000" + image.thumbnailUrl;
+            image.url = "http://192.168.0.101:3000" + image.url;
+            image.thumbnailUrl = "http://192.168.0.101:3000" + image.thumbnailUrl;
         }
     }
     return res.json(plants);
@@ -295,8 +264,7 @@ module.exports = {
     deletePlant: deletePlant,
     getPlant: getPlant,
     getAll: getAll,
-    getAllThePlantsForOneGarden: getAllThePlantsForOneGarden,
-    updatePlantSections: updatePlantSections
+    getAllThePlantsForOneGarden: getAllThePlantsForOneGarden
 };
 
 
