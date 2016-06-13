@@ -65,25 +65,37 @@ var convertIds = function (req, convertIdsCallback) {
     async.series([
             function (callback) {
                 //obtain flavors
-                flavors = JSON.parse(req.body.flavors);
-                utilObject.convertIdsToObjectIds(flavors, callback);
+                if(req.body.flavors) {
+                    flavors = JSON.parse(req.body.flavors);
+                    utilObject.convertIdsToObjectIds(flavors, callback);
+                } else {
+                    callback(undefined);
+                }
             },
             function (callback) {
                 //obtain attributes
-                attributes = JSON.parse(req.body.attributes);
-                utilObject.convertIdsToObjectIds(attributes, callback);
+                if(req.body.attributes) {
+                    attributes = JSON.parse(req.body.attributes);
+                    utilObject.convertIdsToObjectIds(attributes, callback);
+                } else {
+                    callback(undefined);
+                }
             },
             function (callback) {
                 //obtain plagues
-                plagues = JSON.parse(req.body.plagues);
-                utilObject.convertIdsToObjectIds(plagues, callback);
+                if(req.body.plagues) {
+                    plagues = JSON.parse(req.body.plagues);
+                    utilObject.convertIdsToObjectIds(plagues, callback);
+                } else {
+                    callback(undefined);
+                }
             }
         ],
         function (err) {
             if (err) {
                 return convertIdsCallback(err);
             }
-            return convertIdsCallback(flavors, attributes, plagues);
+            return convertIdsCallback(undefined, flavors, attributes, plagues);
         });
 };
 
@@ -100,13 +112,26 @@ var convertIdsFromMongo = function (plant, convertIdsFromMongoCallback) {
 
     async.series([
             function (callback) {
-                utilObject.convertItemsId(flavors, callback);
+                if(flavors) {
+                    utilObject.convertItemsId(flavors, callback);
+                } else {
+                    callback(undefined);
+                }
+
             },
             function (callback) {
-                utilObject.convertItemsId(attributes, callback);
+                if(attributes) {
+                    utilObject.convertItemsId(attributes, callback);
+                } else {
+                    callback(undefined);
+                }
             },
             function (callback) {
-                utilObject.convertItemsId(plagues, callback);
+                if(plagues) {
+                    utilObject.convertItemsId(plagues, callback);
+                } else {
+                    callback(undefined);
+                }
             }
         ],
         function (err) {

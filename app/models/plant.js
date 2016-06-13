@@ -14,6 +14,7 @@ var plantSchema = new mongoose.Schema({
     floweringTime: String,
     genotype: String,
     harvest: Number,
+    description: String,
     irrigations: [Schema.Types.ObjectId],
     gardenId: {type: Schema.Types.ObjectId, required: true},
     images: [

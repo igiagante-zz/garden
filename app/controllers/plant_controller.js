@@ -61,7 +61,7 @@ var createPlant = function (req, res) {
                     gardenId: req.body.gardenId,
                     genotype: req.body.genotype,
                     floweringTime: req.body.floweringTime,
-                    description:req.body.description,
+                    description: req.body.description,
                     images: imagesData,
                     flavors: flavors,
                     attributes: attributes,
@@ -80,7 +80,6 @@ var createPlant = function (req, res) {
 
                         plantService.convertIdsFromMongo(plant, function() {
                             utilObject.convertItemId(plant, function () {
-
                                 return res.json(plant);
                             });
                         });
@@ -236,8 +235,8 @@ var exposeImagesPath = function (plants, res) {
 
         for (var j = 0; j < images.length; j++) {
             var image = images[j];
-            image.url = "http://192.168.0.101:3000" + image.url;
-            image.thumbnailUrl = "http://192.168.0.101:3000" + image.thumbnailUrl;
+            image.url = "http://10.18.32.137:3000" + image.url;
+            image.thumbnailUrl = "http://10.18.32.137:3000" + image.thumbnailUrl;
         }
     }
     return res.json(plants);
