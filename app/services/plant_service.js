@@ -95,14 +95,14 @@ var convertIds = function (req, convertIdsCallback) {
             if (err) {
                 return convertIdsCallback(err);
             }
-            return convertIdsCallback(undefined, flavors, attributes, plagues);
+            return convertIdsCallback(flavors, attributes, plagues);
         });
 };
 
 /**
  * Convert the ids to MongoDB ObjectId
  * @param plant Plant
- * @param convertIdsCallback
+ * @param convertIdsFromMongoCallback
  */
 var convertIdsFromMongo = function (plant, convertIdsFromMongoCallback) {
 

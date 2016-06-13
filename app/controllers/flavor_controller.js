@@ -3,7 +3,8 @@
  */
 
 var Flavor = require('../models/flavor'),
-    utilObject = require('../commons/util_object');
+    utilObject = require('../commons/util_object'),
+    utilImage = require('../commons/util_image');
 
 /**
  * Get all the flavors
@@ -16,9 +17,10 @@ var getAll = function (req, res) {
             res.send(err);
         }
         utilObject.convertItemsId(flavors, function() {
-            return res.json(flavors);
+            utilImage.exposeImages(flavors, function () {
+                return res.json(flavors);
+            });
         });
-        //return exposeImagesPath(flavors, res);
     });
 };
 

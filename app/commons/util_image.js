@@ -4,16 +4,42 @@
 
 "use strict";
 
-var exposeImagesPath = function(items, res) {
+var async = require('async');
 
-    for(var i = 0; i < items.length; i++) {
+/**
+ * Add domain to the paths' images
+ * @param items
+ * @param callbackItems
+ */
+var exposeImages = function (items, callbackExposeImages) {
 
-        var item = items[i];
-        item.imageUrl = "http://10.18.32.137:3000" + item.imageUrl;
+    async.each(items, function (item, callback) {
+        _exposeOneImage(item, callback);
+    }, function (err) {
+        if (err) {
+            return callbackExposeImages(err);
+        }
+        callbackExposeImages(undefined);
+    });
+};
+
+
+/**
+ * Add domain to the image's path
+ * @param item
+ * @param callback
+ */
+var _exposeOneImage = function (item, callback) {
+
+    if (item.hasOwnProperty("_doc")) {
+        var doc = item._doc;
+        if (doc.hasOwnProperty("imageUrl")) {
+            doc.imageUrl = "http://10.18.32.137:3000" + item.imageUrl;
+        }
     }
-    return res.json(item);
+    callback();
 };
 
 module.exports = {
-    exposeImagesPath: exposeImagesPath
+    exposeImages: exposeImages
 };
