@@ -13,7 +13,7 @@ var fs = require('extfs'),
     mkdir = require('mkdir-p');
 
 
-var pathImagesUploaded = process.cwd() + '/public/images/uploads/';
+var pathImagesUploaded = process.cwd() + '/../public/images/uploads/';
 
 var getFolderImagePath = function (folderName) {
     return pathImagesUploaded + folderName;
