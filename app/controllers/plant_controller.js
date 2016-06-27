@@ -184,8 +184,12 @@ var deletePlant = function (req, res) {
                 return res.status(404).send(err);
             }
 
-            logger.debug(' The plant with id: ' + req.params.plant_id + ' was deleted. ');
-            return res.status(202).send(' The plant with name ' + plant.name + ' was deleted. ');
+            var text = ' The plant with id ' + req.params.plant_id + ' was deleted. ';
+            logger.debug(text);
+            var data = {
+                message: text
+            };
+            return res.status(202).send(data);
         });
     });
 };
@@ -226,6 +230,11 @@ var getAll = function (req, res) {
     });
 };
 
+/**
+ * Add domain to the images resources
+ * @param plants - List of plants
+ * @param res - Response
+ */
 var exposeImagesPath = function (plants, res) {
 
     for (var i = 0; i < plants.length; i++) {
