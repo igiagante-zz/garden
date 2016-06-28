@@ -4,7 +4,8 @@
 
 "use strict";
 
-var async = require('async');
+var async = require('async'),
+    config = require('../../config');
 
 /**
  * Add domain to the paths' images
@@ -34,12 +35,49 @@ var _exposeOneImage = function (item, callback) {
     if (item.hasOwnProperty("_doc")) {
         var doc = item._doc;
         if (doc.hasOwnProperty("imageUrl")) {
-            doc.imageUrl = "http://10.18.32.137:3000" + item.imageUrl;
+            doc.imageUrl = config.connection.domain + item.imageUrl;
         }
     }
     callback();
 };
 
+/**
+ * Add domain to the images resources
+ * @param plants - List of plants
+ * @param res - Response
+ */
+var exposeImagesPathFromPlant = function (plants, res) {
+
+    for (var i = 0; i < plants.length; i++) {
+
+        var plant = plants[i];
+        var images = plant.images;
+
+        for (var j = 0; j < images.length; j++) {
+            var image = images[j];
+            image.url = config.connection.domain + image.url;
+            image.thumbnailUrl = config.connection.domain + image.thumbnailUrl;
+        }
+
+        var flavors = plant.flavors;
+
+        for (var i = 0; i < flavors.length; i++) {
+            var flavor = flavors[i];
+            flavor.imageUrl = config.connection.domain + flavor.imageUrl;
+        }
+
+        var plagues = plant.plagues;
+
+        for (var k = 0; k < plagues.length; k++) {
+            var plague = plagues[k];
+            plague.imageUrl = config.connection.domain + plague.imageUrl;
+        }
+
+    }
+    return res.json(plants);
+};
+
 module.exports = {
-    exposeImages: exposeImages
+    exposeImages: exposeImages,
+    exposeImagesPathFromPlant: exposeImagesPathFromPlant
 };

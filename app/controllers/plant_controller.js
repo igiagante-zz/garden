@@ -231,45 +231,9 @@ var getAll = function (req, res) {
             res.send(err);
         }
         utilObject.convertItemsId(plants, function () {
-            exposeImagesPath(plants, res);
+            utilImage.exposeImagesPathFromPlant(plants, res);
         });
     });
-};
-
-/**
- * Add domain to the images resources
- * @param plants - List of plants
- * @param res - Response
- */
-var exposeImagesPath = function (plants, res) {
-
-    for (var i = 0; i < plants.length; i++) {
-
-        var plant = plants[i];
-        var images = plant.images;
-
-        for (var j = 0; j < images.length; j++) {
-            var image = images[j];
-            image.url = "http://10.18.32.137:3000" + image.url;
-            image.thumbnailUrl = "http://10.18.32.137:3000" + image.thumbnailUrl;
-        }
-
-        var flavors = plant.flavors;
-
-        for (var i = 0; i < flavors.length; i++) {
-            var flavor = flavors[i];
-            flavor.imageUrl = "http://10.18.32.137:3000" + flavor.imageUrl;
-        }
-
-        var plagues = plant.plagues;
-
-        for (var k = 0; k < plagues.length; k++) {
-            var plague = plagues[k];
-            plague.imageUrl = "http://10.18.32.137:3000" + plague.imageUrl;
-        }
-
-    }
-    return res.json(plants);
 };
 
 /**
