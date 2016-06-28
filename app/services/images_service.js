@@ -10,7 +10,8 @@ var fs = require('extfs'),
     im = require('imagemagick'),
     mongoose = require('mongoose'),
     _ = require('lodash'),
-    mkdir = require('mkdir-p');
+    mkdir = require('mkdir-p'),
+    rimraf = require('rimraf');
 
 
 var pathImagesUploaded = process.cwd() + '/../public/images/uploads/';
@@ -249,6 +250,20 @@ var createProcessImageFiles = function (folderName, files, createProcessImageFil
 
 /** ------------------------------ Create Model Flow Finished ------------------------------------------ **/
 
+/**
+ * Delete a folder with all the images files
+ * @param folderName
+ * @param deleteFolderImageCallback
+ */
+var deleteFolderImage = function(folderName, deleteFolderImageCallback) {
+    rimraf(getFolderImagePath(folderName), function (error) {
+       if(error) {
+           deleteFolderImageCallback(error);
+       }
+    });
+    deleteFolderImageCallback(undefined);
+};
+
 /** ----------------------------------- Delete Model Flow ----------------------------------------------- **/
 
 /**
@@ -416,7 +431,7 @@ var deleteImageFiles = function (folderName, files, deleteImageFilesCallback) {
  * Delete file images for one model.
  * @param folderName the name of the folder
  * @param callback callback for the async auto
- * @param results results obtained from the last function in async
+ * @param results results.getImagesDataToBeDelete represents resources ids images to be deleted
  */
 var deleteImageFilesProcess = function (folderName, callback, results) {
     //delete images for one model
@@ -501,6 +516,8 @@ var getImageData = function (folderName, files, imageMain, callback) {
     callback(undefined, imageData);
 };
 
+/** ------------------------------ Update Model Flow ------------------------------------------ **/
+
 /**
  * Update model with image documents
  * @param model Model to be updated
@@ -562,8 +579,6 @@ var getImagesDataFromRequest = function (model, request, callback) {
     });
 };
 
-/** ------------------------------ Update Model Flow ------------------------------------------ **/
-
 /**
  * Each entity which contains images, can use this process to update its images.
  * @param request
@@ -596,7 +611,7 @@ var processImageUpdate = function (request, model, oldFolderName, mainCallback) 
         getImagesDataToBeDelete: async.apply(verifyIfImagesShouldBeDeleted, imagesFromDB, resourcesIds),
 
         // Delete files whose resource id doesn't exist any more. The data of resources ids comes
-        // from results.getImagesDataToBeDelete and inject in deleteImagesFiles function
+        // from results.getImagesDataToBeDelete and injected in deleteImageFilesProcess function
         deleteImagesFiles: ['getImagesDataToBeDelete', async.apply(deleteImageFilesProcess, folderName)],
 
         // Update images data from the model
@@ -642,6 +657,7 @@ module.exports = {
     verifyIfImagesShouldBeDeleted: verifyIfImagesShouldBeDeleted,
     processImageUpdate: processImageUpdate,
     persistImageFiles: persistImageFiles,
-    createProcessImageFiles: createProcessImageFiles
+    createProcessImageFiles: createProcessImageFiles,
+    deleteFolderImage: deleteFolderImage
 };
 

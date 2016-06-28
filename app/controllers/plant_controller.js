@@ -189,7 +189,13 @@ var deletePlant = function (req, res) {
             var data = {
                 message: text
             };
-            return res.status(202).send(data);
+
+            imageService.deleteFolderImage(plant.name, function(error) {
+                if(error) {
+                    return res.status(400).send(' The images folder could not be deleted. ');
+                }
+                return res.status(202).send(data);
+            });
         });
     });
 };
