@@ -15,17 +15,18 @@ var fs = require('extfs'),
 
 
 var pathImagesUploaded = process.cwd() + '/../public/images/uploads/';
+var pathImages = process.cwd() + '/public/images/uploads/';
 
 var getFolderImagePath = function (folderName) {
     return pathImagesUploaded + folderName;
 };
 
 var getMainImagePath = function (folderName, imageFileName) {
-    return getFolderImagePath(folderName) + '/fullsize/' + imageFileName;
+    return pathImagesUploaded + folderName + '/fullsize/' + imageFileName;
 };
 
 var getThumbImagePath = function (folderName, imageFileName) {
-    return getFolderImagePath(folderName) + '/thumb/' + imageFileName;
+    return pathImagesUploaded + folderName + '/thumb/' + imageFileName;
 };
 
 var getUrlImagePath = function (folderName, imageFileName) {
@@ -105,7 +106,8 @@ var writeImageFile = function (data, newPath, writeImageCallback) {
  */
 var persistImageFile = function (folderName, image, mainCallback) {
 
-    var newPath = getMainImagePath(folderName, image.originalname);
+    var newPath = pathImagesUploaded + folderName + '/fullsize/' + image.originalname;
+    // var newPath = getMainImagePath(folderName, image.originalname);
 
     async.waterfall([
 
@@ -458,17 +460,21 @@ var verifyIfImagesShouldBeDeleted = function (imagesFromDB, resourcesIds, callba
 
     logger.debug(' Getting image to be deleted ');
 
-    //Represent an array of resources ids which are found in imagesFromDB Array
-    var result = imagesFromDB.filter(function (item) {
-        return resourcesIds.filter(function (id) {
-                return item._id == id;
-            }).length === 0;
-    });
+    if(resourcesIds) {
+        //Represent an array of resources ids which are found in imagesFromDB Array
+        var result = imagesFromDB.filter(function (item) {
+            return resourcesIds.filter(function (id) {
+                    return item._id == id;
+                }).length === 0;
+        });
 
-    logger.debug('The following images should be deleted. ');
-    logger.debug(JSON.stringify(result));
+        logger.debug('The following images should be deleted. ');
+        logger.debug(JSON.stringify(result));
 
-    callback(undefined, result);
+        callback(undefined, result);
+    }
+    
+    callback(undefined);
 };
 
 /**
@@ -592,7 +598,10 @@ var processImageUpdate = function (request, model, oldFolderName, mainCallback) 
     var imagesFromDB = JSON.parse(JSON.stringify(model.images));
 
     //obtain resourcesIds in order to check if some picture needs to be updated
-    var resourcesIds = JSON.parse(request.body.resourcesIds);
+    var resourcesIds = null;
+    if(request.body.resourcesIds) {
+        resourcesIds = JSON.parse(request.body.resourcesIds);
+    }
 
     var folderName = model.name;
 

@@ -1,5 +1,5 @@
 /**
- * Created by igiagante on 28/4/16.
+ * @author Ignacio Giagante, on 28/4/16.
  */
 
 process.env.NODE_ENV = 'test';

@@ -44,7 +44,7 @@ var createPlant = function (req, res) {
         }
 
         // TODO - Refactor
-        plantService.convertIds(req, function(flavors, attributes, plagues) {
+        plantService.convertIds(req, function (flavors, attributes, plagues) {
 
             Garden.findById(req.body.gardenId, function (err) {
 
@@ -78,7 +78,7 @@ var createPlant = function (req, res) {
                         }
                         logger.debug(' the plant was persisted successfully ');
 
-                        plantService.convertIdsFromMongo(plant, function() {
+                        plantService.convertIdsFromMongo(plant, function () {
                             utilObject.convertItemId(plant, function () {
                                 return res.json(plant);
                             });
@@ -123,36 +123,61 @@ var updatePlant = function (req, res) {
             plant.name = req.body.name;
         }
 
-        if (req.body.name) {
+        if (req.body.size) {
             plant.size = req.body.size;
         }
 
-        if (req.body.name) {
+        if (req.body.phSoil) {
             plant.phSoil = req.body.phSoil;
         }
 
-        if (req.body.name) {
+        if (req.body.ecSoil) {
             plant.ecSoil = req.body.ecSoil;
         }
 
-        if (req.body.name) {
+        if (req.body.harvest) {
             plant.harvest = req.body.harvest;
         }
 
-        if (req.body.name) {
-            plant.irrigations = req.body.irrigations;
+        if (req.body.genotype) {
+            plant.genotype = req.body.genotype;
         }
 
-        plant.gardenId = req.body.gardenId;
+        if (req.body.floweringTime) {
+            plant.floweringTime = req.body.floweringTime;
+        }
 
-        //Update images for one plant
-        imageService.processImageUpdate(req, plant, oldFolderName, function (err) {
-            if (err) {
-                return res.send(err);
-            }
-            logger.debug(' Response : ' + plant);
-            utilObject.convertItemId(plant, function () {
-                return res.json(plant);
+        if (req.body.description) {
+            plant.description = req.body.description;
+        }
+
+        // TODO - Refactor
+        plantService.convertIds(req, function (flavors, attributes, plagues) {
+
+            plant.flavors = flavors;
+
+            plant.attributes = attributes;
+
+            plant.plagues = plagues;
+
+            plant.gardenId = req.body.gardenId;
+
+            //Update images for one plant
+            imageService.processImageUpdate(req, plant, oldFolderName, function (err) {
+                if (err) {
+                    return res.send(err);
+                }
+
+                // After images have processed, let's update de plant's document
+                plant.save(function (err, plant) {
+                    if (err) {
+                        res.send(err);
+                    }
+                    utilObject.convertItemId(plant, function () {
+                        logger.debug(' Response : ' + plant);
+                        return res.json(plant);
+                    });
+                });
             });
         });
     });
@@ -190,8 +215,8 @@ var deletePlant = function (req, res) {
                 message: text
             };
 
-            imageService.deleteFolderImage(plant.name, function(error) {
-                if(error) {
+            imageService.deleteFolderImage(plant.name, function (error) {
+                if (error) {
                     return res.status(400).send(' The images folder could not be deleted. ');
                 }
                 return res.status(202).send(data);
