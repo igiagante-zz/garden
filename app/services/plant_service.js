@@ -100,7 +100,7 @@ var convertIds = function (req, convertIdsCallback) {
 };
 
 /**
- * Convert the ids to MongoDB ObjectId
+ * Convert the MongoDB ObjectId to id
  * @param plant Plant
  * @param convertIdsFromMongoCallback
  */
@@ -109,6 +109,7 @@ var convertIdsFromMongo = function (plant, convertIdsFromMongoCallback) {
     var flavors = plant.flavors;
     var attributes = plant.attributes;
     var plagues = plant.plagues;
+    var images = plant.images;
 
     async.series([
             function (callback) {
@@ -117,7 +118,6 @@ var convertIdsFromMongo = function (plant, convertIdsFromMongoCallback) {
                 } else {
                     callback(undefined);
                 }
-
             },
             function (callback) {
                 if(attributes) {
@@ -129,6 +129,13 @@ var convertIdsFromMongo = function (plant, convertIdsFromMongoCallback) {
             function (callback) {
                 if(plagues) {
                     utilObject.convertItemsId(plagues, callback);
+                } else {
+                    callback(undefined);
+                }
+            },
+            function (callback) {
+                if(images) {
+                    utilObject.convertItemsId(images, callback);
                 } else {
                     callback(undefined);
                 }

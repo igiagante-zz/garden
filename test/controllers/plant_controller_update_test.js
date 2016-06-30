@@ -4,7 +4,7 @@
 
 process.env.NODE_ENV = 'test';
 
-var chai = require('chai').
+var chai = require('chai'),
     chaiHttp = require('chai-http'),
     mongoose = require("mongoose"),
     server = require('../../app/server'),
@@ -49,7 +49,7 @@ describe('Plant Controller', function () {
                 res.should.be.json;
 
                 res.body.should.be.a('object');
-                res.body.should.have.property('_id');
+                res.body.should.have.property('id');
                 res.body.should.have.property('name');
                 res.body.should.have.property('phSoil');
                 res.body.should.have.property('ecSoil');
@@ -92,7 +92,7 @@ describe('Plant Controller', function () {
                 res.should.be.json;
 
                 res.body.should.be.a('object');
-                res.body.should.have.property('_id');
+                res.body.should.have.property('id');
                 res.body.should.have.property('name');
                 res.body.should.have.property('phSoil');
                 res.body.should.have.property('ecSoil');

@@ -80,6 +80,7 @@ var createPlant = function (req, res) {
 
                         plantService.convertIdsFromMongo(plant, function () {
                             utilObject.convertItemId(plant, function () {
+                                logger.debug(' Plant created : \n' + plant);
                                 return res.json(plant);
                             });
                         });
@@ -173,9 +174,12 @@ var updatePlant = function (req, res) {
                     if (err) {
                         res.send(err);
                     }
-                    utilObject.convertItemId(plant, function () {
-                        logger.debug(' Response : ' + plant);
-                        return res.json(plant);
+
+                    plantService.convertIdsFromMongo(plant, function () {
+                        utilObject.convertItemId(plant, function () {
+                            logger.debug(' Response : ' + plant);
+                            return res.json(plant);
+                        });
                     });
                 });
             });

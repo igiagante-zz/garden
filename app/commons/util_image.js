@@ -61,8 +61,8 @@ var exposeImagesPathFromPlant = function (plants, res) {
 
         var flavors = plant.flavors;
 
-        for (var i = 0; i < flavors.length; i++) {
-            var flavor = flavors[i];
+        for (var d = 0; d < flavors.length; i++) {
+            var flavor = flavors[d];
             flavor.imageUrl = config.connection.domain + flavor.imageUrl;
         }
 

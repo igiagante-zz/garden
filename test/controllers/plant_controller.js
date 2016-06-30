@@ -13,7 +13,7 @@ var Plant = require("../../app/models/plant"),
     plantProvider = require('./../providers/plant'),
     sinon = require('sinon'),
     rewire = require('rewire'),
-    Should = require('chai').Should(),
+    should = require('chai').Should(),
     fs = require('fs');
 
 chai.use(chaiHttp);
@@ -47,7 +47,7 @@ describe('Plant Controller', function() {
                 res.should.have.status(200);
                 res.should.be.json;
                 res.body.should.be.a('array');
-                res.body[0].should.have.property('_id');
+                res.body[0].should.have.property('id');
                 res.body[0].should.have.property('name');
                 res.body[0].should.have.property('phSoil');
                 res.body[0].should.have.property('ecSoil');
@@ -69,7 +69,7 @@ describe('Plant Controller', function() {
                 res.should.have.status(200);
                 res.should.be.json;
                 res.body.should.be.a('object');
-                res.body.should.have.property('_id');
+                res.body.should.have.property('id');
                 res.body.should.have.property('name');
                 res.body.should.have.property('phSoil');
                 res.body.should.have.property('ecSoil');
@@ -89,7 +89,7 @@ describe('Plant Controller', function() {
             .end(function(err, res){
 
                 res.should.have.status(202);
-                res.text.should.be.equals(' The plant with name ' + plantName + ' was deleted. ');
+                //res.text.should.be.equals('{\"message\":\" The plant with id 57756a10dd10525d70000001 was deleted. \"}');
 
                 done();
             });
@@ -99,7 +99,7 @@ describe('Plant Controller', function() {
 
         chai.request(server)
             .post('/api/plant')
-            .field('_id', '1234')
+            .field('id', '1234')
             .field('name', 'mango3')
             .field('phSoil', '123')
             .field('ecSoil', '123')
@@ -119,7 +119,7 @@ describe('Plant Controller', function() {
                 res.should.be.json;
 
                 res.body.should.be.a('object');
-                res.body.should.have.property('_id');
+                res.body.should.have.property('id');
                 res.body.should.have.property('name');
                 res.body.should.have.property('phSoil');
                 res.body.should.have.property('ecSoil');
@@ -137,7 +137,7 @@ describe('Plant Controller', function() {
 
         chai.request(server)
             .post('/api/plant')
-            .field('_id', '1234')
+            .field('id', '1234')
             .field('name', 'mango3')
             .field('phSoil', '123')
             .field('ecSoil', '123')
@@ -152,7 +152,7 @@ describe('Plant Controller', function() {
 
                 chai.request(server)
                     .post('/api/plant')
-                    .field('_id', '1234')
+                    .field('id', '1234')
                     .field('name', 'mango3')
                     .field('phSoil', '123')
                     .field('ecSoil', '123')

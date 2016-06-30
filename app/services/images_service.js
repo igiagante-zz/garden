@@ -473,7 +473,6 @@ var verifyIfImagesShouldBeDeleted = function (imagesFromDB, resourcesIds, callba
 
         callback(undefined, result);
     }
-    
     callback(undefined);
 };
 
