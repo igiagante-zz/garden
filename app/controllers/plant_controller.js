@@ -80,8 +80,14 @@ var createPlant = function (req, res) {
 
                         plantService.convertIdsFromMongo(plant, function () {
                             utilObject.convertItemId(plant, function () {
-                                logger.debug(' Plant created : \n' + plant);
-                                return res.json(plant);
+                                imageService.getResourcesIdsImages(plant._doc.id, function (err, resourcesIds) {
+                                    if(err) {
+                                        return callback(err);
+                                    }
+                                    plant.resourcesIds = resourcesIds;
+                                    logger.debug(' Plant created : \n' + plant);
+                                    return res.json(plant);
+                                });
                             });
                         });
                     });
@@ -152,6 +158,10 @@ var updatePlant = function (req, res) {
             plant.description = req.body.description;
         }
 
+        if (req.body.resourcesIds) {
+            plant.resourcesIds = JSON.parse(req.body.resourcesIds);
+        }
+
         // TODO - Refactor
         plantService.convertIds(req, function (flavors, attributes, plagues) {
 
@@ -177,8 +187,14 @@ var updatePlant = function (req, res) {
 
                     plantService.convertIdsFromMongo(plant, function () {
                         utilObject.convertItemId(plant, function () {
-                            logger.debug(' Response : ' + plant);
-                            return res.json(plant);
+                            imageService.getResourcesIdsImages(plant._doc.id, function (err, resourcesIds) {
+                                if(err) {
+                                    return callback(err);
+                                }
+                                plant._doc.resourcesIds = resourcesIds;
+                                logger.debug(' Plant updated : \n' + plant);
+                                return res.json(plant);
+                            });
                         });
                     });
                 });

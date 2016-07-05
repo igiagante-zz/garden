@@ -1,6 +1,7 @@
 "use strict";
 
 var Garden = require('../models/garden'),
+    logger = require('../utils/logger'),
     utilObject = require('../commons/util_object');
 
 /**
@@ -16,7 +17,7 @@ var createGarden = function (req, res) {
         if (err) {
             res.send(err);
         }
-        utilObject.convertItemId(garden, function() {
+        utilObject.convertItemId(garden, function () {
             return res.json(garden);
         });
     });
@@ -45,7 +46,7 @@ var updateGarden = function (req, res) {
             if (err) {
                 res.send(err);
             }
-            utilObject.convertItemId(garden, function() {
+            utilObject.convertItemId(garden, function () {
                 return res.json(garden);
             });
         });
@@ -62,7 +63,7 @@ var getGarden = function (req, res) {
         if (err) {
             res.send(err);
         }
-        utilObject.convertItemId(garden, function() {
+        utilObject.convertItemId(garden, function () {
             return res.json(garden);
         });
     });
@@ -77,19 +78,16 @@ var deleteGarden = function (req, res) {
     Garden.remove({
         _id: req.params.garden_id
     }, function (err) {
-        if (err) {
-            res.send(err);
-        }
 
-        // get and return all the todos after you create another
-        Garden.find(function (err, gardens) {
-            if (err) {
-                res.send(err);
-            }
-            utilObject.convertItemsId(gardens, function() {
-                return res.json(gardens);
-            });
-        });
+        if (err) {
+            return res.status(404).send(err);
+        }
+        var text = ' The garden with id ' + req.params.plant_id + ' was deleted. ';
+        logger.debug(text);
+        var data = {
+            message: text
+        };
+        return res.status(202).send(data);
     });
 };
 
@@ -103,7 +101,7 @@ var getAll = function (req, res) {
         if (err) {
             res.send(err);
         }
-        utilObject.convertItemsId(gardens, function() {
+        utilObject.convertItemsId(gardens, function () {
             return res.json(gardens);
         });
     });

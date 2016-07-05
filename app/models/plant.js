@@ -16,6 +16,7 @@ var plantSchema = new mongoose.Schema({
     harvest: Number,
     description: String,
     irrigations: [Schema.Types.ObjectId],
+    resourcesIds: [Schema.Types.ObjectId], // each id corresponds to the one image id
     gardenId: {type: Schema.Types.ObjectId, required: true},
     images: [
         {

@@ -1,5 +1,5 @@
 /**
- * Created by igiagante on 1/4/16.
+ * @author Ignacio Giagante, on 1/4/16.
  */
 
 "use strict";

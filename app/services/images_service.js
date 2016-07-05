@@ -11,11 +11,11 @@ var fs = require('extfs'),
     mongoose = require('mongoose'),
     _ = require('lodash'),
     mkdir = require('mkdir-p'),
-    rimraf = require('rimraf');
+    rimraf = require('rimraf'),
+    Plant = require('../models/plant');
 
 
 var pathImagesUploaded = process.cwd() + '/../public/images/uploads/';
-var pathImages = process.cwd() + '/public/images/uploads/';
 
 var getFolderImagePath = function (folderName) {
     return pathImagesUploaded + folderName;
@@ -51,11 +51,12 @@ var resizeImage = function (folderName, imageFileName, resizeImageCallback) {
     var mainPath = getMainImagePath(folderName, imageFileName);
     var thumbPath = getThumbImagePath(folderName, imageFileName);
 
-    im.resize({srcPath: mainPath, dstPath: thumbPath, width: 200},
+    im.resize({srcPath: mainPath, dstPath: thumbPath, width: 400},
 
         function (err) {
             if (err) {
-                logger.error('The thumbnail image could not be saved');
+                logger.error('The thumbnail image could not be saved \n');
+                logger.error(err);
                 return resizeImageCallback(err);
             }
             resizeImageCallback(undefined);
@@ -142,7 +143,7 @@ var persistImageFile = function (folderName, image, mainCallback) {
  */
 var persistImageFiles = function (folderName, files, persistImageFilesCallback) {
 
-    if(_.isEmpty(files)) {
+    if (_.isEmpty(files)) {
         return persistImageFilesCallback(undefined);
     }
 
@@ -179,7 +180,7 @@ var persistImageFiles = function (folderName, files, persistImageFilesCallback) 
  */
 var createImageDirectory = function (folderName, files, createImageDirectoryCallback) {
 
-    if(_.isEmpty(files)) {
+    if (_.isEmpty(files)) {
         return createImageDirectoryCallback(undefined);
     }
 
@@ -257,11 +258,11 @@ var createProcessImageFiles = function (folderName, files, createProcessImageFil
  * @param folderName
  * @param deleteFolderImageCallback
  */
-var deleteFolderImage = function(folderName, deleteFolderImageCallback) {
+var deleteFolderImage = function (folderName, deleteFolderImageCallback) {
     rimraf(getFolderImagePath(folderName), function (error) {
-       if(error) {
-           deleteFolderImageCallback(error);
-       }
+        if (error) {
+            deleteFolderImageCallback(error);
+        }
     });
     deleteFolderImageCallback(undefined);
 };
@@ -460,7 +461,7 @@ var verifyIfImagesShouldBeDeleted = function (imagesFromDB, resourcesIds, callba
 
     logger.debug(' Getting image to be deleted ');
 
-    if(resourcesIds) {
+    if (resourcesIds) {
         //Represent an array of resources ids which are found in imagesFromDB Array
         var result = imagesFromDB.filter(function (item) {
             return resourcesIds.filter(function (id) {
@@ -472,8 +473,9 @@ var verifyIfImagesShouldBeDeleted = function (imagesFromDB, resourcesIds, callba
         logger.debug(JSON.stringify(result));
 
         callback(undefined, result);
+    } else {
+        callback(undefined);
     }
-    callback(undefined);
 };
 
 /**
@@ -547,7 +549,7 @@ var updateModel = function (model, callback, results) {
     if (imagesDataToBeDeleted) {
         for (var k = 0; k < imagesDataToBeDeleted.length; k++) {
             for (var j = 0; j < model.images.length; j++) {
-                if(model.images[j]._id == imagesDataToBeDeleted[k]._id) {
+                if (model.images[j]._id == imagesDataToBeDeleted[k]._id) {
                     model.images[j].remove();
                 }
             }
@@ -585,6 +587,38 @@ var getImagesDataFromRequest = function (model, request, callback) {
 };
 
 /**
+ * Return resources ids related to the images from database.
+ * @param modelId Represent the Id from the model which contains the images
+ * @param callback
+ * @returns {Array} Represent resources ids images
+ */
+var getResourcesIdsImages = function (modelId, callback) {
+
+    logger.debug(' Getting resources ids images from model ');
+
+    var resourcesIds = [];
+
+    Plant.find({ _id: modelId }, function (err, plantDB) {
+        if (err) {
+           return callback(err);
+        }
+
+        if(plantDB === null) {
+            return callback('The plant was not found');
+        }
+
+        var plant = JSON.parse(JSON.stringify(plantDB))[0];
+
+        if(plant.images) {
+            for(var i = 0; i < plant.images.length; i++){
+                resourcesIds.push(plant.images[i]._id);
+            }
+        }
+        callback(undefined, resourcesIds);
+    });
+};
+
+/**
  * Each entity which contains images, can use this process to update its images.
  * @param request
  * @param model The model that should be updated
@@ -598,7 +632,7 @@ var processImageUpdate = function (request, model, oldFolderName, mainCallback) 
 
     //obtain resourcesIds in order to check if some picture needs to be updated
     var resourcesIds = null;
-    if(request.body.resourcesIds) {
+    if (request.body.resourcesIds) {
         resourcesIds = JSON.parse(request.body.resourcesIds);
     }
 
@@ -666,6 +700,7 @@ module.exports = {
     processImageUpdate: processImageUpdate,
     persistImageFiles: persistImageFiles,
     createProcessImageFiles: createProcessImageFiles,
-    deleteFolderImage: deleteFolderImage
+    deleteFolderImage: deleteFolderImage,
+    getResourcesIdsImages: getResourcesIdsImages
 };
 
