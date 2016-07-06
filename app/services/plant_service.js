@@ -3,6 +3,7 @@
 var Plant = require('../models/plant.js'),
     logger = require('../utils/logger'),
     utilObject = require('../commons/util_object'),
+    utilImage = require('../commons/util_image'),
     async = require('async');
 
 /**
@@ -53,20 +54,39 @@ var getPlantName = function (plantId, getPlantCallback) {
     });
 };
 
+var convertPlantsIdsFromMongo = function(plants, callback) {
+
+    async.each(plants, function (plant, callback) {
+        convertIdsFromMongo(plant, callback);
+    }, function (err) {
+        if (err) {
+            return callback(err);
+        }
+        callback(undefined);
+    });
+};
+
 /**
- * Convert the ids to MongoDB ObjectId
- * @param req request
+ * Convert the inner ids from one plant to MongoDB ObjectId
+ * @param plant Plant Object
  * @param convertIdsCallback
  */
-var convertIds = function (req, convertIdsCallback) {
+var convertIds = function (plant, convertIdsCallback) {
 
     var flavors, attributes, plagues;
 
     async.series([
             function (callback) {
+                if(plant) {
+                    utilObject.convertIdToObjectId(plant, callback);
+                } else {
+                    callback(undefined);
+                }
+            },
+            function (callback) {
                 //obtain flavors
-                if(req.body.flavors) {
-                    flavors = JSON.parse(req.body.flavors);
+                if(plant.flavors) {
+                    flavors = JSON.parse(plant.flavors);
                     utilObject.convertIdsToObjectIds(flavors, callback);
                 } else {
                     callback(undefined);
@@ -74,8 +94,8 @@ var convertIds = function (req, convertIdsCallback) {
             },
             function (callback) {
                 //obtain attributes
-                if(req.body.attributes) {
-                    attributes = JSON.parse(req.body.attributes);
+                if(plant.attributes) {
+                    attributes = JSON.parse(plant.attributes);
                     utilObject.convertIdsToObjectIds(attributes, callback);
                 } else {
                     callback(undefined);
@@ -83,8 +103,8 @@ var convertIds = function (req, convertIdsCallback) {
             },
             function (callback) {
                 //obtain plagues
-                if(req.body.plagues) {
-                    plagues = JSON.parse(req.body.plagues);
+                if(plant.plagues) {
+                    plagues = JSON.parse(plant.plagues);
                     utilObject.convertIdsToObjectIds(plagues, callback);
                 } else {
                     callback(undefined);
@@ -112,6 +132,13 @@ var convertIdsFromMongo = function (plant, convertIdsFromMongoCallback) {
     var images = plant.images;
 
     async.series([
+            function (callback) {
+                if(plant) {
+                    utilObject.convertItemId(plant, callback);
+                } else {
+                    callback(undefined);
+                }
+            },
             function (callback) {
                 if(flavors) {
                     utilObject.convertItemsId(flavors, callback);
@@ -149,10 +176,40 @@ var convertIdsFromMongo = function (plant, convertIdsFromMongoCallback) {
         });
 };
 
+var getPlantsByGardenId = function(gardenId, callback) {
+
+    var filterPlants = [];
+
+    Plant.find(function (err, plants) {
+        if (err) {
+            return callback(err);
+        }
+
+        for(var i = 0; i < plants.length; i++){
+            if(plants[i]._doc.gardenId.equals(gardenId)) {
+                filterPlants.push(plants[i]);
+            }
+        }
+
+        utilObject.convertItemsId(filterPlants, function () {
+            convertPlantsIdsFromMongo(filterPlants, function (err) {
+                if(err) {
+                    return callback(err);
+                }
+                utilImage.exposeImagesPathFromPlant(filterPlants, function() {
+                    return callback(undefined, filterPlants);
+                });
+            });
+        });
+    });
+};
+
 module.exports = {
     getPlantInfoById: getPlantInfoById,
     getPlantInfoByName: getPlantInfoByName,
     getPlantName: getPlantName,
     convertIds: convertIds,
-    convertIdsFromMongo: convertIdsFromMongo
+    convertIdsFromMongo: convertIdsFromMongo,
+    getPlantsByGardenId: getPlantsByGardenId,
+    convertPlantsIdsFromMongo: convertPlantsIdsFromMongo
 };

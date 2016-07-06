@@ -2,7 +2,9 @@
 
 var Garden = require('../models/garden'),
     logger = require('../utils/logger'),
-    utilObject = require('../commons/util_object');
+    utilObject = require('../commons/util_object'),
+    PlantService = require('../../app/services/plant_service'),
+    gardenService = require('../../app/services/garden_service');
 
 /**
  * Create a garden
@@ -44,7 +46,7 @@ var updateGarden = function (req, res) {
         // save the garden
         garden.save(function (err, garden) {
             if (err) {
-                res.send(err);
+                return res.send(err);
             }
             utilObject.convertItemId(garden, function () {
                 return res.json(garden);
@@ -64,7 +66,13 @@ var getGarden = function (req, res) {
             res.send(err);
         }
         utilObject.convertItemId(garden, function () {
-            return res.json(garden);
+            PlantService.getPlantsByGardenId(garden._doc.id, function (err, plants) {
+                if(err) {
+                    return res.send(err);
+                }
+                garden._doc.plants = plants;
+                return res.json(garden);
+            });
         });
     });
 };
@@ -102,7 +110,12 @@ var getAll = function (req, res) {
             res.send(err);
         }
         utilObject.convertItemsId(gardens, function () {
-            return res.json(gardens);
+            gardenService.addPlantsToGardens(gardens, function(err) {
+                if(err) {
+                    return res.status(404).send(err);
+                }
+                return res.json(gardens);
+            });
         });
     });
 };

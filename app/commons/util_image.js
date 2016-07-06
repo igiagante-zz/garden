@@ -44,9 +44,9 @@ var _exposeOneImage = function (item, callback) {
 /**
  * Add domain to the images resources
  * @param plants - List of plants
- * @param res - Response
+ * @param exposeImagesPathFromPlantCallback - Callback
  */
-var exposeImagesPathFromPlant = function (plants, res) {
+var exposeImagesPathFromPlant = function (plants, exposeImagesPathFromPlantCallback) {
 
     for (var i = 0; i < plants.length; i++) {
 
@@ -72,9 +72,8 @@ var exposeImagesPathFromPlant = function (plants, res) {
             var plague = plagues[k];
             plague.imageUrl = config.connection.domain + plague.imageUrl;
         }
-
     }
-    return res.json(plants);
+    return exposeImagesPathFromPlantCallback(undefined);
 };
 
 module.exports = {

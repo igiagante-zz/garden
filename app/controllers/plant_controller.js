@@ -79,15 +79,13 @@ var createPlant = function (req, res) {
                         logger.debug(' the plant was persisted successfully ');
 
                         plantService.convertIdsFromMongo(plant, function () {
-                            utilObject.convertItemId(plant, function () {
-                                imageService.getResourcesIdsImages(plant._doc.id, function (err, resourcesIds) {
-                                    if(err) {
-                                        return callback(err);
-                                    }
-                                    plant.resourcesIds = resourcesIds;
-                                    logger.debug(' Plant created : \n' + plant);
-                                    return res.json(plant);
-                                });
+                            imageService.getResourcesIdsImages(plant._doc.id, function (err, resourcesIds) {
+                                if (err) {
+                                    return callback(err);
+                                }
+                                plant.resourcesIds = resourcesIds;
+                                logger.debug(' Plant created : \n' + plant);
+                                return res.json(plant);
                             });
                         });
                     });
@@ -163,7 +161,7 @@ var updatePlant = function (req, res) {
         }
 
         // TODO - Refactor
-        plantService.convertIds(req, function (flavors, attributes, plagues) {
+        plantService.convertIds(req.body, function (flavors, attributes, plagues) {
 
             plant.flavors = flavors;
 
@@ -186,15 +184,13 @@ var updatePlant = function (req, res) {
                     }
 
                     plantService.convertIdsFromMongo(plant, function () {
-                        utilObject.convertItemId(plant, function () {
-                            imageService.getResourcesIdsImages(plant._doc.id, function (err, resourcesIds) {
-                                if(err) {
-                                    return callback(err);
-                                }
-                                plant._doc.resourcesIds = resourcesIds;
-                                logger.debug(' Plant updated : \n' + plant);
-                                return res.json(plant);
-                            });
+                        imageService.getResourcesIdsImages(plant._doc.id, function (err, resourcesIds) {
+                            if (err) {
+                                return callback(err);
+                            }
+                            plant._doc.resourcesIds = resourcesIds;
+                            logger.debug(' Plant updated : \n' + plant);
+                            return res.json(plant);
                         });
                     });
                 });
@@ -273,10 +269,12 @@ var getPlant = function (req, res) {
 var getAll = function (req, res) {
     Plant.find(function (err, plants) {
         if (err) {
-            res.send(err);
+            return res.send(err);
         }
-        utilObject.convertItemsId(plants, function () {
-            utilImage.exposeImagesPathFromPlant(plants, res);
+        plantService.convertPlantsIdsFromMongo(plants, function () {
+            utilImage.exposeImagesPathFromPlant(plants, function() {
+                return res.send(plants);
+            });
         });
     });
 };

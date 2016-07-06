@@ -2,11 +2,11 @@
  * @author Ignacio Giagante, on 8/6/16.
  */
 
+"use strict";
+
 var async = require('async'),
     mongoose = require('mongoose'),
     ObjectID = mongoose.Types.ObjectId;
-
-"use strict";
 
 /**
  * Convert the property _id to id in each item from a list
@@ -33,7 +33,7 @@ var convertItemsId = function (items, callbackItems) {
  */
 var convertItemId = function (item, callback) {
 
-    if (item.hasOwnProperty("_doc")) {
+    if (item && item.hasOwnProperty("_doc")) {
         var doc = item._doc;
         if (doc.hasOwnProperty("_id")) {
             item._doc.id = item._doc._id;
@@ -68,7 +68,7 @@ var convertIdsToObjectIds = function (items, callbackItems) {
  */
 var convertIdToObjectId = function (item, callback) {
 
-    if (item.hasOwnProperty("id")) {
+    if (item && item.hasOwnProperty("id")) {
         item._id = ObjectID(item.id);
     }
     callback();
@@ -77,5 +77,6 @@ var convertIdToObjectId = function (item, callback) {
 module.exports = {
     convertItemId: convertItemId,
     convertItemsId: convertItemsId,
+    convertIdToObjectId: convertIdToObjectId,
     convertIdsToObjectIds: convertIdsToObjectIds
 };

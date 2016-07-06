@@ -1,5 +1,5 @@
 /**
- * Created by igiagante on 28/4/16.
+ * @author Ignacio Giagante, on 28/4/16.
  */
 
 process.env.NODE_ENV = 'test';
@@ -27,7 +27,7 @@ describe('Plant Controller', function() {
 
     beforeEach(function(done){
 
-        Plant.create(plantProvider.plant, function (err, createdPlant) {
+        Plant.create(plantProvider.plantOne, function (err, createdPlant) {
             plantId = createdPlant.id;
             plantName = createdPlant.name;
             done();
