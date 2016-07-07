@@ -44,7 +44,7 @@ var createPlant = function (req, res) {
         }
 
         // TODO - Refactor
-        plantService.convertIds(req, function (flavors, attributes, plagues) {
+        plantService.convertIds(req.body, function (flavors, attributes, plagues) {
 
             Garden.findById(req.body.gardenId, function (err) {
 
