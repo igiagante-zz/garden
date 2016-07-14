@@ -11,8 +11,7 @@ var fs = require('extfs'),
     mongoose = require('mongoose'),
     _ = require('lodash'),
     mkdir = require('mkdir-p'),
-    rimraf = require('rimraf'),
-    Plant = require('../models/plant');
+    rimraf = require('rimraf');
 
 
 var pathImagesUploaded = process.cwd() + '/../public/images/uploads/';
@@ -108,7 +107,6 @@ var writeImageFile = function (data, newPath, writeImageCallback) {
 var persistImageFile = function (folderName, image, mainCallback) {
 
     var newPath = pathImagesUploaded + folderName + '/fullsize/' + image.originalname;
-    // var newPath = getMainImagePath(folderName, image.originalname);
 
     async.waterfall([
 
@@ -587,38 +585,6 @@ var getImagesDataFromRequest = function (model, request, callback) {
 };
 
 /**
- * Return resources ids related to the images from database.
- * @param modelId Represent the Id from the model which contains the images
- * @param callback
- * @returns {Array} Represent resources ids images
- */
-var getResourcesIdsImages = function (modelId, callback) {
-
-    logger.debug(' Getting resources ids images from model ');
-
-    var resourcesIds = [];
-
-    Plant.find({ _id: modelId }, function (err, plantDB) {
-        if (err) {
-           return callback(err);
-        }
-
-        if(plantDB === null) {
-            return callback('The plant was not found');
-        }
-
-        var plant = JSON.parse(JSON.stringify(plantDB))[0];
-
-        if(plant.images) {
-            for(var i = 0; i < plant.images.length; i++){
-                resourcesIds.push(plant.images[i]._id);
-            }
-        }
-        callback(undefined, resourcesIds);
-    });
-};
-
-/**
  * Each entity which contains images, can use this process to update its images.
  * @param request
  * @param model The model that should be updated
@@ -700,7 +666,6 @@ module.exports = {
     processImageUpdate: processImageUpdate,
     persistImageFiles: persistImageFiles,
     createProcessImageFiles: createProcessImageFiles,
-    deleteFolderImage: deleteFolderImage,
-    getResourcesIdsImages: getResourcesIdsImages
+    deleteFolderImage: deleteFolderImage
 };
 

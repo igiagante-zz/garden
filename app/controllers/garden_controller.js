@@ -90,7 +90,7 @@ var deleteGarden = function (req, res) {
         if (err) {
             return res.status(404).send(err);
         }
-        var text = ' The garden with id ' + req.params.plant_id + ' was deleted. ';
+        var text = ' The garden with id ' + req.params.garden_id + ' was deleted. ';
         logger.debug(text);
         var data = {
             message: text

@@ -16,11 +16,13 @@ describe('Test Plant Service', function () {
     Plant.collection.drop();
 
     var gardenId;
+    var plantId;
 
     beforeEach(function (done) {
 
         Plant.create(plantProvider.plantOne, function (err, createdPlant) {
             gardenId = createdPlant.gardenId;
+            plantId = createdPlant.plantId;
         });
 
         Plant.create(plantProvider.plantTwo, function (err, createdPlant) {
@@ -41,6 +43,18 @@ describe('Test Plant Service', function () {
             should.not.exist(err);
 
             plants.should.have.length(2);
+        });
+
+        done();
+    });
+
+    it('should return a list of resources ids images', function (done) {
+
+        PlantService.getResourcesIdsImagesForPlant(plantId, function(err, resourcesIds) {
+            // Confirm that that an error does not exist
+            should.not.exist(err);
+
+            resourcesIds.should.have.length(2);
         });
 
         done();

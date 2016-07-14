@@ -1,5 +1,5 @@
 /**
- * Created by igiagante on 7/4/16.
+ * @author Ignacio Giagante, on 7/4/16.
  */
 
 var mongoose = require('mongoose');

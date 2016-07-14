@@ -27,8 +27,40 @@ var getPlantInfoById = function (plantId, getPlantCallback) {
 };
 
 /**
- * Get plant's info using name
- * @param plantId
+ * Return resources ids related to the images from database.
+ * @param modelId Represent the Id from the model which contains the images
+ * @param callback
+ * @returns {Array} Represent resources ids images
+ */
+var getResourcesIdsImagesForPlant = function (modelId, callback) {
+
+    logger.debug(' Getting resources ids images from model ');
+
+    var resourcesIds = [];
+
+    Plant.find({ _id: modelId }, function (err, plantDB) {
+        if (err) {
+            return callback(err);
+        }
+
+        if(plantDB === null) {
+            return callback('The plant was not found');
+        }
+
+        var plant = JSON.parse(JSON.stringify(plantDB))[0];
+
+        if(plant.images) {
+            for(var i = 0; i < plant.images.length; i++){
+                resourcesIds.push(plant.images[i]._id);
+            }
+        }
+        callback(undefined, resourcesIds);
+    });
+};
+
+/**
+ * Get plant's info using its name
+ * @param name Plant's name
  * @param getPlantCallback
  */
 var getPlantInfoByName = function (name, getPlantCallback) {
@@ -206,6 +238,7 @@ var getPlantsByGardenId = function(gardenId, callback) {
 
 module.exports = {
     getPlantInfoById: getPlantInfoById,
+    getResourcesIdsImagesForPlant: getResourcesIdsImagesForPlant,
     getPlantInfoByName: getPlantInfoByName,
     getPlantName: getPlantName,
     convertIds: convertIds,

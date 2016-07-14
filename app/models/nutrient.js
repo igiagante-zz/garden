@@ -16,6 +16,7 @@ var nutrientSchema = new mongoose.Schema({
     ph: Number,
     npk: String,
     description: String,
+    resourcesIds: [Schema.Types.ObjectId], // each id corresponds to the one image id
     images: [
         {
             _id: Schema.Types.ObjectId,

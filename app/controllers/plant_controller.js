@@ -49,7 +49,7 @@ var createPlant = function (req, res) {
             Garden.findById(req.body.gardenId, function (err) {
 
                 if (err) {
-                    res.send(err);
+                    return res.send(err);
                 }
 
                 Plant.create({
@@ -79,7 +79,7 @@ var createPlant = function (req, res) {
                         logger.debug(' the plant was persisted successfully ');
 
                         plantService.convertIdsFromMongo(plant, function () {
-                            imageService.getResourcesIdsImages(plant._doc.id, function (err, resourcesIds) {
+                            plantService.getResourcesIdsImagesForPlant(plant._doc.id, function (err, resourcesIds) {
                                 if (err) {
                                     return callback(err);
                                 }
@@ -177,14 +177,14 @@ var updatePlant = function (req, res) {
                     return res.send(err);
                 }
 
-                // After images have processed, let's update de plant's document
+                // After images have been processed, let's update de plant's document
                 plant.save(function (err, plant) {
                     if (err) {
-                        res.send(err);
+                        return res.send(err);
                     }
 
                     plantService.convertIdsFromMongo(plant, function () {
-                        imageService.getResourcesIdsImages(plant._doc.id, function (err, resourcesIds) {
+                        plantService.getResourcesIdsImagesForPlant(plant._doc.id, function (err, resourcesIds) {
                             if (err) {
                                 return callback(err);
                             }
