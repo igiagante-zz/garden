@@ -68,6 +68,24 @@ var getNutrientId = function (name, getNutrientIdCallback) {
     });
 };
 
+/**
+ * Convert the MongoDB ObjectId to id
+ * @param nutrients Nutrient List
+ * @param convertIdsFromMongoCallback
+ */
+var convertIdsFromMongo = function (nutrients, convertIdsFromMongoCallback) {
+
+    async.each(nutrients, function (nutrient, callback) {
+        utilObject.convertItemsId(nutrient.images, callback);
+    }, function (err) {
+        if (err) {
+            return convertIdsFromMongoCallback(err);
+        }
+        convertIdsFromMongoCallback(undefined);
+    });
+};
+
+
 var convertChildrenIds = function(nutrient, convertChildrenIdsCallback){
     utilObject.convertItemsId(nutrient.images, function() {
         convertChildrenIdsCallback(undefined, nutrient);
@@ -107,5 +125,6 @@ module.exports = {
     getNutrientInfoByName: getNutrientInfoByName,
     getResourcesIdsImagesForNutrient: getResourcesIdsImagesForNutrient,
     getNutrientId: getNutrientId,
-    getNutrient: getNutrient
+    getNutrient: getNutrient,
+    convertIdsFromMongo: convertIdsFromMongo
 };

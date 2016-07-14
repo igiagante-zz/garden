@@ -3,8 +3,8 @@
 var imageService = require('../services/images_service'),
     logger = require('../utils/logger'),
     nutrientService = require('../services/nutrient_service'),
-    Nutrient = require('../models/nutrient'),
-    utilObject = require('../commons/util_object');
+    utilObject = require('../commons/util_object'),
+    Nutrient = require('../models/nutrient');
 
 /**
  * Create one nutrient
@@ -27,7 +27,7 @@ var createNutrient = function (req, res) {
         logger.debug(' -------------------- Creating a new nutrient  -------------------- ');
 
         if (req.files !== null) {
-            imageService.getImageData(nutrientName, req.files, req.body.main, function (err, data) {
+            imageService.getImageData(nutrientName, req.files, req.body.mainImage, function (err, data) {
                 imagesData = data;
             });
         }
@@ -125,27 +125,46 @@ var updateNutrient = function (req, res) {
 var getNutrient = function (req, res) {
     Nutrient.findById(req.params.nutrient_id, function (err, nutrient) {
         if (err) {
-            res.send(err);
+            return res.send(err);
         }
-        res.json(nutrient);
+        return res.json(nutrient);
     });
 };
 
 //delete a nutrient
 var deleteNutrient = function (req, res) {
-    Nutrient.remove({
-        _id: req.params.nutrient_id
-    }, function (err) {
+
+    Nutrient.findById(req.params.nutrient_id, function (err, nutrient) {
+
         if (err) {
-            res.send(err);
+            return res.status(500).send(err.name + ': ' + err.message);
         }
 
-        // get and return all the todos after you create another
-        Nutrient.find(function (err, nutrients) {
+        if (nutrient === null) {
+            logger.debug('  The nutrient does not exist!  ');
+            return res.status(400).send(' The nutrient does not exist ');
+        }
+
+        Nutrient.remove({
+            _id: req.params.nutrient_id
+        }, function (err) {
+
             if (err) {
-                res.send(err);
+                return res.status(404).send(err);
             }
-            res.json(nutrients);
+
+            var text = ' The nutrient with id ' + req.params.nutrient_id + ' was deleted. ';
+            logger.debug(text);
+            var data = {
+                message: text
+            };
+
+            imageService.deleteFolderImage(nutrient.name, function (error) {
+                if (error) {
+                    return res.status(400).send(' The images folder could not be deleted. ');
+                }
+                return res.status(202).send(data);
+            });
         });
     });
 };
@@ -154,9 +173,13 @@ var deleteNutrient = function (req, res) {
 var getAll = function (req, res) {
     Nutrient.find(function (err, nutrients) {
         if (err) {
-            res.send(err);
+            return res.send(err);
         }
-        res.json(nutrients);
+        utilObject.convertItemsId(nutrients, function () {
+            nutrientService.convertIdsFromMongo(nutrients, function(){
+                return res.json(nutrients);
+            });
+        });
     });
 };
 

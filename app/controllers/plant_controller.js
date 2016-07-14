@@ -252,11 +252,11 @@ var getPlant = function (req, res) {
 
     Plant.findById(req.params.plant_id, function (err, plant) {
         if (err) {
-            res.send(err);
+            return res.send(err);
         }
 
         utilObject.convertItemId(plant, function () {
-            res.json(plant);
+            return res.json(plant);
         });
     });
 };
