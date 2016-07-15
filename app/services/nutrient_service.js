@@ -7,6 +7,7 @@
 var Nutrient = require('../models/nutrient'),
     utilObject = require('../commons/util_object'),
     async = require('async'),
+    util_image = require('../commons/util_image'),
     logger = require('../utils/logger');
 
 /**
@@ -27,7 +28,7 @@ var getNutrientInfoByName = function (name, getNutrientCallback) {
 
 /**
  * Return resources ids related to the images from database.
- * @param modelId Represent the Id from the model which contains the images
+ * @param nutrient Represent the model which contains the images
  * @param callback
  * @returns {Array} Represent resources ids images
  */
@@ -48,6 +49,7 @@ var getResourcesIdsImagesForNutrient = function (nutrient, callback) {
             resourcesIds.push(nutrientParsed.images[i].id);
         }
     }
+
     nutrient.resourcesIds = resourcesIds;
     callback(undefined, nutrient);
 };

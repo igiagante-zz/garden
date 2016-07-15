@@ -3,6 +3,7 @@
 var imageService = require('../services/images_service'),
     logger = require('../utils/logger'),
     nutrientService = require('../services/nutrient_service'),
+    utilImage = require('../commons/util_image'),
     utilObject = require('../commons/util_object'),
     Nutrient = require('../models/nutrient');
 

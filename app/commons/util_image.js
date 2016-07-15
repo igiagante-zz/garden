@@ -10,7 +10,7 @@ var async = require('async'),
 /**
  * Add domain to the paths' images
  * @param items
- * @param callbackItems
+ * @param callbackExposeImages
  */
 var exposeImages = function (items, callbackExposeImages) {
 
@@ -24,7 +24,6 @@ var exposeImages = function (items, callbackExposeImages) {
     });
 };
 
-
 /**
  * Add domain to the image's path
  * @param item
@@ -34,11 +33,35 @@ var _exposeOneImage = function (item, callback) {
 
     if (item.hasOwnProperty("_doc")) {
         var doc = item._doc;
-        if (doc.hasOwnProperty("imageUrl")) {
-            doc.imageUrl = config.connection.domain + item.imageUrl;
+        if (doc.hasOwnProperty("url")) {
+            doc.url = config.connection.domain + item.url;
+        }
+        if (doc.hasOwnProperty("thumbnailUrl")) {
+            doc.thumbnailUrl = config.connection.domain + item.thumbnailUrl;
         }
     }
     callback();
+};
+
+/**
+ * Add domain to the images resources
+ * @param nutrients - List of nutrients
+ * @param exposeImagesPathFromPlantCallback - Callback
+ */
+var exposeImagesPathFromNutrients = function (nutrients, exposeImagesPathFromPlantCallback) {
+
+    for (var i = 0; i < nutrients.length; i++) {
+
+        var nutrient = nutrients[i];
+        var images = nutrient.images;
+
+        for (var j = 0; j < images.length; j++) {
+            var image = images[j];
+            image.url = config.connection.domain + image.url;
+            image.thumbnailUrl = config.connection.domain + image.thumbnailUrl;
+        }
+    }
+    return exposeImagesPathFromPlantCallback(undefined);
 };
 
 /**
@@ -78,5 +101,6 @@ var exposeImagesPathFromPlant = function (plants, exposeImagesPathFromPlantCallb
 
 module.exports = {
     exposeImages: exposeImages,
-    exposeImagesPathFromPlant: exposeImagesPathFromPlant
+    exposeImagesPathFromPlant: exposeImagesPathFromPlant,
+    exposeImagesPathFromNutrients: exposeImagesPathFromNutrients
 };
