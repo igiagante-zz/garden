@@ -1,18 +1,45 @@
 "use strict";
 
-var Dose = require('models/dose'),
+var Dose = require('../models/dose'),
+    async = require('async'),
     logger = require('../utils/logger');
 
-var doseService = {};
+var getDoseById = function (doseId, getDoseByIrrigationIdCallback) {
 
-doseService.getDose = function (dose_id) {
-
-    Dose.findById({"_id ": dose_id}, function (err, dose) {
+    Dose.findById({"_id": doseId}, function (err, dose) {
         if (err) {
             logger.debug(err);
+            return getDoseByIrrigationIdCallback(err);
         }
-        return dose;
+        return getDoseByIrrigationIdCallback(undefined, dose);
     });
 };
 
-module.exports = doseService;
+/**
+ * Add doses to irrigations
+ * @param irrigations
+ * @param addDoseCallback
+ */
+var addDose = function (irrigations, addDoseCallback) {
+
+    async.each(irrigations, function (irrigation, callback) {
+
+        getDoseById(irrigation._doc.doseId, function (err, dose) {
+            if (err) {
+                return callback(err);
+            }
+            irrigation._doc.dose = dose;
+            return callback(undefined, irrigation);
+        });
+
+    }, function (err) {
+        if (err) {
+            return addDoseCallback(err);
+        }
+        return addDoseCallback(undefined);
+    });
+};
+
+module.exports = {
+    addDose: addDose
+};

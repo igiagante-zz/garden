@@ -17,17 +17,9 @@ var doseSchema = new mongoose.Schema({
 			ph: Number,
             npk: String,
             description: String,
-            quantityUsed: Number,
-            images: [
-                {
-                    _id: Schema.Types.ObjectId,
-                    url: { type: String, required: true },
-                    thumbnailUrl: { type: String, required: true }
-                }
-            ]
+            quantityUsed: Number
 		}
-	],
-    editable: {type: Boolean, required:true}
+	]
 });
 
 // Export the Mongoose model

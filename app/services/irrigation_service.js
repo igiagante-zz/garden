@@ -1,5 +1,5 @@
 /**
- * Created by igiagante on 1/4/16.
+ * @author Ignacio Giagante, on 1/4/16.
  */
 
 "use strict";
@@ -8,7 +8,37 @@ var Irrigation = require('../models/irrigation'),
     Dose = require('../models/dose'),
     async = require('async'),
     logger = require('../utils/logger'),
+    utilObject = require('../commons/util_object'),
     Nutrient = require('../models/nutrient');
+
+
+/**
+ * Get all the irrigation for one garden
+ * @param gardenId
+ * @param callback
+ */
+var getIrrigationsByGardenId = function(gardenId, callback) {
+
+    var filterIrrigations = [];
+
+    Irrigation.find(function (err, irrigations) {
+        if (err) {
+            return callback(err);
+        }
+
+        for(var i = 0; i < irrigations.length; i++){
+            if(irrigations[i]._doc.gardenId.equals(gardenId)) {
+                filterIrrigations.push(irrigations[i]);
+            }
+        }
+
+        utilObject.convertItemsId(filterIrrigations, function () {
+            return callback(undefined, filterIrrigations);
+        });
+    });
+};
+
+
 
 
 /**
@@ -180,7 +210,8 @@ var calculateUseOfNutrients = function(gardenId, fromDate, toDate, mainCallback)
 };
 
 module.exports = {
-    calculateUseOfNutrients : calculateUseOfNutrients
+    calculateUseOfNutrients : calculateUseOfNutrients,
+    getIrrigationsByGardenId: getIrrigationsByGardenId
 };
 
 

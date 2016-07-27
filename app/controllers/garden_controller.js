@@ -67,7 +67,7 @@ var getGarden = function (req, res) {
         }
         utilObject.convertItemId(garden, function () {
             PlantService.getPlantsByGardenId(garden._doc.id, function (err, plants) {
-                if(err) {
+                if (err) {
                     return res.send(err);
                 }
                 garden._doc.plants = plants;
@@ -110,11 +110,18 @@ var getAll = function (req, res) {
             res.send(err);
         }
         utilObject.convertItemsId(gardens, function () {
-            gardenService.addPlantsToGardens(gardens, function(err) {
-                if(err) {
-                    return res.status(404).send(err);
+
+            gardenService.addIrrigationsToGardens(gardens, function (err) {
+                if (err) {
+                    return res.status(500).send(err);
                 }
-                return res.json(gardens);
+
+                gardenService.addPlantsToGardens(gardens, function (err) {
+                    if (err) {
+                        return res.status(500).send(err);
+                    }
+                    return res.json(gardens);
+                });
             });
         });
     });
