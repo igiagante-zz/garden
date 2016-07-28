@@ -3,6 +3,7 @@
 var Irrigation = require('../models/irrigation'),
     Dose = require('../models/dose'),
     utilObject = require('../commons/util_object'),
+    logger = require('../utils/logger'),
     irrigationService = require('../services/irrigation_service');
 
 var nutrientsUsed = function (req, res) {
@@ -85,34 +86,6 @@ var createIrrigation = function (req, res) {
 };
 
 /**
- * Update one irrigation
- * @param req
- * @param res
- */
-var updateIrrigation = function (req, res) {
-
-    Irrigation.findById(req.params.irrigation_id, function (err, irrigation) {
-
-        if (err) {
-            res.send(err);
-        }
-
-        irrigation.irrigationDate = req.body.irrigationDate;
-        irrigation.quantity = req.body.quantity;
-        irrigation.gardenId = req.body.gardenId;
-        irrigation.doseId = req.body.doseId;
-
-        // save the irrigation
-        irrigation.save(function (err) {
-            if (err) {
-                res.send(err);
-            }
-            res.json(irrigation);
-        });
-    });
-};
-
-/**
  * Get one irrigation
  * @param req
  * @param res
@@ -142,7 +115,7 @@ var deleteIrrigation = function (req, res) {
             return res.status(500).send(err.name + ': ' + err.message);
         }
 
-        if (plant === null) {
+        if (irrigation === null) {
             logger.debug('  The irrigation does not exist!  ');
             return res.status(400).send(' The irrigation does not exist ');
         }
@@ -183,7 +156,6 @@ var getAll = function (req, res) {
 
 module.exports = {
     createIrrigation: createIrrigation,
-    updateIrrigation: updateIrrigation,
     deleteIrrigation: deleteIrrigation,
     getIrrigation: getIrrigation,
     getAll: getAll,
