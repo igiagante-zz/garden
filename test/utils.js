@@ -9,7 +9,7 @@
 
 
 var mongoose = require('mongoose');
-var config = require('../config');
+var config = require('../config/config');
 
 
 // ensure the NODE_ENV is set to 'test'

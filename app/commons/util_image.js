@@ -5,7 +5,7 @@
 "use strict";
 
 var async = require('async'),
-    config = require('../../config');
+    connection = require('../../config/connection');
 
 /**
  * Add domain to the paths' images
@@ -34,10 +34,10 @@ var _exposeOneImage = function (item, callback) {
     if (item.hasOwnProperty("_doc")) {
         var doc = item._doc;
         if (doc.hasOwnProperty("url")) {
-            doc.url = config.connection.domain + item.url;
+            doc.url = connection.domain + item.url;
         }
         if (doc.hasOwnProperty("thumbnailUrl")) {
-            doc.thumbnailUrl = config.connection.domain + item.thumbnailUrl;
+            doc.thumbnailUrl = connection.domain + item.thumbnailUrl;
         }
     }
     callback();
@@ -57,8 +57,8 @@ var exposeImagesPathFromNutrients = function (nutrients, exposeImagesPathFromPla
 
         for (var j = 0; j < images.length; j++) {
             var image = images[j];
-            image.url = config.connection.domain + image.url;
-            image.thumbnailUrl = config.connection.domain + image.thumbnailUrl;
+            image.url = connection.domain + image.url;
+            image.thumbnailUrl = connection.domain + image.thumbnailUrl;
         }
     }
     return exposeImagesPathFromPlantCallback(undefined);
@@ -78,22 +78,22 @@ var exposeImagesPathFromPlant = function (plants, exposeImagesPathFromPlantCallb
 
         for (var j = 0; j < images.length; j++) {
             var image = images[j];
-            image.url = config.connection.domain + image.url;
-            image.thumbnailUrl = config.connection.domain + image.thumbnailUrl;
+            image.url = connection.domain + image.url;
+            image.thumbnailUrl = connection.domain + image.thumbnailUrl;
         }
 
         var flavors = plant.flavors;
 
         for (var d = 0; d < flavors.length; d++) {
             var flavor = flavors[d];
-            flavor.imageUrl = config.connection.domain + flavor.imageUrl;
+            flavor.imageUrl = connection.domain + flavor.imageUrl;
         }
 
         var plagues = plant.plagues;
 
         for (var k = 0; k < plagues.length; k++) {
             var plague = plagues[k];
-            plague.imageUrl = config.connection.domain + plague.imageUrl;
+            plague.imageUrl = connection.domain + plague.imageUrl;
         }
     }
     return exposeImagesPathFromPlantCallback(undefined);

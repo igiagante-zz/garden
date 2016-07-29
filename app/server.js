@@ -7,8 +7,12 @@ var express = require('express'),        // call express
     multer = require('multer'),
     logger = require('./utils/logger'),
     cors = require('cors'),
-    config = require('../config'),
+    config = require('../config/database'),
+    passport = require('passport'),
     mongoose = require('mongoose');
+
+// pass passport for configuration
+require('../config/passport')(passport);
 
 var app = express();  // define our app using express
 
@@ -31,31 +35,49 @@ app.use(expressValidator()); // to validate requests
 //CORS middleware
 app.use(cors());
 
+// Use the passport package in our application
+app.use(passport.initialize());
+
 var port = process.env.PORT || 3000;        // set our port
 
 // ROUTES FOR OUR API
 // ================================================
 // get an instance of the express Router
 var router = express.Router(),
-    doseRouter = require('./routers/dose_router.js'),
-    gardenRouter = require('./routers/garden_router.js'),
-    irrigationRouter = require('./routers/irrigation_router.js'),
-    plantRouter = require('./routers/plant_router.js'),
-    nutrientRouter = require('./routers/nutrient_router.js'),
-    flavorRouter = require('./routers/flavor_router.js'),
-    attributeRouter = require('./routers/attribute_router.js'),
-    plagueRouter = require('./routers/plague_router.js'),
-    sensorRouter = require('./routers/sensor_router.js');
+    doseRouter = require('./routers/dose_router'),
+    gardenRouter = require('./routers/garden_router'),
+    irrigationRouter = require('./routers/irrigation_router'),
+    plantRouter = require('./routers/plant_router'),
+    nutrientRouter = require('./routers/nutrient_router'),
+    flavorRouter = require('./routers/flavor_router'),
+    attributeRouter = require('./routers/attribute_router'),
+    plagueRouter = require('./routers/plague_router'),
+    sensorRouter = require('./routers/sensor_router'),
+    userRouter = require('./routers/user_router'),
+    authService = require('./services/auth_service');
 
-router.use('/doses', doseRouter);
-router.use('/garden', gardenRouter);
-router.use('/irrigation', irrigationRouter);
-router.use('/plant', plantRouter);
-router.use('/nutrient', nutrientRouter);
-router.use('/flavor', flavorRouter);
-router.use('/attribute', attributeRouter);
-router.use('/plague', plagueRouter);
-router.use('/sensor', sensorRouter);
+// middleware to use for all requests in order to verify if the user is authorized
+var isUserAuthenticated = function (req, res, next) {
+
+    authService.isUserAuthenticated(req, function (err) {
+        if (err) {
+            return res.status(403).send({success: false, msg: 'Authentication failed. User not found.'});
+        } else {
+            next();
+        }
+    });
+};
+
+router.use('/dose', passport.authenticate('jwt', {session: false}), isUserAuthenticated, doseRouter);
+router.use('/garden', passport.authenticate('jwt', {session: false}), isUserAuthenticated, gardenRouter);
+router.use('/irrigation', passport.authenticate('jwt', {session: false}), isUserAuthenticated, irrigationRouter);
+router.use('/plant', passport.authenticate('jwt', {session: false}), isUserAuthenticated, plantRouter);
+router.use('/nutrient', passport.authenticate('jwt', {session: false}), isUserAuthenticated,  nutrientRouter);
+router.use('/flavor', passport.authenticate('jwt', {session: false}), isUserAuthenticated,  flavorRouter);
+router.use('/attribute', passport.authenticate('jwt', {session: false}), isUserAuthenticated,  attributeRouter);
+router.use('/plague', passport.authenticate('jwt', {session: false}), isUserAuthenticated,  plagueRouter);
+router.use('/sensor', passport.authenticate('jwt', {session: false}), isUserAuthenticated,  sensorRouter);
+router.use('/user', userRouter);
 
 // middleware to use for all requests
 router.use(function (req, res, next) {

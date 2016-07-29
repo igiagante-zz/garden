@@ -4,9 +4,6 @@ var express = require('express'),
 
 //create a irrigation
 router.post('/', irrigationController.createIrrigation);
-
-//update a irrigation
-router.put('/:irrigation_id', irrigationController.updateIrrigation);
     
 //retrieve one irrigation
 router.get('/:irrigation_id', irrigationController.getIrrigation);
