@@ -23,7 +23,15 @@ var isUserAuthenticated = function (req, isUserAuthenticatedCallback) {
 
     var token = getToken(req.headers);
 
-    var decoded = jwt.decode(token, auth.secret);
+    var payload = jwt.decode(token, auth.secret);
+
+    if(payload.exp <= moment().unix()) {
+        return res
+            .status(401)
+            .send({message: "The token has expired"});
+    }
+
+    req.user = payload.sub;
 
     User.findOne({
         name: decoded.name
@@ -37,4 +45,4 @@ var isUserAuthenticated = function (req, isUserAuthenticatedCallback) {
 
 module.exports = {
     isUserAuthenticated: isUserAuthenticated
-}
+};

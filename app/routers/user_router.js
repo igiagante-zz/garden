@@ -11,6 +11,6 @@ var express = require('express'),
 
 router.post('/signup', userController.signup);
 
-router.post('/authenticate', userController.authenticate);
+router.post('/login', userController.login);
 
 module.exports = router;

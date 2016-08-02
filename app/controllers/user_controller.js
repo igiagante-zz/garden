@@ -6,8 +6,17 @@
 
 var User = require('../models/user'),
     jwt = require('jwt-simple'),
+    moment = require('moment'),
     auth = require('../../config/auth');
 
+var _createToken = function(user) {
+    var payload = {
+        sub: user._id,
+        iat: moment().unix(),
+        exp: moment().add(14, "days").unix()
+    };
+    return jwt.encode(payload, auth.secret);
+};
 
 var signup = function(req, res) {
     if (!req.body.name || !req.body.password) {
@@ -18,16 +27,18 @@ var signup = function(req, res) {
             password: req.body.password
         });
         // save the user
-        newUser.save(function(err) {
+        newUser.save(function(err, user) {
             if (err) {
                 return res.json({success: false, msg: 'Username already exists.'});
             }
-            res.json({success: true, msg: 'Successful created new user.'});
+
+            var token = _createToken(user);
+            return res.status(200).json({ token : token });
         });
     }
 };
 
-var authenticate = function(req, res) {
+var login = function(req, res) {
     User.findOne({
         name: req.body.name
     }, function(err, user) {
@@ -40,9 +51,9 @@ var authenticate = function(req, res) {
             user.comparePassword(req.body.password, function (err, isMatch) {
                 if (isMatch && !err) {
                     // if user is found and password is right create a token
-                    var token = jwt.encode(user, auth.secret);
+                    var token = _createToken(user);
                     // return the information including token as JSON
-                    res.json({success: true, token: 'JWT ' + token});
+                    res.json({success: true, token: token});
                 } else {
                     res.send({success: false, msg: 'Authentication failed. Wrong password.'});
                 }
@@ -53,5 +64,5 @@ var authenticate = function(req, res) {
 
 module.exports = {
     signup: signup,
-    authenticate: authenticate
-}
+    login: login
+};
