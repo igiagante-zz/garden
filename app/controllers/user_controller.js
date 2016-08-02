@@ -13,34 +13,37 @@ var _createToken = function(user) {
     var payload = {
         sub: user._id,
         iat: moment().unix(),
-        exp: moment().add(14, "days").unix()
+        exp: moment().add(1, "days").unix()
     };
     return jwt.encode(payload, auth.secret);
 };
 
 var signup = function(req, res) {
-    if (!req.body.name || !req.body.password) {
+
+    console.log("trying to register an user");
+
+    if (!req.body.username || !req.body.password) {
         res.json({success: false, msg: 'Please pass name and password.'});
     } else {
         var newUser = new User({
-            name: req.body.name,
+            name: req.body.username,
             password: req.body.password
         });
         // save the user
         newUser.save(function(err, user) {
             if (err) {
-                return res.json({success: false, msg: 'Username already exists.'});
+                return res.status(409).send({success: false, msg: 'Username already exists.'});
             }
 
             var token = _createToken(user);
-            return res.status(200).json({ token : token });
+            return res.status(200).json({success: true, token : token });
         });
     }
 };
 
 var login = function(req, res) {
     User.findOne({
-        name: req.body.name
+        name: req.body.username
     }, function(err, user) {
         if (err) throw err;
 
@@ -53,9 +56,9 @@ var login = function(req, res) {
                     // if user is found and password is right create a token
                     var token = _createToken(user);
                     // return the information including token as JSON
-                    res.json({success: true, token: token});
+                    res.status(200).json({success: true, token: token});
                 } else {
-                    res.send({success: false, msg: 'Authentication failed. Wrong password.'});
+                    res.status(403).send({success: false, msg: 'Authentication failed. Wrong password.'});
                 }
             });
         }

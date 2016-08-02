@@ -61,7 +61,7 @@ var isUserAuthenticated = function (req, res, next) {
     if(!req.headers.authorization) {
         return res
             .status(403)
-            .send({message: "You should provide header Authorization"});
+            .send({message: "Your request does not have header Authorization"});
     }
     authService.isUserAuthenticated(req, function (err) {
         if (err) {

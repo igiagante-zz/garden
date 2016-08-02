@@ -5,5 +5,5 @@
 "use strict";
 
 module.exports = {
-        domain: "http://10.18.33.67:3000"
+        domain: "http://10.18.32.203:3000"
 };
