@@ -9,6 +9,10 @@ var User = require('../models/user'),
     moment = require('moment'),
     auth = require('../../config/auth');
 
+var invalidUser = 'INVALID_USER';
+var userNotFound = 'USER_NOT_FOUND';
+var wrongPassword = 'WRONG_PASSWORD';
+
 var _createToken = function(user) {
     var payload = {
         sub: user._id,
@@ -20,8 +24,6 @@ var _createToken = function(user) {
 
 var signup = function(req, res) {
 
-    console.log("trying to register an user");
-
     if (!req.body.username || !req.body.password) {
         res.json({success: false, msg: 'Please pass name and password.'});
     } else {
@@ -32,11 +34,11 @@ var signup = function(req, res) {
         // save the user
         newUser.save(function(err, user) {
             if (err) {
-                return res.status(409).send({success: false, msg: 'Username already exists.'});
+                return res.status(409).send({message: invalidUser});
             }
 
             var token = _createToken(user);
-            return res.status(200).json({success: true, token : token });
+            return res.status(200).json({token : token });
         });
     }
 };
@@ -48,7 +50,7 @@ var login = function(req, res) {
         if (err) throw err;
 
         if (!user) {
-            res.send({success: false, msg: 'Authentication failed. User not found.'});
+            res.send({message: userNotFound});
         } else {
             // check if password matches
             user.comparePassword(req.body.password, function (err, isMatch) {
@@ -56,9 +58,9 @@ var login = function(req, res) {
                     // if user is found and password is right create a token
                     var token = _createToken(user);
                     // return the information including token as JSON
-                    res.status(200).json({success: true, token: token});
+                    res.status(200).json({token: token});
                 } else {
-                    res.status(403).send({success: false, msg: 'Authentication failed. Wrong password.'});
+                    res.status(403).send({message: wrongPassword});
                 }
             });
         }

@@ -65,7 +65,7 @@ var isUserAuthenticated = function (req, res, next) {
     }
     authService.isUserAuthenticated(req, function (err) {
         if (err) {
-            return res.status(403).send({success: false, msg: 'Authentication failed. User not found.'});
+            return res.status(403).send({message: 'Authentication failed. User not found.'});
         } else {
             next();
         }
