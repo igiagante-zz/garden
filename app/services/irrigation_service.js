@@ -9,6 +9,7 @@ var Irrigation = require('../models/irrigation'),
     async = require('async'),
     logger = require('../utils/logger'),
     utilObject = require('../commons/util_object'),
+    doseService = require('./dose_service'),
     Nutrient = require('../models/nutrient');
 
 
@@ -31,6 +32,12 @@ var getIrrigationsByGardenId = function(gardenId, callback) {
                 filterIrrigations.push(irrigations[i]);
             }
         }
+
+        doseService.addDose(filterIrrigations, function (err) {
+            if (err) {
+                return callback(err);
+            }
+        });
 
         utilObject.convertItemsId(filterIrrigations, function () {
             return callback(undefined, filterIrrigations);

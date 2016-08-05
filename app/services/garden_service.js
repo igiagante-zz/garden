@@ -4,9 +4,10 @@
 
 'use strict';
 
-var plantService = require('../../app/services/plant_service'),
-    irrigationService = require('../../app/services/irrigation_service'),
-    doseService = require('../../app/services/dose_service'),
+var plantService = require('./plant_service'),
+    irrigationService = require('./irrigation_service'),
+    Garden = require('../models/garden'),
+    utilObject = require('../commons/util_object'),
     async = require('async');
 
 /**
@@ -33,19 +34,23 @@ var addPlants = function (gardens, addPlantsCallback) {
 
     async.each(gardens, function (garden, callback) {
 
-        plantService.getPlantsByGardenId(garden._doc.id, function (err, plants) {
-            if (err) {
-                return callback(err);
-            }
-            garden._doc.plants = plants;
-            return callback(undefined, garden);
-        });
+        addPlantsToOneGarden(garden, callback);
 
     }, function (err) {
         if (err) {
             return addPlantsCallback(err);
         }
         return addPlantsCallback(undefined);
+    });
+};
+
+var addPlantsToOneGarden = function(garden, addPlantsToOneGardenCallback) {
+    plantService.getPlantsByGardenId(garden._doc.id, function (err, plants) {
+        if (err) {
+            return addPlantsToOneGardenCallback(err);
+        }
+        garden._doc.plants = plants;
+        return addPlantsToOneGardenCallback(undefined, garden);
     });
 };
 
@@ -67,26 +72,13 @@ var addIrrigationsToGardens = function (gardens, addIrrigationsToGardensCallback
 /**
  * Add irrigations to the garden
  * @param gardens
- * @param addPlantsCallback
+ * @param addIrrigationsCallback
  */
 var addIrrigations = function (gardens, addIrrigationsCallback) {
 
     async.each(gardens, function (garden, callback) {
 
-        irrigationService.getIrrigationsByGardenId(garden._doc.id, function (err, irrigations) {
-            if (err) {
-                return callback(err);
-            }
-
-            doseService.addDose(irrigations, function (err) {
-                if (err) {
-                    return callback(err);
-                }
-
-                garden._doc.irrigations = irrigations;
-                return callback(undefined, garden);
-            });
-        });
+        addIrrigationsToOneGarden(garden, callback);
 
     }, function (err) {
         if (err) {
@@ -96,7 +88,59 @@ var addIrrigations = function (gardens, addIrrigationsCallback) {
     });
 };
 
+var addIrrigationsToOneGarden = function(garden, addIrrigationsToOneGardenCallback){
+    irrigationService.getIrrigationsByGardenId(garden._doc.id, function (err, irrigations) {
+        if (err) {
+            return addIrrigationsToOneGardenCallback(err);
+        }
+        garden._doc.irrigations = irrigations;
+        return addIrrigationsToOneGardenCallback(undefined, garden);
+    });
+};
+
+/**
+ * Get all the data from all the gardens related to one user
+ * @param gardensIds Embedded Documents which contain garden's ids
+ * @param getGardensDataCallback
+ */
+var getGardensData = function(gardensIds, getGardensDataCallback){
+
+    var gardens = [];
+
+    async.each(gardensIds, function (gardenId, callback) {
+
+        Garden.findOne({ "_id" : gardenId._doc._id}, function(err, garden){
+           if(err) {
+               return callback(err);
+           }
+            // convert _id to id -> fucking mongo
+            utilObject.convertItemId(garden, function() {
+
+                addPlantsToOneGarden(garden, function(err, garden) {
+                    if(err) {
+                        return callback(err);
+                    }
+
+                    addIrrigationsToOneGarden(garden, function(err) {
+                        if(err) {
+                            return callback(err);
+                        }
+                        gardens.push(garden);
+                        return callback(undefined);
+                    });
+                });
+            });
+        });
+    }, function (err) {
+        if (err) {
+            return getGardensDataCallback(err);
+        }
+        return getGardensDataCallback(undefined, gardens);
+    });
+};
+
 module.exports = {
     addPlantsToGardens: addPlantsToGardens,
-    addIrrigationsToGardens: addIrrigationsToGardens
+    addIrrigationsToGardens: addIrrigationsToGardens,
+    getGardensData: getGardensData
 };

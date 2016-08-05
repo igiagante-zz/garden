@@ -73,7 +73,7 @@ var isUserAuthenticated = function (req, res, next) {
 };
 
 router.use('/dose', passport.authenticate('jwt', {session: false}), isUserAuthenticated, doseRouter);
-router.use('/garden', passport.authenticate('jwt', {session: false}), isUserAuthenticated, gardenRouter);
+router.use('/garden',  gardenRouter);
 router.use('/irrigation', passport.authenticate('jwt', {session: false}), isUserAuthenticated, irrigationRouter);
 router.use('/plant', passport.authenticate('jwt', {session: false}), isUserAuthenticated, plantRouter);
 router.use('/nutrient', passport.authenticate('jwt', {session: false}), isUserAuthenticated,  nutrientRouter);

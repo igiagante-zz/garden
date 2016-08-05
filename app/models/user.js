@@ -14,7 +14,8 @@ var UserSchema = new Schema({
     password: {
         type: String,
         required: true
-    }
+    },
+    gardensIds: [{_id: Schema.Types.ObjectId}]
 });
 
 UserSchema.pre('save', function (next) {
