@@ -13,6 +13,9 @@ router.put('/:garden_id', gardenController.updateGarden);
 //retrieve one garden
 router.get('/:garden_id', gardenController.getGarden);
 
+//get gardens for one user
+router.get('/user/:username', gardenController.getGardensByUserName);
+
 //delete a garden
 router.delete('/:garden_id', gardenController.deleteGarden);
 

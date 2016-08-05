@@ -78,10 +78,10 @@ router.use('/irrigation', passport.authenticate('jwt', {session: false}), isUser
 router.use('/plant', passport.authenticate('jwt', {session: false}), isUserAuthenticated, plantRouter);
 router.use('/nutrient', passport.authenticate('jwt', {session: false}), isUserAuthenticated,  nutrientRouter);
 router.use('/flavor', passport.authenticate('jwt', {session: false}), isUserAuthenticated,  flavorRouter);
-router.use('/attribute', passport.authenticate('jwt', {session: false}), isUserAuthenticated,  attributeRouter);
-router.use('/plague', passport.authenticate('jwt', {session: false}), isUserAuthenticated,  plagueRouter);
 router.use('/sensor', passport.authenticate('jwt', {session: false}), isUserAuthenticated,  sensorRouter);
 router.use('/user', userRouter);
+router.use('/attribute', attributeRouter);
+router.use('/plague', plagueRouter);
 
 // middleware to use for all requests
 router.use(function (req, res, next) {

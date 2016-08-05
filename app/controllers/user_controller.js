@@ -5,7 +5,6 @@
 "use strict";
 
 var User = require('../models/user'),
-    gardenService = require('../services/garden_service'),
     jwt = require('jwt-simple'),
     moment = require('moment'),
     auth = require('../../config/auth');
@@ -68,33 +67,7 @@ var login = function(req, res) {
     });
 };
 
-/**
- * Get the gardens for one user
- * @param req
- * @param res
- */
-var getGardens = function(req, res) {
-    User.findOne({
-        name: req.params.username
-    }, function(err, user) {
-        if (err) {
-            return res.status(505).send(err);
-        }
-        if (!user) {
-            return res.status(404).send({message: userNotFound});
-        } else {
-            gardenService.getGardensData(user._doc.gardensIds, function(err, gardens){
-                if (err) {
-                    return res.status(505).send(err);
-                }
-               return res.status(200).json(gardens);
-            });
-        }
-    });
-};
-
 module.exports = {
     signup: signup,
-    login: login,
-    getGardens: getGardens
+    login: login
 };

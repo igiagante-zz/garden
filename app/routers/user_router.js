@@ -13,6 +13,4 @@ router.post('/signup', userController.signup);
 
 router.post('/login', userController.login);
 
-router.get('/getGardens/:username', userController.getGardens);
-
 module.exports = router;

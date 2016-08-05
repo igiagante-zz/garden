@@ -1,6 +1,7 @@
 "use strict";
 
 var Garden = require('../models/garden'),
+    User = require('../models/user'),
     logger = require('../utils/logger'),
     utilObject = require('../commons/util_object'),
     PlantService = require('../../app/services/plant_service'),
@@ -127,10 +128,36 @@ var getAll = function (req, res) {
     });
 };
 
+/**
+ * Get the gardens for one user
+ * @param req
+ * @param res
+ */
+var getGardensByUserName = function(req, res) {
+    User.findOne({
+        name: req.params.username
+    }, function(err, user) {
+        if (err) {
+            return res.status(505).send(err);
+        }
+        if (!user) {
+            return res.status(404).send({message: userNotFound});
+        } else {
+            gardenService.getGardensData(user._doc.gardensIds, function(err, gardens){
+                if (err) {
+                    return res.status(505).send(err);
+                }
+                return res.status(200).json(gardens);
+            });
+        }
+    });
+};
+
 module.exports = {
     createGarden: createGarden,
     updateGarden: updateGarden,
     deleteGarden: deleteGarden,
     getGarden: getGarden,
-    getAll: getAll
+    getAll: getAll,
+    getGardensByUserName: getGardensByUserName
 };
