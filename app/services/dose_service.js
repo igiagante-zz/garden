@@ -20,17 +20,11 @@ var getDoseById = function (doseId, getDoseByIrrigationIdCallback) {
  * @param irrigations
  * @param addDoseCallback
  */
-var addDose = function (irrigations, addDoseCallback) {
+var addDoses = function (irrigations, addDoseCallback) {
 
     async.each(irrigations, function (irrigation, callback) {
 
-        getDoseById(irrigation._doc.doseId, function (err, dose) {
-            if (err) {
-                return callback(err);
-            }
-            irrigation._doc.dose = dose;
-            return callback(undefined, irrigation);
-        });
+        addDoseToIrrigation(irrigation, callback);
 
     }, function (err) {
         if (err) {
@@ -40,6 +34,24 @@ var addDose = function (irrigations, addDoseCallback) {
     });
 };
 
+/**
+ * Add dose to one irrigation
+ * @param irrigation
+ * @param addDoseCallback
+ */
+var addDoseToIrrigation = function (irrigation, addDoseCallback) {
+
+    getDoseById(irrigation._doc.doseId, function (err, dose) {
+        if (err) {
+            return addDoseCallback(err);
+        }
+        irrigation._doc.dose = dose;
+        delete irrigation._doc.dose._doc._id;
+        return addDoseCallback(undefined, irrigation);
+    });
+};
+
 module.exports = {
-    addDose: addDose
+    addDoseToIrrigation: addDoseToIrrigation,
+    addDoses: addDoses
 };

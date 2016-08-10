@@ -58,12 +58,13 @@ var router = express.Router(),
 
 // middleware to use for all requests in order to verify if the user is authorized
 var isUserAuthenticated = function (req, res, next) {
-    if(!req.headers.authorization) {
+    var token = req.headers.authorization;
+    if(!token) {
         return res
             .status(403)
             .send({message: "Your request does not have header Authorization"});
     }
-    authService.isUserAuthenticated(req, function (err) {
+    authService.isUserAuthenticated(token, function (err) {
         if (err) {
             return res.status(403).send({message: 'Authentication failed. User not found.'});
         } else {

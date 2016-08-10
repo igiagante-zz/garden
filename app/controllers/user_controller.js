@@ -67,7 +67,25 @@ var login = function(req, res) {
     });
 };
 
+var refreshToken = function(req, res) {
+    User.findOne({
+        _id: req.body.id
+    }, function(err, user) {
+        if (err) throw err;
+
+        if (!user) {
+            res.send({message: userNotFound});
+        } else {
+            // if user is found, lets create a token
+            var token = _createToken(user);
+            // return the information including token as JSON
+            res.status(200).json({token: token});
+        }
+    });
+};
+
 module.exports = {
     signup: signup,
-    login: login
+    login: login,
+    refreshToken: refreshToken
 };

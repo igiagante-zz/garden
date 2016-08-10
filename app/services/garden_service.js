@@ -44,7 +44,7 @@ var addPlants = function (gardens, addPlantsCallback) {
     });
 };
 
-var addPlantsToOneGarden = function(garden, addPlantsToOneGardenCallback) {
+var addPlantsToOneGarden = function (garden, addPlantsToOneGardenCallback) {
     plantService.getPlantsByGardenId(garden._doc.id, function (err, plants) {
         if (err) {
             return addPlantsToOneGardenCallback(err);
@@ -88,7 +88,7 @@ var addIrrigations = function (gardens, addIrrigationsCallback) {
     });
 };
 
-var addIrrigationsToOneGarden = function(garden, addIrrigationsToOneGardenCallback){
+var addIrrigationsToOneGarden = function (garden, addIrrigationsToOneGardenCallback) {
     irrigationService.getIrrigationsByGardenId(garden._doc.id, function (err, irrigations) {
         if (err) {
             return addIrrigationsToOneGardenCallback(err);
@@ -103,26 +103,26 @@ var addIrrigationsToOneGarden = function(garden, addIrrigationsToOneGardenCallba
  * @param gardensIds Embedded Documents which contain garden's ids
  * @param getGardensDataCallback
  */
-var getGardensData = function(gardensIds, getGardensDataCallback){
+var getGardensData = function (gardensIds, getGardensDataCallback) {
 
     var gardens = [];
 
     async.each(gardensIds, function (gardenId, callback) {
 
-        Garden.findOne({ "_id" : gardenId._doc._id}, function(err, garden){
-           if(err) {
-               return callback(err);
-           }
+        Garden.findOne({"_id": gardenId._doc._id}, function (err, garden) {
+            if (err) {
+                return callback(err);
+            }
             // convert _id to id -> fucking mongo
-            utilObject.convertItemId(garden, function() {
+            utilObject.convertItemId(garden, function () {
 
-                addPlantsToOneGarden(garden, function(err, garden) {
-                    if(err) {
+                addPlantsToOneGarden(garden, function (err, garden) {
+                    if (err) {
                         return callback(err);
                     }
 
-                    addIrrigationsToOneGarden(garden, function(err) {
-                        if(err) {
+                    addIrrigationsToOneGarden(garden, function (err) {
+                        if (err) {
                             return callback(err);
                         }
                         gardens.push(garden);

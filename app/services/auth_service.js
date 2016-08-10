@@ -3,6 +3,7 @@
  */
 
 var jwt = require('jwt-simple'),
+    moment = require('moment'),
     auth = require('../../config/auth'),
     User = require('../models/user');
 
@@ -19,9 +20,7 @@ var getToken = function (headers) {
     }
 };
 
-var isUserAuthenticated = function (req, isUserAuthenticatedCallback) {
-
-    var token = getToken(req.headers);
+var isUserAuthenticated = function (token, isUserAuthenticatedCallback) {
 
     var payload = jwt.decode(token, auth.secret);
 
@@ -31,11 +30,10 @@ var isUserAuthenticated = function (req, isUserAuthenticatedCallback) {
             .send({message: "The token has expired"});
     }
 
-    req.user = payload.sub;
-
     User.findOne({
-        name: decoded.name
+        _id: payload.sub
     }, function (err, user) {
+
         if (err) {
             return isUserAuthenticatedCallback(err);
         }

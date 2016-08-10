@@ -33,19 +33,16 @@ var getIrrigationsByGardenId = function(gardenId, callback) {
             }
         }
 
-        doseService.addDose(filterIrrigations, function (err) {
+        doseService.addDoses(filterIrrigations, function (err) {
             if (err) {
                 return callback(err);
             }
-        });
-
-        utilObject.convertItemsId(filterIrrigations, function () {
-            return callback(undefined, filterIrrigations);
+            utilObject.convertItemsId(filterIrrigations, function () {
+                return callback(undefined, filterIrrigations);
+            });
         });
     });
 };
-
-
 
 
 /**
