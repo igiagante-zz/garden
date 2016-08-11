@@ -62,17 +62,26 @@ var updateGarden = function (req, res) {
  * @param res
  */
 var getGarden = function (req, res) {
+
     Garden.findById(req.params.garden_id, function (err, garden) {
         if (err) {
             res.send(err);
         }
+
         utilObject.convertItemId(garden, function () {
-            PlantService.getPlantsByGardenId(garden._doc.id, function (err, plants) {
+
+            gardenService.addIrrigationsToOneGarden(garden, function (err) {
                 if (err) {
-                    return res.send(err);
+                    return res.status(500).send(err);
                 }
-                garden._doc.plants = plants;
-                return res.json(garden);
+
+                PlantService.getPlantsByGardenId(garden._doc.id, function (err, plants) {
+                    if (err) {
+                        return res.send(err);
+                    }
+                    garden._doc.plants = plants;
+                    return res.json(garden);
+                });
             });
         });
     });

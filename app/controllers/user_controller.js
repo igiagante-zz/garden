@@ -50,7 +50,7 @@ var login = function(req, res) {
         if (err) throw err;
 
         if (!user) {
-            res.send({message: userNotFound});
+            res.status(404).send({message: userNotFound});
         } else {
             // check if password matches
             user.comparePassword(req.body.password, function (err, isMatch) {
@@ -69,7 +69,7 @@ var login = function(req, res) {
 
 var refreshToken = function(req, res) {
     User.findOne({
-        _id: req.body.id
+        _id: req.body.userId
     }, function(err, user) {
         if (err) throw err;
 
@@ -79,7 +79,7 @@ var refreshToken = function(req, res) {
             // if user is found, lets create a token
             var token = _createToken(user);
             // return the information including token as JSON
-            res.status(200).json({token: token});
+            return res.status(200).json({token: token});
         }
     });
 };

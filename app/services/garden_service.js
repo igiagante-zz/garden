@@ -61,7 +61,7 @@ var addPlantsToOneGarden = function (garden, addPlantsToOneGardenCallback) {
  */
 var addIrrigationsToGardens = function (gardens, addIrrigationsToGardensCallback) {
 
-    addIrrigations(gardens, function (err) {
+    addIrrigationsToGarden(gardens, function (err) {
         if (err) {
             return addIrrigationsToGardensCallback(err);
         }
@@ -74,7 +74,7 @@ var addIrrigationsToGardens = function (gardens, addIrrigationsToGardensCallback
  * @param gardens
  * @param addIrrigationsCallback
  */
-var addIrrigations = function (gardens, addIrrigationsCallback) {
+var addIrrigationsToGarden = function (gardens, addIrrigationsCallback) {
 
     async.each(gardens, function (garden, callback) {
 
@@ -141,6 +141,6 @@ var getGardensData = function (gardensIds, getGardensDataCallback) {
 
 module.exports = {
     addPlantsToGardens: addPlantsToGardens,
-    addIrrigationsToGardens: addIrrigationsToGardens,
+    addIrrigationsToOneGarden: addIrrigationsToOneGarden,
     getGardensData: getGardensData
 };

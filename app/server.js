@@ -59,7 +59,7 @@ var router = express.Router(),
 // middleware to use for all requests in order to verify if the user is authorized
 var isUserAuthenticated = function (req, res, next) {
     var token = req.headers.authorization;
-    if(!token) {
+    if (!token) {
         return res
             .status(403)
             .send({message: "Your request does not have header Authorization"});
@@ -73,16 +73,16 @@ var isUserAuthenticated = function (req, res, next) {
     });
 };
 
-router.use('/dose', passport.authenticate('jwt', {session: false}), isUserAuthenticated, doseRouter);
-router.use('/garden',  gardenRouter);
-router.use('/irrigation', passport.authenticate('jwt', {session: false}), isUserAuthenticated, irrigationRouter);
-router.use('/plant', passport.authenticate('jwt', {session: false}), isUserAuthenticated, plantRouter);
-router.use('/nutrient', passport.authenticate('jwt', {session: false}), isUserAuthenticated,  nutrientRouter);
-router.use('/flavor', passport.authenticate('jwt', {session: false}), isUserAuthenticated,  flavorRouter);
-router.use('/sensor', passport.authenticate('jwt', {session: false}), isUserAuthenticated,  sensorRouter);
+router.use('/dose', isUserAuthenticated, doseRouter);
+router.use('/garden', gardenRouter);
+router.use('/irrigation', isUserAuthenticated, irrigationRouter);
+router.use('/plant', isUserAuthenticated, plantRouter);
+router.use('/nutrient', isUserAuthenticated, nutrientRouter);
+router.use('/sensor', isUserAuthenticated, sensorRouter);
 router.use('/user', userRouter);
 router.use('/attribute', attributeRouter);
 router.use('/plague', plagueRouter);
+router.use('/flavor', flavorRouter);
 
 // middleware to use for all requests
 router.use(function (req, res, next) {
