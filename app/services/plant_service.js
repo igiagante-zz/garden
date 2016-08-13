@@ -1,6 +1,6 @@
 "use strict";
 
-var Plant = require('../models/plant.js'),
+var Plant = require('../models/plant'),
     logger = require('../utils/logger'),
     utilObject = require('../commons/util_object'),
     utilImage = require('../commons/util_image'),

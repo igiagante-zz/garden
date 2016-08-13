@@ -2,10 +2,12 @@
 
 var Garden = require('../models/garden'),
     User = require('../models/user'),
+    userService = require('../services/user_service'),
     logger = require('../utils/logger'),
     utilObject = require('../commons/util_object'),
     PlantService = require('../../app/services/plant_service'),
-    gardenService = require('../../app/services/garden_service');
+    gardenService = require('../../app/services/garden_service'),
+    _ = require('lodash');
 
 /**
  * Create a garden
@@ -14,14 +16,34 @@ var Garden = require('../models/garden'),
  */
 var createGarden = function (req, res) {
 
-    Garden.create({
-        name: req.body.name
-    }, function (err, garden) {
-        if (err) {
-            res.send(err);
+    var userId = req.body.userId;
+    var gardenName = req.body.name;
+
+    gardenService.findGardenByName(gardenName, function (err, garden) {
+
+        // Verify that any garden exits with this name
+        if (garden !== null) {
+            logger.debug('  The name of the garden already exists. Try other please!  ');
+            return res.status(409).send(' The name of the garden already exists. Try other please! ');
         }
-        utilObject.convertItemId(garden, function () {
-            return res.json(garden);
+
+        Garden.create({
+            userId: userId,
+            name: req.body.name
+        }, function (err, garden) {
+            if (err) {
+                return res.status(500).send(err);
+            }
+
+            userService.addGardenIdToUser(userId, garden._doc._id, function (err, user) {
+                if (err) {
+                    return res.status(500).send(err);
+                }
+
+                utilObject.convertItemId(garden, function () {
+                    return res.json(garden);
+                });
+            });
         });
     });
 };
@@ -142,17 +164,17 @@ var getAll = function (req, res) {
  * @param req
  * @param res
  */
-var getGardensByUserName = function(req, res) {
+var getGardensByUserName = function (req, res) {
     User.findOne({
         name: req.params.username
-    }, function(err, user) {
+    }, function (err, user) {
         if (err) {
             return res.status(505).send(err);
         }
         if (!user) {
             return res.status(404).send({message: userNotFound});
         } else {
-            gardenService.getGardensData(user._doc.gardensIds, function(err, gardens){
+            gardenService.getGardensData(user._doc.gardensIds, function (err, gardens) {
                 if (err) {
                     return res.status(505).send(err);
                 }

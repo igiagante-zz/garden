@@ -49,7 +49,10 @@ var addPlantsToOneGarden = function (garden, addPlantsToOneGardenCallback) {
         if (err) {
             return addPlantsToOneGardenCallback(err);
         }
-        garden._doc.plants = plants;
+        if(garden._doc.plants){
+            garden._doc.plants = plants;
+        }
+
         return addPlantsToOneGardenCallback(undefined, garden);
     });
 };
@@ -110,8 +113,13 @@ var getGardensData = function (gardensIds, getGardensDataCallback) {
     async.each(gardensIds, function (gardenId, callback) {
 
         Garden.findOne({"_id": gardenId._doc._id}, function (err, garden) {
+            
             if (err) {
                 return callback(err);
+            }
+
+            if(!garden) {
+                return callback(undefined);
             }
             // convert _id to id -> fucking mongo
             utilObject.convertItemId(garden, function () {
@@ -139,8 +147,19 @@ var getGardensData = function (gardensIds, getGardensDataCallback) {
     });
 };
 
+var findGardenByName = function (gardenName, findGardenByNameCallback) {
+    Garden.findOne({ name : gardenName }, function(err, garden){
+       if(err) {
+           return findGardenByNameCallback(err);
+       }
+        return findGardenByNameCallback(undefined, garden);
+    });
+};
+
 module.exports = {
     addPlantsToGardens: addPlantsToGardens,
+    addIrrigationsToGardens: addIrrigationsToGardens,
     addIrrigationsToOneGarden: addIrrigationsToOneGarden,
-    getGardensData: getGardensData
+    getGardensData: getGardensData,
+    findGardenByName: findGardenByName
 };
