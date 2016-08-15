@@ -18,30 +18,21 @@ var createGarden = function (req, res) {
     var userId = req.body.userId;
     var gardenName = req.body.name;
 
-    gardenService.findGardenByName(gardenName, function (err, garden) {
-
-        // Verify that any garden exits with this name
-        if (garden !== null) {
-            logger.debug('  The name of the garden already exists. Try other please!  ');
-            return res.status(409).send(' The name of the garden already exists. Try other please! ');
+    Garden.create({
+        userId: userId,
+        name: gardenName
+    }, function (err, garden) {
+        if (err) {
+            return res.status(500).send(err);
         }
 
-        Garden.create({
-            userId: userId,
-            name: req.body.name
-        }, function (err, garden) {
+        userService.addGardenIdToUser(userId, garden._doc._id, function (err, user) {
             if (err) {
                 return res.status(500).send(err);
             }
 
-            userService.addGardenIdToUser(userId, garden._doc._id, function (err, user) {
-                if (err) {
-                    return res.status(500).send(err);
-                }
-
-                utilObject.convertItemId(garden, function () {
-                    return res.json(garden);
-                });
+            utilObject.convertItemId(garden, function () {
+                return res.json(garden);
             });
         });
     });
@@ -120,7 +111,7 @@ var deleteGarden = function (req, res) {
 
     Garden.remove({
         _id: gardenId
-    }, function(err) {
+    }, function (err) {
 
         if (err) {
             return res.status(404).send(err);
