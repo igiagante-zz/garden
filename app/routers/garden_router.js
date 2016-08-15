@@ -17,7 +17,7 @@ router.get('/:garden_id', gardenController.getGarden);
 router.get('/user/:username', gardenController.getGardensByUserName);
 
 //delete a garden
-router.delete('/:garden_id', gardenController.deleteGarden);
+router.delete('/:garden_id/:user_id', gardenController.deleteGarden);
 
 //get all gardens
 router.get('/', gardenController.getAll);

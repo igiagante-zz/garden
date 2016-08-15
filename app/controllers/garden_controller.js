@@ -6,8 +6,7 @@ var Garden = require('../models/garden'),
     logger = require('../utils/logger'),
     utilObject = require('../commons/util_object'),
     PlantService = require('../../app/services/plant_service'),
-    gardenService = require('../../app/services/garden_service'),
-    _ = require('lodash');
+    gardenService = require('../../app/services/garden_service');
 
 /**
  * Create a garden
@@ -115,19 +114,32 @@ var getGarden = function (req, res) {
  * @param res
  */
 var deleteGarden = function (req, res) {
+
+    var userId = req.params.user_id;
+    var gardenId = req.params.garden_id;
+
     Garden.remove({
-        _id: req.params.garden_id
-    }, function (err) {
+        _id: gardenId
+    }, function(err) {
 
         if (err) {
             return res.status(404).send(err);
         }
-        var text = ' The garden with id ' + req.params.garden_id + ' was deleted. ';
+
+        var text = ' The garden with id ' + gardenId + ' was deleted. ';
         logger.debug(text);
+
         var data = {
             message: text
         };
-        return res.status(202).send(data);
+
+        userService.removeGardenIdFromUser(userId, gardenId, function (err, user) {
+            if (err) {
+                return res.status(500).send(err);
+            }
+
+            return res.status(202).send(data);
+        });
     });
 };
 

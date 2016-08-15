@@ -28,6 +28,30 @@ var addGardenIdToUser = function (userId, gardenId, addGardenIdToUserCallback) {
     });
 };
 
+var removeGardenIdFromUser = function (userId, gardenId, addGardenIdToUserCallback) {
+
+    User.findOne({_id: userId}, function (err, user) {
+        if (err) {
+            return addGardenIdToUserCallback(err);
+        }
+
+        var gardensIds = user._doc.gardensIds;
+        if(gardensIds) {
+            var index = gardensIds.indexOf(gardenId);
+            gardensIds.splice(index, 1);
+        }
+
+        user.save(function (err) {
+            if (err) {
+                return addGardenIdToUserCallback(err);
+            }
+
+            return addGardenIdToUserCallback(undefined, user);
+        });
+    });
+};
+
 module.exports = {
-    addGardenIdToUser: addGardenIdToUser
+    addGardenIdToUser: addGardenIdToUser,
+    removeGardenIdFromUser: removeGardenIdFromUser
 };

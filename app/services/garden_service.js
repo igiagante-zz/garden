@@ -113,7 +113,7 @@ var getGardensData = function (gardensIds, getGardensDataCallback) {
     async.each(gardensIds, function (gardenId, callback) {
 
         Garden.findOne({"_id": gardenId._doc._id}, function (err, garden) {
-            
+
             if (err) {
                 return callback(err);
             }
