@@ -8,7 +8,10 @@ var express = require('express'),
     router = express.Router(),
     attributeController = require('../controllers/attribute_controller');
 
-//get all flavors
+//get all attributes
 router.get('/', attributeController.getAll);
+
+//get mock attributes
+router.get('/mock', attributeController.getAttributesMock);
 
 module.exports = router;

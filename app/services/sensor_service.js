@@ -5,7 +5,9 @@
 "use strict";
 
 var Measure = require('../models/measure'),
-    async = require('async');
+    async = require('async'),
+    request = require('request'),
+    moment = require('moment');
 
 var processSensor = function(measure, callback){
 
@@ -43,7 +45,51 @@ var getSensorMeasures = function(sensorId, callback) {
     });
 };
 
+var getTemperatureAndHumidity = function(callback) {
+
+    var url = "http://api.openweathermap.org/data/2.5/forecast/daily?q=Cordoba&units=metric&cnt=16&appid=ee6b949a571893998b4424956aca7d97";
+
+    request(url, function(error, response, body) {
+        if (!error && response.statusCode == 200) {
+
+            var bodyJson = JSON.parse(body);
+            var days = bodyJson.list;
+            var temps = [];
+
+            if(days) {
+
+                for (var i = 0; i < days.length; i++) {
+
+                    var date = new Date(days[i].dt * 1000);
+                    var humidity = days[i].humidity;
+
+                    if(humidity == 0) {
+                        humidity = _getRandomHumidity();
+                    }
+
+                    var temp = {
+                        "date": date,
+                        "temp": days[i].temp.day,
+                        "humidity" : humidity
+                    };
+                    temps.push(temp);
+                }
+            }
+            callback(undefined, temps);
+        } else {
+            callback(error);
+        }
+    });
+
+    var _getRandomHumidity = function() {
+        var low = 30;
+        var high = 70;
+        return Math.floor(Math.random() * (high - low + 1) + low);
+    }
+};
+
 module.exports = {
     processData : processData,
-    getSensorMeasures : getSensorMeasures
+    getSensorMeasures : getSensorMeasures,
+    getTemperatureAndHumidity: getTemperatureAndHumidity
 };

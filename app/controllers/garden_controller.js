@@ -5,8 +5,9 @@ var Garden = require('../models/garden'),
     userService = require('../services/user_service'),
     logger = require('../utils/logger'),
     utilObject = require('../commons/util_object'),
-    PlantService = require('../../app/services/plant_service'),
     gardenService = require('../../app/services/garden_service');
+
+var userNotFound = 'USER_NOT_FOUND';
 
 /**
  * Create a garden
@@ -53,6 +54,7 @@ var updateGarden = function (req, res) {
             res.send(err);
         }
 
+        garden.userId = req.body.userId;
         garden.name = req.body.name;
         garden.startDate = req.body.startDate;
         garden.endDate = req.body.endDate;
@@ -61,8 +63,15 @@ var updateGarden = function (req, res) {
             if (err) {
                 return res.send(err);
             }
+
             utilObject.convertItemId(garden, function () {
-                return res.json(garden);
+
+                gardenService.getGarden(garden._doc.id, function (err, garden) {
+                    if(err) {
+                        return res.status(500).send(err);
+                    }
+                    return res.status(200).send(garden);
+                });
             });
         });
     });
@@ -75,27 +84,13 @@ var updateGarden = function (req, res) {
  */
 var getGarden = function (req, res) {
 
-    Garden.findById(req.params.garden_id, function (err, garden) {
-        if (err) {
-            res.send(err);
-        }
+    var gardenId = req.params.garden_id;
 
-        utilObject.convertItemId(garden, function () {
-
-            gardenService.addIrrigationsToOneGarden(garden, function (err) {
-                if (err) {
-                    return res.status(500).send(err);
-                }
-
-                PlantService.getPlantsByGardenId(garden._doc.id, function (err, plants) {
-                    if (err) {
-                        return res.send(err);
-                    }
-                    garden._doc.plants = plants;
-                    return res.json(garden);
-                });
-            });
-        });
+    gardenService.getGarden(gardenId, function (err, garden) {
+       if(err) {
+           return res.status(500).send(err);
+       }
+        return res.status(200).send(garden);
     });
 };
 

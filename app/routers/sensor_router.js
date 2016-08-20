@@ -14,4 +14,7 @@ router.post('/', sensorController.processDataSensor);
 //get measures from one sensor
 router.get('/measures/:sensor_id', sensorController.measures);
 
+//get measures from one sensor
+router.get('/', sensorController.getDataSensors);
+
 module.exports = router;

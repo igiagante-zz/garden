@@ -30,7 +30,18 @@ var measures = function(req, res) {
     });
 };
 
+var getDataSensors = function(req, res) {
+
+    sensorService.getTemperatureAndHumidity(function (err, data) {
+        if(err) {
+            return res.send(err);
+        }
+        return res.send(data);
+    });
+};
+
 module.exports = {
     processDataSensor : processDataSensor,
-    measures : measures
+    measures : measures,
+    getDataSensors : getDataSensors
 };

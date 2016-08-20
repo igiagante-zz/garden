@@ -8,6 +8,7 @@ var plantService = require('./plant_service'),
     irrigationService = require('./irrigation_service'),
     Garden = require('../models/garden'),
     utilObject = require('../commons/util_object'),
+    plantService = require('../../app/services/plant_service'),
     async = require('async');
 
 /**
@@ -49,9 +50,8 @@ var addPlantsToOneGarden = function (garden, addPlantsToOneGardenCallback) {
         if (err) {
             return addPlantsToOneGardenCallback(err);
         }
-        if(garden._doc.plants){
-            garden._doc.plants = plants;
-        }
+
+        garden._doc.plants = plants;
 
         return addPlantsToOneGardenCallback(undefined, garden);
     });
@@ -118,7 +118,7 @@ var getGardensData = function (gardensIds, getGardensDataCallback) {
                 return callback(err);
             }
 
-            if(!garden) {
+            if (!garden) {
                 return callback(undefined);
             }
             // convert _id to id -> fucking mongo
@@ -148,11 +148,42 @@ var getGardensData = function (gardensIds, getGardensDataCallback) {
 };
 
 var findGardenByName = function (gardenName, findGardenByNameCallback) {
-    Garden.findOne({ name : gardenName }, function(err, garden){
-       if(err) {
-           return findGardenByNameCallback(err);
-       }
+    Garden.findOne({name: gardenName}, function (err, garden) {
+        if (err) {
+            return findGardenByNameCallback(err);
+        }
         return findGardenByNameCallback(undefined, garden);
+    });
+};
+
+/**
+ * Get a garden
+ * @param gardenId
+ * * @param getGardenCallback
+ */
+var getGarden = function (gardenId, getGardenCallback) {
+
+    Garden.findById(gardenId, function (err, garden) {
+        if (err) {
+            return getGardenCallback(err);
+        }
+
+        utilObject.convertItemId(garden, function () {
+
+            addIrrigationsToOneGarden(garden, function (err) {
+                if (err) {
+                    return getGardenCallback(err);
+                }
+
+                plantService.getPlantsByGardenId(garden._doc.id, function (err, plants) {
+                    if (err) {
+                        return getGardenCallback(err);
+                    }
+                    garden._doc.plants = plants;
+                    return getGardenCallback(undefined, garden);
+                });
+            });
+        });
     });
 };
 
@@ -161,5 +192,6 @@ module.exports = {
     addIrrigationsToGardens: addIrrigationsToGardens,
     addIrrigationsToOneGarden: addIrrigationsToOneGarden,
     getGardensData: getGardensData,
-    findGardenByName: findGardenByName
+    findGardenByName: findGardenByName,
+    getGarden: getGarden
 };

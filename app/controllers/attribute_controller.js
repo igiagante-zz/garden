@@ -4,6 +4,7 @@
 
 
 var Attribute = require('../models/attribute'),
+    attributeService = require('../services/attributes_service'),
     utilObject = require('../commons/util_object');
 
 /**
@@ -22,7 +23,15 @@ var getAll = function (req, res) {
     });
 };
 
+var getAttributesMock = function (req, res) {
+
+    attributeService.getAttributesData(function (attrs){
+       return res.status(200).send(attrs);
+    });
+};
+
 module.exports = {
-    getAll: getAll
+    getAll: getAll,
+    getAttributesMock: getAttributesMock
 };
 
