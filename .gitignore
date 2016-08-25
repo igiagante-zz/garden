@@ -15,7 +15,8 @@ npm-debug.log
 node_modules
 .DS_Store
 
-images/
+public/images/uploads/
+test/controllers/images/
 
 dump/
 
