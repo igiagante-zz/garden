@@ -20,8 +20,6 @@ var processDataSensor = function(req, res) {
 
 var measures = function(req, res) {
 
-    console.log("req: " + req.params.sensor_id);
-
     sensorService.getSensorMeasures(req.params.sensor_id, function(error, measures){
         if(error) {
             res.json(error);
@@ -40,8 +38,19 @@ var getDataSensors = function(req, res) {
     });
 };
 
+var getActualTempAndHumd = function(req, res) {
+
+    sensorService.getActualTempAndHumidity(function (err, data) {
+        if(err) {
+            return res.send(err);
+        }
+        return res.send(data);
+    });
+};
+
 module.exports = {
     processDataSensor : processDataSensor,
     measures : measures,
-    getDataSensors : getDataSensors
+    getDataSensors : getDataSensors,
+    getActualTempAndHumd: getActualTempAndHumd
 };

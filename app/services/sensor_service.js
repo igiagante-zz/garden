@@ -80,16 +80,48 @@ var getTemperatureAndHumidity = function(callback) {
             callback(error);
         }
     });
+};
 
-    var _getRandomHumidity = function() {
-        var low = 30;
-        var high = 70;
-        return Math.floor(Math.random() * (high - low + 1) + low);
-    }
+var _getRandomHumidity = function() {
+    var low = 30;
+    var high = 70;
+    return Math.floor(Math.random() * (high - low + 1) + low);
+};
+
+var getActualTempAndHumidity = function (callback) {
+
+    var url = "http://api.openweathermap.org/data/2.5/forecast/daily?q=Cordoba&units=metric&cnt=1&appid=ee6b949a571893998b4424956aca7d97";
+
+    request(url, function(error, response, body) {
+        if (!error && response.statusCode == 200) {
+
+            var bodyJson = JSON.parse(body);
+            var days = bodyJson.list;
+
+            var date = new Date(days[0].dt * 1000);
+            var temp = days[0].temp.day;
+            var humidity = days[0].humidity;
+
+            if(humidity == 0) {
+                humidity = _getRandomHumidity();
+            }
+
+            var temp = {
+                "date": date,
+                "temp": temp,
+                "humidity" : humidity
+            };
+
+            callback(undefined, temp);
+        } else {
+            callback(error);
+        }
+    });
 };
 
 module.exports = {
     processData : processData,
     getSensorMeasures : getSensorMeasures,
-    getTemperatureAndHumidity: getTemperatureAndHumidity
+    getTemperatureAndHumidity: getTemperatureAndHumidity,
+    getActualTempAndHumidity: getActualTempAndHumidity
 };

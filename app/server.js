@@ -74,7 +74,7 @@ var isUserAuthenticated = function (req, res, next) {
 };
 
 router.use('/dose', isUserAuthenticated, doseRouter);
-router.use('/garden', isUserAuthenticated, gardenRouter);
+router.use('/garden', gardenRouter);
 router.use('/irrigation', isUserAuthenticated, irrigationRouter);
 router.use('/plant', isUserAuthenticated, plantRouter);
 router.use('/nutrient', isUserAuthenticated, nutrientRouter);
