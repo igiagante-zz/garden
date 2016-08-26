@@ -1,0 +1,15 @@
+{
+  "node": true,
+  "curly": true,
+  "unused": true,
+  "trailing": true,
+  "undef": true,
+  "globals": {
+    "describe": false,
+    "it": false,
+    "before": false,
+    "beforeEach": false,
+    "after": false,
+    "afterEach": false
+  }
+}
