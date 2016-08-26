@@ -1,8 +1,5 @@
 var express = require('express'),
-    router = express.Router(),
-    Plant = require('../models/plant'),
-    Images = require('../models/image'),
-    imageService = require('../services/image_service'),
+    imageService = require('../services/images_service'),
     logger = require('../utils/logger');
 
 //Each plant has a main image to use like portrait in the gallery
