@@ -20,3 +20,5 @@ test/controllers/images/
 
 .idea/*
 *.iml
+
+*.pem
