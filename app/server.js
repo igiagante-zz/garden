@@ -74,7 +74,7 @@ var isUserAuthenticated = function (req, res, next) {
 };
 
 router.use('/dose', isUserAuthenticated, doseRouter);
-router.use('/garden', gardenRouter);
+router.use('/garden', isUserAuthenticated, gardenRouter);
 router.use('/irrigation', isUserAuthenticated, irrigationRouter);
 router.use('/plant', isUserAuthenticated, plantRouter);
 router.use('/nutrient', isUserAuthenticated, nutrientRouter);
@@ -103,7 +103,6 @@ router.get('/', function (req, res) {
 app.use('/api', router);
 
 //static
-console.log('process.cwd(): ' + process.cwd());
 app.use(express.static(process.cwd() + '/../public'));
 
 // START THE SERVER
