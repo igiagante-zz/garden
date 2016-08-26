@@ -14,7 +14,7 @@ var fs = require('extfs'),
     rimraf = require('rimraf');
 
 
-var pathImagesUploaded = process.cwd() + '/../public/images/uploads/';
+var pathImagesUploaded = process.cwd() + '/public/images/uploads/';
 
 var getFolderImagePath = function (folderName) {
     return pathImagesUploaded + folderName;
