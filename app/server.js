@@ -38,7 +38,7 @@ app.use(cors());
 // Use the passport package in our application
 app.use(passport.initialize());
 
-var port = process.env.PORT || 8080;        // set our port
+var port = process.env.PORT || 80;        // set our port
 
 // ROUTES FOR OUR API
 // ================================================
