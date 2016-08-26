@@ -177,8 +177,10 @@ var getAll = function (req, res) {
             return res.send(err);
         }
         utilObject.convertItemsId(nutrients, function () {
-            nutrientService.convertIdsFromMongo(nutrients, function(){
-                return res.json(nutrients);
+            nutrientService.convertIdsFromMongo(nutrients, function () {
+                utilImage.exposeImagesPathFromNutrients(nutrients, function () {
+                    return res.json(nutrients);
+                });
             });
         });
     });

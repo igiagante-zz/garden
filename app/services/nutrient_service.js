@@ -7,7 +7,7 @@
 var Nutrient = require('../models/nutrient'),
     utilObject = require('../commons/util_object'),
     async = require('async'),
-    util_image = require('../commons/util_image'),
+    utilImage = require('../commons/util_image'),
     logger = require('../utils/logger');
 
 /**

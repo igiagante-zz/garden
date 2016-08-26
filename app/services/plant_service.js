@@ -76,13 +76,13 @@ var getPlantInfoByName = function (name, getPlantCallback) {
 
 var getPlantName = function (plantId, getPlantCallback) {
 
-    Plant.findById(plantId, function (error, plant) {
-        if (error) {
+    Plant.findById(plantId, function (err, plant) {
+        if (err) {
             console.log('The plant wasn\'t found');
             console.log(error);
             return getPlantCallback(error);
         }
-        getPlantCallback(undefined, plant.name);
+        return getPlantCallback(undefined, plant.name);
     });
 };
 
@@ -94,7 +94,7 @@ var convertPlantsIdsFromMongo = function(plants, callback) {
         if (err) {
             return callback(err);
         }
-        callback(undefined);
+        return callback(undefined);
     });
 };
 
