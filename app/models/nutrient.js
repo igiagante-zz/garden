@@ -10,8 +10,6 @@ var mongoose = require('mongoose'),
 
 // Define the nutrient schema
 var nutrientSchema = new mongoose.Schema({
-
-    _id: Schema.Types.ObjectId,
     name: String,
     ph: Number,
     npk: String,
