@@ -197,9 +197,9 @@ var createImageDirectory = function (folderName, files, createImageDirectoryCall
             fs.exists(fullsizeImagePath, function (exist) {
                 if (!exist) {
                     mkdir(fullsizeImagePath, function (err) {
-                        /*if (err) {
+                        if (err) {
                             return createImageDirectoryCallback(err + ' --> ' +  fullsizeImagePath + ' could not be created');
-                        } */
+                        }
                         logger.debug('directory created : ' + fullsizeImagePath);
                     });
                 }
