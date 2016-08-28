@@ -7,7 +7,8 @@ var Plant = require('../models/plant'),
     plantService = require('../services/plant_service'),
     util = require('util'),
     utilObject = require('../commons/util_object'),
-    utilImage = require('../commons/util_image');
+    utilImage = require('../commons/util_image'),
+    userService = require('../services/user_service');
 
 /**
  * Create a plant
@@ -44,48 +45,61 @@ var createPlant = function (req, res) {
         }
 
         // TODO - Refactor
-        plantService.convertIds(req.body, function (flavors, attributes, plagues) {
+        userService.getUserByGardenId(req.body.gardenId, function (err, user) {
+            if (err) {
+                return res.send(err);
+            }
 
-            Garden.findById(req.body.gardenId, function (err) {
+            var username = user.name.split('@')[0];
 
-                if (err) {
-                    return res.send(err);
-                }
+            var folderPath = '/../public/users/' + username + '/images/plants/';
 
-                Plant.create({
-                    name: req.body.name,
-                    size: req.body.size,
-                    phSoil: req.body.phSoil,
-                    ecSoil: req.body.ecSoil,
-                    harvest: req.body.harvest,
-                    gardenId: req.body.gardenId,
-                    genotype: req.body.genotype,
-                    floweringTime: req.body.floweringTime,
-                    description: req.body.description,
-                    images: imagesData,
-                    flavors: flavors,
-                    attributes: attributes,
-                    plagues: plagues
-                }, function (err, plant) {
-                    if (err) {
-                        res.send(err);
-                    }
+            imageService.setImagesPath(folderPath, function () {
 
-                    //persist images for one plant
-                    imageService.createProcessImageFiles(plantName, req.files, function (err) {
+                plantService.convertIds(req.body, function (flavors, attributes, plagues) {
+
+                    Garden.findById(req.body.gardenId, function (err) {
+
                         if (err) {
-                            return res.send(' There was an error trying to persist a plant ' + err);
+                            return res.send(err);
                         }
-                        logger.debug(' the plant was persisted successfully ');
 
-                        plantService.convertIdsFromMongo(plant, function () {
-                            plantService.getResourcesIdsImagesForPlant(plant._doc.id, function (err, resourcesIds) {
+                        Plant.create({
+                            name: req.body.name,
+                            size: req.body.size,
+                            phSoil: req.body.phSoil,
+                            ecSoil: req.body.ecSoil,
+                            harvest: req.body.harvest,
+                            gardenId: req.body.gardenId,
+                            genotype: req.body.genotype,
+                            floweringTime: req.body.floweringTime,
+                            description: req.body.description,
+                            images: imagesData,
+                            flavors: flavors,
+                            attributes: attributes,
+                            plagues: plagues
+                        }, function (err, plant) {
+                            if (err) {
+                                return res.send(err);
+                            }
+
+                            //persist images for one plant
+                            imageService.createProcessImageFiles(plantName, req.files, function (err) {
                                 if (err) {
-                                    return callback(err);
+                                    return res.send(' There was an error trying to persist a plant ' + err);
                                 }
-                                plant.resourcesIds = resourcesIds;
-                                logger.debug(' Plant created : \n' + plant);
-                                return res.json(plant);
+                                logger.debug(' the plant was persisted successfully ');
+
+                                plantService.convertIdsFromMongo(plant, function () {
+                                    plantService.getResourcesIdsImagesForPlant(plant._doc.id, function (err, resourcesIds) {
+                                        if (err) {
+                                            return callback(err);
+                                        }
+                                        plant.resourcesIds = resourcesIds;
+                                        logger.debug(' Plant created : \n' + plant);
+                                        return res.json(plant);
+                                    });
+                                });
                             });
                         });
                     });
@@ -119,7 +133,7 @@ var updatePlant = function (req, res) {
 
         var oldFolderName = false;
 
-        //If the name of the plant(Model) changes, the folder's image path should be updated.
+        //If the name of the plant(Model) changes, the image folder's name should be updated.
         if (plant.name !== req.body.name) {
             oldFolderName = plant.name;
         }
@@ -161,36 +175,42 @@ var updatePlant = function (req, res) {
         }
 
         // TODO - Refactor
-        plantService.convertIds(req.body, function (flavors, attributes, plagues) {
+        userService.getUserByGardenId(req.body.gardenId, function (err, user) {
+            if (err) {
+                return res.send(err);
+            }
 
-            plant.flavors = flavors;
+            plantService.convertIds(req.body, function (flavors, attributes, plagues) {
 
-            plant.attributes = attributes;
+                plant.flavors = flavors;
 
-            plant.plagues = plagues;
+                plant.attributes = attributes;
 
-            plant.gardenId = req.body.gardenId;
+                plant.plagues = plagues;
 
-            //Update images for one plant
-            imageService.processImageUpdate(req, plant, oldFolderName, function (err) {
-                if (err) {
-                    return res.send(err);
-                }
+                plant.gardenId = req.body.gardenId;
 
-                // After images have been processed, let's update de plant's document
-                plant.save(function (err, plant) {
+                //Update images for one plant
+                imageService.processImageUpdate(req, plant, oldFolderName, function (err) {
                     if (err) {
                         return res.send(err);
                     }
 
-                    plantService.convertIdsFromMongo(plant, function () {
-                        plantService.getResourcesIdsImagesForPlant(plant._doc.id, function (err, resourcesIds) {
-                            if (err) {
-                                return callback(err);
-                            }
-                            plant._doc.resourcesIds = resourcesIds;
-                            logger.debug(' Plant updated : \n' + plant);
-                            return res.json(plant);
+                    // After images have been processed, let's update de plant's document
+                    plant.save(function (err, plant) {
+                        if (err) {
+                            return res.send(err);
+                        }
+
+                        plantService.convertIdsFromMongo(plant, function () {
+                            plantService.getResourcesIdsImagesForPlant(plant._doc.id, function (err, resourcesIds) {
+                                if (err) {
+                                    return callback(err);
+                                }
+                                plant._doc.resourcesIds = resourcesIds;
+                                logger.debug(' Plant updated : \n' + plant);
+                                return res.json(plant);
+                            });
                         });
                     });
                 });
@@ -272,7 +292,7 @@ var getAll = function (req, res) {
             return res.send(err);
         }
         plantService.convertPlantsIdsFromMongo(plants, function () {
-            utilImage.exposeImagesPathFromPlant(plants, function() {
+            utilImage.exposeImagesPathFromPlant(plants, function () {
                 return res.send(plants);
             });
         });

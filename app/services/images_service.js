@@ -14,7 +14,7 @@ var fs = require('extfs'),
     rimraf = require('rimraf');
 
 
-var pathImagesUploaded = process.cwd() + '/../public/images/uploads/';
+var pathImagesUploaded = ''; //process.cwd() + '/../public/images/uploads/';
 
 var getFolderImagePath = function (folderName) {
     return pathImagesUploaded + folderName;
@@ -34,6 +34,11 @@ var getUrlImagePath = function (folderName, imageFileName) {
 
 var getThumbUrlImagePath = function (folderName, imageFileName) {
     return '/images/uploads/' + folderName + '/thumb/' + imageFileName;
+};
+
+var setImagesPath = function(path, callback) {
+    pathImagesUploaded = path;
+    callback(undefined);
 };
 
 
@@ -174,6 +179,7 @@ var persistImageFiles = function (folderName, files, persistImageFilesCallback) 
 /**
  * Create images' directories if they were not created.
  * @param folderName - Folder's name
+ * @param files - Files
  * @param createImageDirectoryCallback
  */
 var createImageDirectory = function (folderName, files, createImageDirectoryCallback) {
@@ -191,9 +197,9 @@ var createImageDirectory = function (folderName, files, createImageDirectoryCall
             fs.exists(fullsizeImagePath, function (exist) {
                 if (!exist) {
                     mkdir(fullsizeImagePath, function (err) {
-                        if (err) {
-                            return createImageDirectoryCallback(err + fullsizeImagePath + ' could not be created');
-                        }
+                        /*if (err) {
+                            return createImageDirectoryCallback(err + ' --> ' +  fullsizeImagePath + ' could not be created');
+                        } */
                         logger.debug('directory created : ' + fullsizeImagePath);
                     });
                 }
@@ -206,7 +212,7 @@ var createImageDirectory = function (folderName, files, createImageDirectoryCall
                 if (!exist) {
                     mkdir(thumbImagePath, function (err) {
                         if (err) {
-                            return createImageDirectoryCallback(err + thumbImagePath + ' could not be created');
+                            return createImageDirectoryCallback(err + ' --> '  + thumbImagePath + ' could not be created');
                         }
                         logger.debug('directory created : ' + thumbImagePath);
                     });
@@ -588,7 +594,7 @@ var getImagesDataFromRequest = function (model, request, callback) {
  * Each entity which contains images, can use this process to update its images.
  * @param request
  * @param model The model that should be updated
- * @param oldFolderName If the value is not empty, the folder's image name should be updated
+ * @param oldFolderName If the value is not empty, the image folder's name should be updated
  * @param mainCallback
  */
 var processImageUpdate = function (request, model, oldFolderName, mainCallback) {
@@ -666,6 +672,7 @@ module.exports = {
     processImageUpdate: processImageUpdate,
     persistImageFiles: persistImageFiles,
     createProcessImageFiles: createProcessImageFiles,
-    deleteFolderImage: deleteFolderImage
+    deleteFolderImage: deleteFolderImage,
+    setImagesPath: setImagesPath
 };
 

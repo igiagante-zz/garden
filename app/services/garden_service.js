@@ -8,7 +8,6 @@ var plantService = require('./plant_service'),
     irrigationService = require('./irrigation_service'),
     Garden = require('../models/garden'),
     utilObject = require('../commons/util_object'),
-    plantService = require('../../app/services/plant_service'),
     async = require('async');
 
 /**
