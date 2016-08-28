@@ -46,8 +46,6 @@ var createGarden = function (req, res) {
  */
 var updateGarden = function (req, res) {
 
-    console.log(req.params);
-
     Garden.findById(req.params.garden_id, function (err, garden) {
 
         if (err) {
