@@ -19,4 +19,7 @@ router.delete('/:nutrient_id', nutrientController.deleteNutrient);
 //get all nutrients
 router.get('/', nutrientController.getAll);
 
+//get nutrients for one user
+router.get('/user/:username', nutrientController.getNutrientsByUserName);
+
 module.exports = router;

@@ -7,7 +7,6 @@
 var Nutrient = require('../models/nutrient'),
     utilObject = require('../commons/util_object'),
     async = require('async'),
-    util_image = require('../commons/util_image'),
     logger = require('../utils/logger');
 
 /**
@@ -88,8 +87,8 @@ var convertIdsFromMongo = function (nutrients, convertIdsFromMongoCallback) {
 };
 
 
-var convertChildrenIds = function(nutrient, convertChildrenIdsCallback){
-    utilObject.convertItemsId(nutrient.images, function() {
+var convertChildrenIds = function (nutrient, convertChildrenIdsCallback) {
+    utilObject.convertItemsId(nutrient.images, function () {
         convertChildrenIdsCallback(undefined, nutrient);
     });
 };
@@ -99,7 +98,7 @@ var convertChildrenIds = function(nutrient, convertChildrenIdsCallback){
  * @param nutrient
  * @param getNutrientCallback
  */
-var getNutrient = function(nutrient, getNutrientCallback){
+var getNutrient = function (nutrient, getNutrientCallback) {
 
     async.waterfall([
 
@@ -123,10 +122,24 @@ var getNutrient = function(nutrient, getNutrientCallback){
     });
 };
 
+var getNutrientsByUserId = function (userId, getNutrientsByUserIdCallback) {
+
+    Nutrient.find({userId: userId}, function (err, nutrients) {
+        if (err) {
+            return getNutrientsByUserIdCallback(err);
+        }
+
+        utilObject.convertItemsId(nutrients, function () {
+            return getNutrientsByUserIdCallback(undefined, nutrients);
+        });
+    });
+};
+
 module.exports = {
     getNutrientInfoByName: getNutrientInfoByName,
     getResourcesIdsImagesForNutrient: getResourcesIdsImagesForNutrient,
     getNutrientId: getNutrientId,
     getNutrient: getNutrient,
-    convertIdsFromMongo: convertIdsFromMongo
+    convertIdsFromMongo: convertIdsFromMongo,
+    getNutrientsByUserId: getNutrientsByUserId
 };

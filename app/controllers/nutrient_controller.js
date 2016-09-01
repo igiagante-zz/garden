@@ -5,7 +5,10 @@ var imageService = require('../services/images_service'),
     nutrientService = require('../services/nutrient_service'),
     utilImage = require('../commons/util_image'),
     utilObject = require('../commons/util_object'),
+    User = require('../models/user'),
     Nutrient = require('../models/nutrient');
+
+var userNotFound = 'USER_NOT_FOUND';
 
 /**
  * Create one nutrient
@@ -15,6 +18,7 @@ var imageService = require('../services/images_service'),
 var createNutrient = function (req, res) {
 
     var imagesData = null;
+    var userId = req.body.userId;
     var nutrientName = req.body.name;
 
     nutrientService.getNutrientInfoByName(nutrientName, function (err, nutrient) {
@@ -34,6 +38,7 @@ var createNutrient = function (req, res) {
         }
 
         Nutrient.create({
+            userId: userId,
             name: req.body.name,
             ph: req.body.ph,
             npk: req.body.npk,
@@ -124,6 +129,7 @@ var updateNutrient = function (req, res) {
 
 //retrieve one nutrient
 var getNutrient = function (req, res) {
+
     Nutrient.findById(req.params.nutrient_id, function (err, nutrient) {
         if (err) {
             return res.send(err);
@@ -172,15 +178,45 @@ var deleteNutrient = function (req, res) {
 
 //get all nutrients
 var getAll = function (req, res) {
+
     Nutrient.find(function (err, nutrients) {
         if (err) {
             return res.send(err);
         }
         utilObject.convertItemsId(nutrients, function () {
-            nutrientService.convertIdsFromMongo(nutrients, function(){
-                return res.json(nutrients);
+            nutrientService.convertIdsFromMongo(nutrients, function () {
+                utilImage.exposeImagesPathFromNutrients(nutrients, function () {
+                    return res.json(nutrients);
+                });
             });
         });
+    });
+};
+
+/**
+ * Get the nutrients for one user
+ * @param req
+ * @param res
+ */
+var getNutrientsByUserName = function (req, res) {
+
+    User.findOne({
+        name: req.params.username
+    }, function (err, user) {
+        if (err) {
+            return res.status(505).send(err);
+        }
+        if (!user) {
+            return res.status(404).send({message: userNotFound});
+        } else {
+
+            nutrientService.getNutrientsByUserId(user._doc._id, function (err, nutrients) {
+                if (err) {
+                    return res.status(505).send(err);
+                }
+                return res.status(200).json(nutrients);
+            });
+        }
     });
 };
 
@@ -189,7 +225,8 @@ module.exports = {
     updateNutrient: updateNutrient,
     deleteNutrient: deleteNutrient,
     getNutrient: getNutrient,
-    getAll: getAll
+    getAll: getAll,
+    getNutrientsByUserName: getNutrientsByUserName
 };
 
 
