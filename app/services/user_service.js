@@ -14,7 +14,7 @@ var addGardenIdToUser = function (userId, gardenId, addGardenIdToUserCallback) {
             return addGardenIdToUserCallback(err);
         }
 
-        if(user._doc.gardensIds) {
+        if(user._doc && user._doc.gardensIds) {
             user._doc.gardensIds.push(gardenId);
         }
 
