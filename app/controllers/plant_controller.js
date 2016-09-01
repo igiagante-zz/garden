@@ -32,7 +32,7 @@ var createPlant = function (req, res) {
         // Verify that any plant exits with this name
         if (plant !== null && plant.length > 0) {
             logger.debug('  The name of the plant already exists. Try other please!  ');
-            return res.status(409).send(' The name of the plant already exists. Try other please! ');
+            //return res.status(409).send(' The name of the plant already exists. Try other please! ');
         }
 
         logger.debug(' -------------------- Creating a new plant  -------------------- ');
