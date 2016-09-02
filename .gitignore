@@ -18,9 +18,6 @@ node_modules
 public/images/uploads/
 test/controllers/images/
 
-dump/
-
-
 .idea/*
 *.iml
 

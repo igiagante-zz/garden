@@ -38,7 +38,7 @@ app.use(cors());
 // Use the passport package in our application
 app.use(passport.initialize());
 
-var port = process.env.PORT || 3000;        // set our port
+var port = process.env.PORT || 80;        // set our port
 
 // ROUTES FOR OUR API
 // ================================================
@@ -77,7 +77,7 @@ router.use('/dose', isUserAuthenticated, doseRouter);
 router.use('/garden', isUserAuthenticated, gardenRouter);
 router.use('/irrigation', isUserAuthenticated, irrigationRouter);
 router.use('/plant', isUserAuthenticated, plantRouter);
-router.use('/nutrient', nutrientRouter);
+router.use('/nutrient', isUserAuthenticated, nutrientRouter);
 router.use('/sensor',  sensorRouter);
 router.use('/user', userRouter);
 router.use('/attribute', attributeRouter);
