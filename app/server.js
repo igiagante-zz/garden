@@ -104,7 +104,7 @@ app.use('/api', router);
 
 //static
 console.log('process.cwd(): ' + process.cwd());
-app.use(express.static(process.cwd() + '/../public'));
+app.use(express.static(process.cwd() + '/public'));
 
 // START THE SERVER
 // =============================================================================
