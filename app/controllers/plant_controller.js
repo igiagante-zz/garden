@@ -272,9 +272,7 @@ var getAll = function (req, res) {
             return res.send(err);
         }
         plantService.convertPlantsIdsFromMongo(plants, function () {
-            utilImage.exposeImagesPathFromPlant(plants, function() {
-                return res.send(plants);
-            });
+            return res.send(plants);
         });
     });
 };
