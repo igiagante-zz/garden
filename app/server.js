@@ -103,7 +103,8 @@ router.get('/', function (req, res) {
 app.use('/api', router);
 
 //static
-app.use(express.static(process.cwd() + '/../public'));
+console.log('process.cwd(): ' + process.cwd());
+app.use(express.static(process.cwd() + '/public'));
 
 // START THE SERVER
 // =============================================================================
