@@ -127,13 +127,21 @@ var deleteIrrigation = function (req, res) {
                 return res.send(err);
             }
 
-            var text = ' The irrigation with id ' + req.params.irrigation_id + ' was deleted. ';
-            logger.debug(text);
-            var data = {
-                message: text
-            };
+            Dose.remove({
+                _id: irrigation._doc.doseId
+            }, function (err) {
+                if (err) {
+                    return res.send(err);
+                }
 
-            return res.status(202).send(data);
+                var text = ' The irrigation with id ' + req.params.irrigation_id + ' was deleted. ';
+                logger.debug(text);
+                var data = {
+                    message: text
+                };
+
+                return res.status(202).send(data);
+            });
         });
     });
 };

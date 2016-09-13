@@ -130,8 +130,28 @@ var getNutrientsByUserId = function (userId, getNutrientsByUserIdCallback) {
         }
 
         utilObject.convertItemsId(nutrients, function () {
-            return getNutrientsByUserIdCallback(undefined, nutrients);
+            convertImagesIdsFromNutrients(nutrients, function () {
+                return getNutrientsByUserIdCallback(undefined, nutrients);
+            });
         });
+    });
+};
+
+
+/**
+ * Convert the property _id to id in each item from a list
+ * @param nutrients
+ * @param callbackNutrients
+ */
+var convertImagesIdsFromNutrients = function (nutrients, callbackNutrients) {
+
+    async.each(nutrients, function (nutrient, callback) {
+        utilObject.convertItemsId(nutrient.images, callback);
+    }, function (err) {
+        if (err) {
+            return callbackNutrients(err);
+        }
+        callbackNutrients(undefined);
     });
 };
 

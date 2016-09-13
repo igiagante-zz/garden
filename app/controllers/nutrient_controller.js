@@ -26,7 +26,7 @@ var createNutrient = function (req, res) {
         // Verify that any nutrient exits with this name
         if (nutrient !== null && nutrient.length > 0) {
             logger.debug('  The name of the nutrient already exists. Try other please!  ');
-            return res.status(409).send(' The name of the nutrient already exists. Try other please! ');
+            //return res.status(409).send(' The name of the nutrient already exists. Try other please! ');
         }
 
         logger.debug(' -------------------- Creating a new nutrient  -------------------- ');
@@ -185,9 +185,7 @@ var getAll = function (req, res) {
         }
         utilObject.convertItemsId(nutrients, function () {
             nutrientService.convertIdsFromMongo(nutrients, function () {
-                utilImage.exposeImagesPathFromNutrients(nutrients, function () {
-                    return res.json(nutrients);
-                });
+                return res.json(nutrients);
             });
         });
     });

@@ -3,7 +3,6 @@
 var Plant = require('../models/plant'),
     logger = require('../utils/logger'),
     utilObject = require('../commons/util_object'),
-    utilImage = require('../commons/util_image'),
     async = require('async');
 
 /**
@@ -38,19 +37,19 @@ var getResourcesIdsImagesForPlant = function (modelId, callback) {
 
     var resourcesIds = [];
 
-    Plant.find({ _id: modelId }, function (err, plantDB) {
+    Plant.find({_id: modelId}, function (err, plantDB) {
         if (err) {
             return callback(err);
         }
 
-        if(plantDB === null) {
+        if (plantDB === null) {
             return callback('The plant was not found');
         }
 
         var plant = JSON.parse(JSON.stringify(plantDB))[0];
 
-        if(plant.images) {
-            for(var i = 0; i < plant.images.length; i++){
+        if (plant.images) {
+            for (var i = 0; i < plant.images.length; i++) {
                 resourcesIds.push(plant.images[i]._id);
             }
         }
@@ -86,7 +85,7 @@ var getPlantName = function (plantId, getPlantCallback) {
     });
 };
 
-var convertPlantsIdsFromMongo = function(plants, callback) {
+var convertPlantsIdsFromMongo = function (plants, callback) {
 
     async.each(plants, function (plant, callback) {
         convertIdsFromMongo(plant, callback);
@@ -109,7 +108,7 @@ var convertIds = function (plant, convertIdsCallback) {
 
     async.series([
             function (callback) {
-                if(plant) {
+                if (plant) {
                     utilObject.convertIdToObjectId(plant, callback);
                 } else {
                     callback(undefined);
@@ -117,7 +116,7 @@ var convertIds = function (plant, convertIdsCallback) {
             },
             function (callback) {
                 //obtain flavors
-                if(plant.flavors) {
+                if (plant.flavors) {
                     flavors = JSON.parse(plant.flavors);
                     utilObject.convertIdsToObjectIds(flavors, callback);
                 } else {
@@ -126,7 +125,7 @@ var convertIds = function (plant, convertIdsCallback) {
             },
             function (callback) {
                 //obtain attributes
-                if(plant.attributes) {
+                if (plant.attributes) {
                     attributes = JSON.parse(plant.attributes);
                     utilObject.convertIdsToObjectIds(attributes, callback);
                 } else {
@@ -135,7 +134,7 @@ var convertIds = function (plant, convertIdsCallback) {
             },
             function (callback) {
                 //obtain plagues
-                if(plant.plagues) {
+                if (plant.plagues) {
                     plagues = JSON.parse(plant.plagues);
                     utilObject.convertIdsToObjectIds(plagues, callback);
                 } else {
@@ -165,35 +164,35 @@ var convertIdsFromMongo = function (plant, convertIdsFromMongoCallback) {
 
     async.series([
             function (callback) {
-                if(plant) {
+                if (plant) {
                     utilObject.convertItemId(plant, callback);
                 } else {
                     callback(undefined);
                 }
             },
             function (callback) {
-                if(flavors) {
+                if (flavors) {
                     utilObject.convertItemsId(flavors, callback);
                 } else {
                     callback(undefined);
                 }
             },
             function (callback) {
-                if(attributes) {
+                if (attributes) {
                     utilObject.convertItemsId(attributes, callback);
                 } else {
                     callback(undefined);
                 }
             },
             function (callback) {
-                if(plagues) {
+                if (plagues) {
                     utilObject.convertItemsId(plagues, callback);
                 } else {
                     callback(undefined);
                 }
             },
             function (callback) {
-                if(images) {
+                if (images) {
                     utilObject.convertItemsId(images, callback);
                 } else {
                     callback(undefined);
@@ -208,7 +207,7 @@ var convertIdsFromMongo = function (plant, convertIdsFromMongoCallback) {
         });
 };
 
-var getPlantsByGardenId = function(gardenId, callback) {
+var getPlantsByGardenId = function (gardenId, callback) {
 
     var filterPlants = [];
 
@@ -217,20 +216,19 @@ var getPlantsByGardenId = function(gardenId, callback) {
             return callback(err);
         }
 
-        for(var i = 0; i < plants.length; i++){
-            if(plants[i]._doc.gardenId.equals(gardenId)) {
+        for (var i = 0; i < plants.length; i++) {
+            if (plants[i]._doc.gardenId.equals(gardenId)) {
                 filterPlants.push(plants[i]);
             }
         }
 
         utilObject.convertItemsId(filterPlants, function () {
             convertPlantsIdsFromMongo(filterPlants, function (err) {
-                if(err) {
+                if (err) {
                     return callback(err);
                 }
-                utilImage.exposeImagesPathFromPlant(filterPlants, function() {
-                    return callback(undefined, filterPlants);
-                });
+                return callback(undefined, filterPlants);
+
             });
         });
     });
